@@ -113,7 +113,7 @@ body {
 .pages-selector {
     display: flex;
     gap: 8px;
-    padding: 12px 0;
+    padding: 40px 0 12px 0;
     margin-bottom: 20px;
     overflow-x: auto;
     scrollbar-width: thin;
@@ -159,12 +159,14 @@ body {
 
 .page-actions {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -36px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     gap: 4px;
     opacity: 0;
     transition: opacity 0.2s;
+    z-index: 10;
 }
 
 .page-tab-wrapper:hover .page-actions {
@@ -190,6 +192,19 @@ body {
 .page-action-btn:hover {
     background: var(--bg-hover);
     transform: scale(1.1);
+}
+
+.page-name-edit {
+    background: var(--bg-primary);
+    border: 2px solid var(--accent-blue);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 14px;
+    padding: 4px 8px;
+    outline: none;
+    font-family: inherit;
+    width: 100%;
+    min-width: 80px;
 }
 
 /* Sidebar Tab Buttons */

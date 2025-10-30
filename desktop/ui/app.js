@@ -179,11 +179,11 @@ function renderPages() {
             <button class="page-tab ${page.id === currentPageId ? 'active' : ''}" 
                     data-page-id="${page.id}"
                     onclick="selectPage('${page.id}')">
-                ${page.name}
+                <span class="page-name" id="page-name-${page.id}">${page.name}</span>
             </button>
             <div class="page-actions">
-                <button class="page-action-btn" onclick="renamePage('${page.id}')" title="Düzenle">✏️</button>
-                <button class="page-action-btn" onclick="deletePage('${page.id}')" title="Sil">🗑️</button>
+                <button class="page-action-btn" onclick="event.stopPropagation(); startEditPageName('${page.id}')" title="Düzenle">✏️</button>
+                <button class="page-action-btn" onclick="event.stopPropagation(); deletePage('${page.id}')" title="Sil">🗑️</button>
             </div>
         </div>
     `).join('') + `
@@ -282,16 +282,63 @@ function hidePageIconPreview() {
     preview.innerHTML = '';
 }
 
-// Rename page
-async function renamePage(pageId) {
+// Start editing page name (inline)
+function startEditPageName(pageId) {
     const page = pages.find(p => p.id === pageId);
     if (!page) return;
     
-    const newName = prompt('Sayfa adı:', page.name);
-    if (!newName) return;
+    const pageNameSpan = document.getElementById(`page-name-${pageId}`);
+    const pageButton = pageNameSpan.closest('.page-tab');
     
-    await window.electronAPI.updatePageName(pageId, newName);
-    await loadPages();
+    // Mevcut metni al
+    const currentName = page.name;
+    
+    // Input oluştur
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = currentName;
+    input.className = 'page-name-edit';
+    
+    // Span'ı gizle ve input'u ekle
+    pageNameSpan.style.display = 'none';
+    pageButton.appendChild(input);
+    
+    // Input'a focus yap ve tüm metni seç
+    input.focus();
+    input.select();
+    
+    // Enter tuşu ile kaydet
+    input.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            await savePageName(pageId, input.value.trim());
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            await loadPages(); // İptal et, sayfayı yeniden yükle
+        }
+    });
+    
+    // Focus kaybedince kaydet
+    input.addEventListener('blur', async () => {
+        await savePageName(pageId, input.value.trim());
+    });
+}
+
+// Save page name
+async function savePageName(pageId, newName) {
+    if (!newName || newName.length === 0) {
+        // Boş isim girilirse, değişikliği iptal et
+        await loadPages();
+        return;
+    }
+    
+    try {
+        await window.electronAPI.updatePageName(pageId, newName);
+        await loadPages();
+    } catch (error) {
+        console.error('Sayfa adı güncellenemedi:', error);
+        await loadPages();
+    }
 }
 
 // Delete page
