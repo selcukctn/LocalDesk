@@ -501,6 +501,43 @@ body {
     font-size: 48px;
 }
 
+.action-type-wrapper {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--bg-tertiary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.radio-label:hover {
+    background: var(--bg-hover);
+}
+
+.radio-label input[type="radio"] {
+    cursor: pointer;
+    accent-color: var(--accent-blue);
+}
+
+.radio-label input[type="radio"]:checked ~ span {
+    color: var(--accent-blue);
+    font-weight: 600;
+}
+
+.radio-label:has(input[type="radio"]:checked) {
+    border-color: var(--accent-blue);
+    background: var(--bg-hover);
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;

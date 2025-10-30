@@ -6,6 +6,7 @@ const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 const os = require('os');
 const EventEmitter = require('events');
+const { spawn } = require('child_process');
 
 const discovery = require('./discovery');
 
@@ -162,7 +163,7 @@ class LocalDeskServer extends EventEmitter {
       // Kısayol çalıştırma
       socket.on('execute-shortcut', (data) => {
         console.log('⌨️  Kısayol çalıştırılıyor:', data);
-        const { shortcutId, keys } = data;
+        const { shortcutId, keys, appPath, actionType } = data;
         
         // Cihaz güvenilir mi kontrol et
         const client = this.connectedClients.get(socket.id);
@@ -177,8 +178,21 @@ class LocalDeskServer extends EventEmitter {
           return;
         }
         
-        // Klavye girdisini gönder
-        this.executeKeys(keys);
+        // Eylem tipine göre çalıştır
+        if (actionType === 'keys' || actionType === 'both') {
+          // Klavye girdisini gönder
+          if (keys && keys.length > 0) {
+            this.executeKeys(keys);
+          }
+        }
+        
+        if (actionType === 'app' || actionType === 'both') {
+          // Uygulamayı başlat
+          if (appPath) {
+            this.launchApp(appPath);
+          }
+        }
+        
         socket.emit('execute-result', { success: true, shortcutId });
       });
       
@@ -257,6 +271,33 @@ class LocalDeskServer extends EventEmitter {
     }
   }
 
+  launchApp(appPath) {
+    try {
+      console.log('🚀 Uygulama başlatılıyor:', appPath);
+      
+      // Dosya var mı kontrol et
+      const fsSync = require('fs');
+      if (!fsSync.existsSync(appPath)) {
+        console.error('❌ Uygulama bulunamadı:', appPath);
+        return;
+      }
+      
+      // Uygulamayı başlat (detached mode - bağımsız çalışsın)
+      const child = spawn(appPath, [], {
+        detached: true,
+        stdio: 'ignore',
+        shell: false
+      });
+      
+      // Process'i serbest bırak
+      child.unref();
+      
+      console.log('✅ Uygulama başlatıldı:', appPath);
+    } catch (error) {
+      console.error('❌ Uygulama başlatma hatası:', error);
+    }
+  }
+
   loadKeyboardAddon() {
     if (process.platform !== 'win32') {
       console.log('⚠️  Klavye addon sadece Windows\'ta destekleniyor');
@@ -312,24 +353,27 @@ class LocalDeskServer extends EventEmitter {
       this.shortcuts = [
         {
           id: 1,
-          label: 'OBS Başlat/Durdur',
-          icon: 'obs.png',
-          keys: ['CONTROL', 'ALT', 'O'],
-          color: '#1F6FEB'
+          label: 'Kaydet',
+          icon: '💾',
+          keys: ['CONTROL', 'S'],
+          color: '#00C853',
+          actionType: 'keys'
         },
         {
           id: 2,
-          label: 'Kaydet',
-          icon: 'save.png',
-          keys: ['CONTROL', 'S'],
-          color: '#00C853'
+          label: 'Kopyala',
+          icon: '📋',
+          keys: ['CONTROL', 'C'],
+          color: '#FF9800',
+          actionType: 'keys'
         },
         {
           id: 3,
-          label: 'Kopyala',
-          icon: 'copy.png',
-          keys: ['CONTROL', 'C'],
-          color: '#FF9800'
+          label: 'Yapıştır',
+          icon: '📌',
+          keys: ['CONTROL', 'V'],
+          color: '#9C27B0',
+          actionType: 'keys'
         }
       ];
       await this.saveShortcuts(this.shortcuts);

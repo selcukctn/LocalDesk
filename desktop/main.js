@@ -117,3 +117,24 @@ ipcMain.handle('select-icon', async () => {
   };
 });
 
+// Uygulama (.exe) seçimi
+ipcMain.handle('select-app', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Uygulama Seç',
+    filters: [
+      { name: 'Uygulamalar', extensions: ['exe'] },
+      { name: 'Tüm Dosyalar', extensions: ['*'] }
+    ],
+    properties: ['openFile']
+  });
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+  
+  return {
+    canceled: false,
+    appPath: result.filePaths[0]
+  };
+});
+
