@@ -50,11 +50,69 @@ std::map<std::string, WORD> keyMap = {
     {"SCROLLLOCK", VK_SCROLL},
     
     {"PRINTSCREEN", VK_SNAPSHOT},
-    {"PAUSE", VK_PAUSE}
+    {"PAUSE", VK_PAUSE},
+    
+    // Medya tuşları
+    {"VOLUMEUP", VK_VOLUME_UP},
+    {"VOLUMEDOWN", VK_VOLUME_DOWN},
+    {"VOLUMEMUTE", VK_VOLUME_MUTE},
+    {"MEDIAPLAYPAUSE", VK_MEDIA_PLAY_PAUSE},
+    {"MEDIASTOP", VK_MEDIA_STOP},
+    {"MEDIANEXTTRACK", VK_MEDIA_NEXT_TRACK},
+    {"MEDIAPREVIOUSTRACK", VK_MEDIA_PREV_TRACK},
+    
+    // Tarayıcı tuşları
+    {"BROWSERHOME", VK_BROWSER_HOME},
+    {"BROWSERBACK", VK_BROWSER_BACK},
+    {"BROWSERFORWARD", VK_BROWSER_FORWARD},
+    {"BROWSERREFRESH", VK_BROWSER_REFRESH},
+    {"BROWSERSTOP", VK_BROWSER_STOP},
+    {"BROWSERSEARCH", VK_BROWSER_SEARCH},
+    {"BROWSERFAVORITES", VK_BROWSER_FAVORITES},
+    
+    // Windows tuşları
+    {"WIN", VK_LWIN},
+    {"LWIN", VK_LWIN},
+    {"RWIN", VK_RWIN}
 };
+
+// Medya tuşları mı kontrol et
+bool IsMediaKey(WORD vk) {
+    return vk == VK_VOLUME_UP || vk == VK_VOLUME_DOWN || vk == VK_VOLUME_MUTE ||
+           vk == VK_MEDIA_PLAY_PAUSE || vk == VK_MEDIA_STOP ||
+           vk == VK_MEDIA_NEXT_TRACK || vk == VK_MEDIA_PREV_TRACK ||
+           vk == VK_BROWSER_HOME || vk == VK_BROWSER_BACK ||
+           vk == VK_BROWSER_FORWARD || vk == VK_BROWSER_REFRESH ||
+           vk == VK_BROWSER_STOP || vk == VK_BROWSER_SEARCH ||
+           vk == VK_BROWSER_FAVORITES;
+}
 
 // Tuşları basma fonksiyonu
 void PressKeys(const std::vector<std::string>& keys) {
+    // Medya tuşları için özel işlem (tek tuş ve medya tuşu ise)
+    if (keys.size() == 1) {
+        auto it = keyMap.find(keys[0]);
+        if (it != keyMap.end() && IsMediaKey(it->second)) {
+            // Medya tuşları için ayrı ayrı gönder (PowerShell gibi)
+            INPUT inputs[2] = {0};
+            
+            // Key Down
+            inputs[0].type = INPUT_KEYBOARD;
+            inputs[0].ki.wVk = it->second;
+            inputs[0].ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
+            
+            // Key Up
+            inputs[1].type = INPUT_KEYBOARD;
+            inputs[1].ki.wVk = it->second;
+            inputs[1].ki.dwFlags = KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+            
+            // İki eventi de gönder
+            SendInput(2, inputs, sizeof(INPUT));
+            return;
+        }
+    }
+    
+    // Normal tuş kombinasyonları için (Ctrl+C, Alt+Tab, vb.)
     std::vector<INPUT> inputs;
     
     // Tüm tuşları bas (key down)
@@ -67,7 +125,14 @@ void PressKeys(const std::vector<std::string>& keys) {
         INPUT input = {0};
         input.type = INPUT_KEYBOARD;
         input.ki.wVk = it->second;
-        input.ki.dwFlags = 0; // Key down
+        
+        // Medya ve özel tuşlar için EXTENDEDKEY flag'i ekle
+        if (IsMediaKey(it->second)) {
+            input.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
+        } else {
+            input.ki.dwFlags = 0; // Normal key down
+        }
+        
         inputs.push_back(input);
     }
     
@@ -81,13 +146,22 @@ void PressKeys(const std::vector<std::string>& keys) {
         INPUT input = {0};
         input.type = INPUT_KEYBOARD;
         input.ki.wVk = keyIt->second;
-        input.ki.dwFlags = KEYEVENTF_KEYUP;
+        
+        // Medya ve özel tuşlar için EXTENDEDKEY + KEYUP flag'i
+        if (IsMediaKey(keyIt->second)) {
+            input.ki.dwFlags = KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
+        } else {
+            input.ki.dwFlags = KEYEVENTF_KEYUP;
+        }
+        
         inputs.push_back(input);
     }
     
     // SendInput ile tuşları gönder
     if (!inputs.empty()) {
-        SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+        UINT result = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
+        // Debug: Kaç input gönderildi?
+        // printf("SendInput result: %d of %zu\n", result, inputs.size());
     }
 }
 

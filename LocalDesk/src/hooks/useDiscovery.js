@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Platform } from 'react-native';
 import dgram from 'react-native-udp';
 import Zeroconf from 'react-native-zeroconf';
 import { Buffer } from 'buffer';
@@ -16,6 +17,7 @@ export const useDiscovery = () => {
   // Refs for persistent references
   const udpSocketRef = useRef(null);
   const scanIntervalRef = useRef(null);
+  const localhostIntervalRef = useRef(null);
   const zeroconfRef = useRef(null);
 
   // Cihaz ekle veya güncelle
@@ -167,6 +169,47 @@ export const useDiscovery = () => {
     }
   }, [addOrUpdateDevice]);
 
+  // Localhost discovery (Simulatör için)
+  const checkLocalhost = useCallback(async () => {
+    try {
+      console.log('🔍 Localhost kontrol ediliyor (Simulatör modu)...');
+      
+      // iOS simulatör localhost, Android emulator 10.0.2.2 kullanır
+      const localhostAddresses = Platform.OS === 'android' 
+        ? ['10.0.2.2', 'localhost', '127.0.0.1']
+        : ['localhost', '127.0.0.1'];
+      
+      for (const host of localhostAddresses) {
+        try {
+          const response = await fetch(`http://${host}:3100/device-info`, {
+            timeout: 2000
+          });
+          
+          if (response.ok) {
+            const deviceInfo = await response.json();
+            console.log('✅ Localhost Desktop bulundu:', deviceInfo);
+            
+            addOrUpdateDevice({
+              id: deviceInfo.id,
+              name: `${deviceInfo.name} (Simulatör)`,
+              type: deviceInfo.type,
+              host: host,
+              port: 3100,
+              discoveryMethod: 'localhost',
+              lastSeen: Date.now()
+            });
+            break;
+          }
+        } catch (err) {
+          // Bu host çalışmıyor, devam et
+          continue;
+        }
+      }
+    } catch (err) {
+      console.log('ℹ️ Localhost discovery başarısız (Normal ağ modunda beklenen)');
+    }
+  }, [addOrUpdateDevice]);
+
   // Discovery başlat
   const startDiscovery = useCallback(() => {
     console.log('🔍 Discovery başlatılıyor...');
@@ -177,7 +220,18 @@ export const useDiscovery = () => {
     // Her iki discovery metodunu başlat
     startUDPDiscovery();
     startMDNSDiscovery();
-  }, [startUDPDiscovery, startMDNSDiscovery]);
+    
+    // Localhost kontrolü (Simulatör için)
+    checkLocalhost();
+    
+    // Periyodik localhost kontrolü
+    const localhostInterval = setInterval(() => {
+      checkLocalhost();
+    }, DISCOVERY_INTERVAL);
+    
+    // Cleanup için interval'i sakla
+    localhostIntervalRef.current = localhostInterval;
+  }, [startUDPDiscovery, startMDNSDiscovery, checkLocalhost]);
 
   // Discovery durdur
   const stopDiscovery = useCallback(() => {
@@ -194,10 +248,16 @@ export const useDiscovery = () => {
       }
     }
     
-    // Interval'i temizle
+    // UDP interval'i temizle
     if (scanIntervalRef.current) {
       clearInterval(scanIntervalRef.current);
       scanIntervalRef.current = null;
+    }
+    
+    // Localhost interval'i temizle
+    if (localhostIntervalRef.current) {
+      clearInterval(localhostIntervalRef.current);
+      localhostIntervalRef.current = null;
     }
     
     // mDNS'i durdur

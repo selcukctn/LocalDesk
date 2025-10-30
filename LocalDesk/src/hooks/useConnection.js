@@ -17,7 +17,7 @@ export const useConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isPairing, setIsPairing] = useState(false);
   const [currentDevice, setCurrentDevice] = useState(null);
-  const [shortcuts, setShortcuts] = useState([]);
+  const [shortcuts, setShortcuts] = useState([]); // Başlangıçta boş array
   const [error, setError] = useState(null);
   const [deviceInfo, setDeviceInfo] = useState(null);
   
@@ -55,6 +55,17 @@ export const useConnection = () => {
     if (!deviceInfo) {
       setError('Cihaz bilgileri yüklenmedi');
       return;
+    }
+    
+    // Mevcut bağlantı varsa önce kapat
+    if (socketRef.current) {
+      console.log('⚠️ Mevcut bağlantı kapatılıyor...');
+      try {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      } catch (err) {
+        console.error('Eski bağlantı kapatma hatası:', err);
+      }
     }
     
     try {
@@ -142,14 +153,14 @@ export const useConnection = () => {
         await addTrustedDevice(device);
       }
       
-      // Kısayolları yükle
-      loadShortcuts();
+      // Kısayolları yükle (cihaz bilgisini geçir)
+      await loadShortcuts(device);
     } else {
       console.error('❌ Pairing reddedildi:', response.message);
       setError(response.message || 'Bağlantı reddedildi');
       disconnect();
     }
-  }, []);
+  }, [loadShortcuts, disconnect, addTrustedDevice]);
 
   // Güvenilir cihaz ekle
   const addTrustedDevice = async (device) => {
@@ -180,23 +191,34 @@ export const useConnection = () => {
   };
 
   // Kısayolları yükle
-  const loadShortcuts = useCallback(async () => {
-    if (!socketRef.current || !isConnected) return;
-    
+  const loadShortcuts = useCallback(async (device) => {
     try {
-      // HTTP üzerinden kısayolları al
-      if (currentDevice) {
-        const response = await fetch(
-          `http://${currentDevice.host}:${currentDevice.port}/shortcuts`
-        );
-        const data = await response.json();
-        setShortcuts(data);
-        console.log('📥 Kısayollar yüklendi:', data.length);
+      const targetDevice = device || currentDevice;
+      if (!targetDevice) {
+        console.warn('⚠️ Kısayol yüklemek için cihaz bilgisi yok');
+        return;
       }
+      
+      console.log('📡 Kısayollar yükleniyor:', `http://${targetDevice.host}:${targetDevice.port}/shortcuts`);
+      
+      // HTTP üzerinden kısayolları al
+      const response = await fetch(
+        `http://${targetDevice.host}:${targetDevice.port}/shortcuts`,
+        { timeout: 5000 }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setShortcuts(data);
+      console.log('📥 Kısayollar yüklendi:', data.length, 'adet');
     } catch (err) {
-      console.error('Kısayol yükleme hatası:', err);
+      console.error('❌ Kısayol yükleme hatası:', err);
+      setError('Kısayollar yüklenemedi: ' + err.message);
     }
-  }, [isConnected, currentDevice]);
+  }, [currentDevice]);
 
   // Kısayol çalıştır
   const executeShortcut = useCallback((shortcut) => {
@@ -209,7 +231,9 @@ export const useConnection = () => {
     
     socketRef.current.emit('execute-shortcut', {
       shortcutId: shortcut.id,
-      keys: shortcut.keys
+      keys: shortcut.keys,
+      appPath: shortcut.appPath,
+      actionType: shortcut.actionType
     });
   }, [isConnected]);
 

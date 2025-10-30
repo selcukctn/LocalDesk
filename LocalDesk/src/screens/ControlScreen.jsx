@@ -113,7 +113,7 @@ export const ControlScreen = ({
       </View>
 
       {/* Footer Info */}
-      {isConnected && shortcuts.length > 0 && (
+      {isConnected && shortcuts && shortcuts.length > 0 && (
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             {shortcuts.length} kısayol aktif

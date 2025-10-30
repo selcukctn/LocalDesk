@@ -74,7 +74,14 @@ class LocalDeskServer extends EventEmitter {
       });
     });
     
+    // Yerel IP adreslerini göster
+    const localIPs = discovery.getLocalIPAddresses();
     console.log(`✅ HTTP/Socket.IO server çalışıyor: ${this.port}`);
+    console.log(`📡 Erişim adresleri:`);
+    console.log(`   - localhost:${this.port} (Bu bilgisayar)`);
+    localIPs.forEach(ip => {
+      console.log(`   - ${ip}:${this.port} (Ağdan erişim)`);
+    });
     
     // Discovery servislerini başlat
     await discovery.start(this.port, this.deviceId, this.deviceName);
@@ -135,15 +142,31 @@ class LocalDeskServer extends EventEmitter {
         console.log('🔐 Pairing isteği alındı:', data);
         const { deviceId, deviceName, deviceType } = data;
         
+        // Aynı deviceId'den eski bağlantı var mı kontrol et
+        for (const [existingSocketId, client] of this.connectedClients.entries()) {
+          if (client.deviceId === deviceId) {
+            console.log('⚠️ Aynı cihazdan eski bağlantı bulundu, kapatılıyor:', existingSocketId);
+            if (client.socket && client.socket.connected) {
+              client.socket.disconnect(true);
+            }
+            this.connectedClients.delete(existingSocketId);
+          }
+        }
+        
         // Zaten güvenilir mi?
         const trusted = this.trustedDevices.find(d => d.id === deviceId);
         if (trusted) {
+          console.log('✅ Güvenilir cihaz otomatik bağlanıyor:', deviceName);
           socket.emit('pair-response', { 
             success: true, 
             message: 'Zaten güvenilir cihaz',
             autoConnected: true 
           });
           this.connectedClients.set(socket.id, { deviceId, deviceName, socket });
+          
+          // Kısayolları hemen gönder
+          console.log('📤 Kısayollar gönderiliyor (otomatik):', this.shortcuts.length, 'adet');
+          socket.emit('shortcuts-update', this.shortcuts);
           return;
         }
         
@@ -162,34 +185,45 @@ class LocalDeskServer extends EventEmitter {
       
       // Kısayol çalıştırma
       socket.on('execute-shortcut', (data) => {
-        console.log('⌨️  Kısayol çalıştırılıyor:', data);
+        console.log('⌨️ Kısayol çalıştırılıyor:', data);
         const { shortcutId, keys, appPath, actionType } = data;
         
         // Cihaz güvenilir mi kontrol et
         const client = this.connectedClients.get(socket.id);
         if (!client) {
+          console.error('❌ Yetkisiz cihaz!');
           socket.emit('error', { message: 'Yetkisiz cihaz' });
           return;
         }
         
         const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
         if (!trusted) {
+          console.error('❌ Güvenilir cihaz değil!');
           socket.emit('error', { message: 'Güvenilir cihaz değil' });
           return;
         }
+        
+        console.log('✅ Cihaz doğrulandı:', client.deviceName);
+        console.log('📋 Eylem:', actionType, '| Keys:', keys, '| AppPath:', appPath);
         
         // Eylem tipine göre çalıştır
         if (actionType === 'keys' || actionType === 'both') {
           // Klavye girdisini gönder
           if (keys && keys.length > 0) {
+            console.log('⌨️ Klavye tuşları gönderiliyor:', keys);
             this.executeKeys(keys);
+          } else {
+            console.warn('⚠️ Keys boş, klavye girdisi atlanıyor');
           }
         }
         
         if (actionType === 'app' || actionType === 'both') {
           // Uygulamayı başlat
           if (appPath) {
+            console.log('🚀 Uygulama başlatılıyor:', appPath);
             this.launchApp(appPath);
+          } else {
+            console.warn('⚠️ AppPath boş, uygulama başlatma atlanıyor');
           }
         }
         
@@ -236,7 +270,8 @@ class LocalDeskServer extends EventEmitter {
           socket: pairing.socket
         });
         
-        // Kısayolları gönder
+        // Kısayolları gönder (Socket.IO ile)
+        console.log('📤 Kısayollar gönderiliyor:', this.shortcuts.length, 'adet');
         pairing.socket.emit('shortcuts-update', this.shortcuts);
       }
       
@@ -257,6 +292,9 @@ class LocalDeskServer extends EventEmitter {
   }
 
   executeKeys(keys) {
+    console.log('🔍 executeKeys çağrıldı, gelen tuşlar:', keys);
+    console.log('🔍 Addon durumu:', this.keyboardAddon ? 'Yüklü ✅' : 'Yüklü değil ❌');
+    
     if (!this.keyboardAddon) {
       console.warn('⚠️  Klavye addon yüklenmedi, simüle edilecek:', keys);
       return;
@@ -264,10 +302,12 @@ class LocalDeskServer extends EventEmitter {
     
     try {
       // C++ addon ile gerçek klavye girdisi
+      console.log('🚀 C++ addon\'a tuşlar gönderiliyor:', keys);
       this.keyboardAddon.sendKeys(keys);
       console.log('✅ Klavye girdisi gönderildi:', keys);
     } catch (error) {
       console.error('❌ Klavye girdisi hatası:', error);
+      console.error('❌ Hata detayı:', error.stack);
     }
   }
 
@@ -282,19 +322,47 @@ class LocalDeskServer extends EventEmitter {
         return;
       }
       
-      // Uygulamayı başlat (detached mode - bağımsız çalışsın)
-      const child = spawn(appPath, [], {
-        detached: true,
-        stdio: 'ignore',
-        shell: false
-      });
+      // Çalışma dizinini belirle (uygulamanın bulunduğu klasör)
+      const workingDir = path.dirname(appPath);
+      console.log('📁 Çalışma dizini:', workingDir);
       
-      // Process'i serbest bırak
-      child.unref();
+      const isWindows = process.platform === 'win32';
       
-      console.log('✅ Uygulama başlatıldı:', appPath);
+      if (isWindows) {
+        // Windows: "start" komutu ile aç (locale sorunlarını çözer)
+        // /B = Yeni pencere açma
+        // "" = Pencere başlığı (boş)
+        const { exec } = require('child_process');
+        const command = `start "" "${appPath}"`;
+        
+        console.log('📝 Komut:', command);
+        
+        exec(command, { cwd: workingDir }, (error, stdout, stderr) => {
+          if (error) {
+            console.error('❌ Uygulama başlatma hatası:', error.message);
+            // stderr genelde Türkçe karakter içerebilir, gösterme
+            return;
+          }
+          console.log('✅ Uygulama başlatıldı (Windows start komutu)');
+        });
+      } else {
+        // Linux/Mac: spawn kullan
+        const child = spawn(appPath, [], {
+          detached: true,
+          stdio: 'ignore',
+          cwd: workingDir
+        });
+        
+        child.on('error', (err) => {
+          console.error('❌ Uygulama başlatma hatası:', err.message);
+        });
+        
+        child.unref();
+        console.log('✅ Uygulama başlatıldı (spawn)');
+      }
+      
     } catch (error) {
-      console.error('❌ Uygulama başlatma hatası:', error);
+      console.error('❌ Uygulama başlatma hatası:', error.message);
     }
   }
 
@@ -305,10 +373,14 @@ class LocalDeskServer extends EventEmitter {
     }
     
     try {
-      this.keyboardAddon = require('./keyboard-addon/build/Release/keyboard');
-      console.log('✅ Klavye addon yüklendi');
+      const addonPath = './keyboard-addon/build/Release/keyboard';
+      console.log('🔍 Addon yükleniyor:', addonPath);
+      this.keyboardAddon = require(addonPath);
+      console.log('✅ Klavye addon başarıyla yüklendi');
+      console.log('✅ sendKeys fonksiyonu:', typeof this.keyboardAddon.sendKeys);
     } catch (error) {
       console.warn('⚠️  Klavye addon yüklenemedi:', error.message);
+      console.error('❌ Hata detayı:', error.stack);
       console.log('   npm run rebuild ile yeniden derlemeyi deneyin');
     }
   }
@@ -429,6 +501,19 @@ class LocalDeskServer extends EventEmitter {
       shortcuts: this.shortcuts.length,
       trustedDevices: this.trustedDevices.length
     };
+  }
+
+  getConnectedClients() {
+    const clients = [];
+    for (const [socketId, client] of this.connectedClients.entries()) {
+      clients.push({
+        socketId,
+        deviceId: client.deviceId,
+        deviceName: client.deviceName,
+        connected: client.socket?.connected || false
+      });
+    }
+    return clients;
   }
 
   async copyIconFile(sourcePath) {

@@ -36,7 +36,8 @@ class DiscoveryService {
       this.udpSocket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
 
       this.udpSocket.on('error', (err) => {
-        console.error('UDP socket hatası:', err);
+        console.error('❌ UDP socket hatası:', err);
+        console.error('   Port zaten kullanımda olabilir veya güvenlik duvarı engelliyor olabilir');
         reject(err);
       });
 
@@ -58,9 +59,11 @@ class DiscoveryService {
             timestamp: Date.now()
           });
           
+          console.log('📤 Discovery yanıtı gönderiliyor:', response);
+          
           this.udpSocket.send(response, rinfo.port, rinfo.address, (err) => {
             if (err) {
-              console.error('UDP yanıt gönderme hatası:', err);
+              console.error('❌ UDP yanıt gönderme hatası:', err);
             } else {
               console.log('✅ Discovery yanıtı gönderildi:', rinfo.address);
             }
@@ -71,13 +74,16 @@ class DiscoveryService {
       this.udpSocket.on('listening', () => {
         const address = this.udpSocket.address();
         console.log(`✅ UDP socket dinliyor: ${address.address}:${address.port}`);
+        console.log('📡 Yerel IP adresleri:', this.getLocalIPAddresses().join(', '));
         
         // Broadcast'i etkinleştir
         this.udpSocket.setBroadcast(true);
+        console.log('✅ UDP broadcast etkinleştirildi');
         
         resolve();
       });
 
+      console.log(`🔌 UDP socket bağlanıyor: 0.0.0.0:${UDP_PORT}`);
       this.udpSocket.bind(UDP_PORT);
     });
   }

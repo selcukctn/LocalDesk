@@ -158,6 +158,16 @@ function renderShortcuts(filter = '') {
             iconHtml = '⌨️';
         }
         
+        // Keys gösterimi - sadece varsa
+        let keysHtml = '';
+        if (shortcut.keys && shortcut.keys.length > 0) {
+            keysHtml = `<div class="shortcut-keys">${shortcut.keys.join(' + ')}</div>`;
+        } else if (shortcut.actionType === 'app' || shortcut.actionType === 'both') {
+            keysHtml = `<div class="shortcut-keys">🚀 Uygulama</div>`;
+        } else {
+            keysHtml = `<div class="shortcut-keys">-</div>`;
+        }
+        
         return `
             <div class="shortcut-card" style="border-left: 4px solid ${shortcut.color}">
                 <div class="shortcut-actions">
@@ -166,7 +176,7 @@ function renderShortcuts(filter = '') {
                 </div>
                 <div class="shortcut-icon">${iconHtml}</div>
                 <div class="shortcut-label">${shortcut.label}</div>
-                <div class="shortcut-keys">${shortcut.keys.join(' + ')}</div>
+                ${keysHtml}
             </div>
         `;
     }).join('');
@@ -216,14 +226,63 @@ async function loadServerInfo() {
         document.getElementById('statusText').textContent = 'Aktif';
         document.getElementById('serverPort').textContent = info.port;
         document.getElementById('activeConnections').textContent = info.connectedClients;
+        document.getElementById('totalShortcuts').textContent = info.shortcuts;
         document.getElementById('deviceNameInput').value = info.deviceName;
         
         // Get IP addresses (simplified - would need backend support)
         document.getElementById('ipAddresses').textContent = 'Lokal ağ';
+        
+        // Aktif bağlantıları da güncelle
+        await loadConnectedClients();
     } catch (error) {
         console.error('Server bilgisi yüklenemedi:', error);
     }
 }
+
+// Load connected clients
+async function loadConnectedClients() {
+    try {
+        const clients = await window.electronAPI.getConnectedClients();
+        renderConnectedClients(clients);
+    } catch (error) {
+        console.error('Bağlı cihazlar yüklenemedi:', error);
+    }
+}
+
+// Render connected clients
+function renderConnectedClients(clients) {
+    const list = document.getElementById('activeConnectionsList');
+    
+    if (!clients || clients.length === 0) {
+        list.innerHTML = `
+            <div class="empty-state">
+                <p>Aktif bağlantı yok</p>
+                <small>Mobil cihazdan bağlan</small>
+            </div>
+        `;
+        return;
+    }
+    
+    list.innerHTML = clients.map(client => `
+        <div class="device-card ${client.connected ? 'connected' : 'disconnected'}">
+            <div class="device-info">
+                <h3>📱 ${client.deviceName}</h3>
+                <p>ID: ${client.deviceId.substring(0, 16)}...</p>
+                <small>Socket: ${client.socketId.substring(0, 8)}...</small>
+            </div>
+            <div class="connection-status">
+                <span class="status-badge ${client.connected ? 'online' : 'offline'}">
+                    ${client.connected ? '🟢 Bağlı' : '🔴 Bağlantı Kesildi'}
+                </span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Otomatik server info güncellemesi
+setInterval(async () => {
+    await loadServerInfo();
+}, 3000); // Her 3 saniyede bir güncelle
 
 // Shortcut Modal
 function openShortcutModal(shortcut = null) {

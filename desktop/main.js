@@ -82,6 +82,10 @@ ipcMain.handle('get-server-info', async () => {
   return server.getServerInfo();
 });
 
+ipcMain.handle('get-connected-clients', async () => {
+  return server.getConnectedClients();
+});
+
 // Pairing isteklerini UI'a ilet
 server.on('pairing-request', (deviceInfo) => {
   if (mainWindow) {

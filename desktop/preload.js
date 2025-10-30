@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Server info
   getServerInfo: () => ipcRenderer.invoke('get-server-info'),
+  getConnectedClients: () => ipcRenderer.invoke('get-connected-clients'),
   
   // Pairing
   onPairingRequest: (callback) => {

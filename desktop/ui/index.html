@@ -54,7 +54,17 @@
             <!-- Devices Tab -->
             <div class="tab-pane" id="devices-tab">
                 <div class="section">
-                    <h2>Güvenilir Cihazlar</h2>
+                    <h2>🔗 Aktif Bağlantılar</h2>
+                    <div class="devices-list" id="activeConnectionsList">
+                        <div class="empty-state">
+                            <p>Aktif bağlantı yok</p>
+                            <small>Mobil cihazdan bağlan</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>✅ Güvenilir Cihazlar</h2>
                     <div class="devices-list" id="trustedDevicesList">
                         <div class="empty-state">
                             <p>Henüz güvenilir cihaz yok</p>
@@ -64,7 +74,7 @@
                 </div>
 
                 <div class="section">
-                    <h2>Bağlantı Bilgileri</h2>
+                    <h2>📡 Bağlantı Bilgileri</h2>
                     <div class="connection-info">
                         <div class="info-row">
                             <span class="label">IP Adresleri:</span>
@@ -73,6 +83,10 @@
                         <div class="info-row">
                             <span class="label">Port:</span>
                             <span class="value" id="serverPort">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Toplam Kısayol:</span>
+                            <span class="value" id="totalShortcuts">0</span>
                         </div>
                         <div class="info-row">
                             <span class="label">Aktif Bağlantılar:</span>

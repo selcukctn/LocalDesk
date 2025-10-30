@@ -49,11 +49,14 @@ const ShortcutButton = ({ shortcut, onPress, disabled }) => {
     }
   };
 
+  // Güvenli keys kontrolü
+  const keys = shortcut?.keys || [];
+
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        { borderLeftColor: shortcut.color || '#1F6FEB' },
+        { borderLeftColor: shortcut?.color || '#1F6FEB' },
         disabled && styles.buttonDisabled
       ]}
       onPress={handlePress}
@@ -61,20 +64,22 @@ const ShortcutButton = ({ shortcut, onPress, disabled }) => {
       disabled={disabled}
     >
       <View style={styles.buttonContent}>
-        <Text style={styles.icon}>{shortcut.icon || '⌨️'}</Text>
+        <Text style={styles.icon}>{shortcut?.icon || '⌨️'}</Text>
         <Text style={styles.label} numberOfLines={2}>
-          {shortcut.label}
+          {shortcut?.label || 'Kısayol'}
         </Text>
-        <View style={styles.keysContainer}>
-          {shortcut.keys.map((key, index) => (
-            <React.Fragment key={index}>
-              <Text style={styles.key}>{key}</Text>
-              {index < shortcut.keys.length - 1 && (
-                <Text style={styles.keySeparator}>+</Text>
-              )}
-            </React.Fragment>
-          ))}
-        </View>
+        {keys.length > 0 && (
+          <View style={styles.keysContainer}>
+            {keys.map((key, index) => (
+              <React.Fragment key={index}>
+                <Text style={styles.key}>{key}</Text>
+                {index < keys.length - 1 && (
+                  <Text style={styles.keySeparator}>+</Text>
+                )}
+              </React.Fragment>
+            ))}
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
