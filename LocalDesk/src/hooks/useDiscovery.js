@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import dgram from 'react-native-udp';
 import Zeroconf from 'react-native-zeroconf';
+import { Buffer } from 'buffer';
 
 const UDP_PORT = 45454;
 const DISCOVER_REQUEST = 'LOCALDESK_DISCOVER_REQUEST';
