@@ -8,33 +8,8 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-left">
-                <h1>🎮 Local Desk</h1>
-                <span class="subtitle">Desktop Controller</span>
-            </div>
-            <div class="header-right">
-                <div class="status-badge">
-                    <span class="status-dot"></span>
-                    <span id="statusText">Bağlantı Bekleniyor</span>
-                </div>
-                <div class="server-info">
-                    <span id="deviceName">-</span> | 
-                    <span id="deviceId">-</span>
-                </div>
-            </div>
-        </header>
-
-        <!-- Tab Navigation -->
-        <nav class="tab-nav">
-            <button class="tab-btn active" data-tab="shortcuts">⌨️ Kısayollar</button>
-            <button class="tab-btn" data-tab="devices">📱 Bağlı Cihazlar</button>
-            <button class="tab-btn" data-tab="settings">⚙️ Ayarlar</button>
-        </nav>
-
-        <!-- Tab Content -->
-        <main class="tab-content">
+        <!-- Main Content Area -->
+        <main class="main-content">
             <!-- Shortcuts Tab -->
             <div class="tab-pane active" id="shortcuts-tab">
                 <!-- Sayfa Seçici -->
@@ -46,9 +21,6 @@
                     <button class="btn btn-primary" id="addShortcutBtn">
                         ➕ Yeni Kısayol Ekle
                     </button>
-                    <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="🔍 Kısayol ara...">
-                    </div>
                 </div>
 
                 <div class="shortcuts-grid" id="shortcutsGrid">
@@ -128,6 +100,45 @@
                 </div>
             </div>
         </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar">
+            <!-- Header Info -->
+            <div class="sidebar-header">
+                <h1>🎮 Local Desk</h1>
+                <span class="subtitle">Desktop Controller</span>
+            </div>
+
+            <!-- Status Info -->
+            <div class="sidebar-status">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Bağlantı Bekleniyor</span>
+                </div>
+                <div class="server-info">
+                    <span id="deviceName">-</span>
+                </div>
+                <div class="server-info">
+                    <span id="deviceId">-</span>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <nav class="sidebar-nav">
+                <button class="tab-btn active" data-tab="shortcuts">
+                    <span class="tab-icon">⌨️</span>
+                    <span class="tab-label">Kısayollar</span>
+                </button>
+                <button class="tab-btn" data-tab="devices">
+                    <span class="tab-icon">📱</span>
+                    <span class="tab-label">Bağlı Cihazlar</span>
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Ayarlar</span>
+                </button>
+            </nav>
+        </aside>
     </div>
 
     <!-- Shortcut Modal -->

@@ -16,7 +16,8 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     title: 'Local Desk - Desktop Controller',
-    backgroundColor: '#1e1e1e'
+    backgroundColor: '#1e1e1e',
+    autoHideMenuBar: true // Menü barını gizle
   });
 
   mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));

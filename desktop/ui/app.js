@@ -100,9 +100,6 @@ function setupEventListeners() {
     document.getElementById('approvePairingBtn').addEventListener('click', () => approvePairing(true));
     document.getElementById('rejectPairingBtn').addEventListener('click', () => approvePairing(false));
     
-    // Search
-    document.getElementById('searchInput').addEventListener('input', handleSearch);
-    
     // Device name save
     document.getElementById('saveDeviceNameBtn').addEventListener('click', saveDeviceName);
     
@@ -178,11 +175,17 @@ function renderPages() {
     if (!pagesContainer) return;
     
     pagesContainer.innerHTML = pages.map(page => `
-        <button class="page-tab ${page.id === currentPageId ? 'active' : ''}" 
-                data-page-id="${page.id}"
-                onclick="selectPage('${page.id}')">
-            ${page.name}
-        </button>
+        <div class="page-tab-wrapper">
+            <button class="page-tab ${page.id === currentPageId ? 'active' : ''}" 
+                    data-page-id="${page.id}"
+                    onclick="selectPage('${page.id}')">
+                ${page.name}
+            </button>
+            <div class="page-actions">
+                <button class="page-action-btn" onclick="renamePage('${page.id}')" title="Düzenle">✏️</button>
+                <button class="page-action-btn" onclick="deletePage('${page.id}')" title="Sil">🗑️</button>
+            </div>
+        </div>
     `).join('') + `
         <button class="page-tab page-add" onclick="addNewPage()">
             + Yeni Sayfa
@@ -212,6 +215,11 @@ function openPageModal() {
     document.getElementById('pageForm').reset();
     hidePageIconPreview();
     pageModal.classList.add('active');
+    
+    // Modal açıldıktan sonra ilk input'a focus yap
+    setTimeout(() => {
+        document.getElementById('pageNameInput').focus();
+    }, 100);
 }
 
 function closePageModal() {
@@ -306,12 +314,8 @@ async function loadShortcuts() {
     await loadPages();
 }
 
-function renderShortcuts(filter = '') {
-    const filtered = shortcuts.filter(s => 
-        s.label.toLowerCase().includes(filter.toLowerCase())
-    );
-    
-    if (filtered.length === 0) {
+function renderShortcuts() {
+    if (shortcuts.length === 0) {
         shortcutsGrid.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
                 <p>Kısayol bulunamadı</p>
@@ -320,7 +324,7 @@ function renderShortcuts(filter = '') {
         return;
     }
     
-    shortcutsGrid.innerHTML = filtered.map(shortcut => {
+    shortcutsGrid.innerHTML = shortcuts.map(shortcut => {
         // İkon gösterimi - emoji mi dosya mı?
         let iconHtml;
         if (shortcut.icon && shortcut.icon.length <= 4) {
@@ -503,6 +507,13 @@ function openShortcutModal(shortcut = null) {
     }
     
     shortcutModal.classList.add('active');
+    
+    // Modal açıldıktan sonra ilk input'a focus yap (hem yeni hem düzenle için)
+    setTimeout(() => {
+        const labelInput = document.getElementById('labelInput');
+        labelInput.focus();
+        labelInput.select(); // Düzenlerken tüm metni seç
+    }, 100);
 }
 
 function closeShortcutModal() {
@@ -634,11 +645,6 @@ async function removeTrustedDevice(deviceId) {
     await loadTrustedDevices();
 }
 
-// Search
-function handleSearch(e) {
-    const query = e.target.value;
-    renderShortcuts(query);
-}
 
 // Action type change handler
 function handleActionTypeChange(e) {
