@@ -6,6 +6,7 @@ let recordingKeys = false;
 let recordedKeys = [];
 let currentPairingRequest = null;
 let selectedIcon = null; // İkon dosya adı veya emoji
+let selectedAppPath = null; // Başlatılacak uygulama yolu
 
 // DOM Elements
 const shortcutsGrid = document.getElementById('shortcutsGrid');
@@ -72,6 +73,14 @@ function setupEventListeners() {
         } else {
             hideIconPreview();
         }
+    });
+    
+    // App selection
+    document.getElementById('selectAppBtn').addEventListener('click', selectAppFile);
+    
+    // Action type değişikliği
+    document.querySelectorAll('input[name="actionType"]').forEach(radio => {
+        radio.addEventListener('change', handleActionTypeChange);
     });
     
     // Pairing buttons
@@ -220,15 +229,29 @@ async function loadServerInfo() {
 function openShortcutModal(shortcut = null) {
     editingShortcutId = shortcut?.id || null;
     selectedIcon = null;
+    selectedAppPath = null;
     
     if (shortcut) {
         document.getElementById('modalTitle').textContent = 'Kısayolu Düzenle';
         document.getElementById('labelInput').value = shortcut.label;
-        document.getElementById('keysDisplay').value = shortcut.keys.join(' + ');
+        document.getElementById('keysDisplay').value = (shortcut.keys || []).join(' + ');
         document.getElementById('colorInput').value = shortcut.color;
         document.getElementById('iconInput').value = shortcut.icon || '';
         selectedIcon = shortcut.icon || null;
-        recordedKeys = [...shortcut.keys];
+        recordedKeys = shortcut.keys ? [...shortcut.keys] : [];
+        
+        // Action type
+        const actionType = shortcut.actionType || 'keys';
+        document.querySelector(`input[name="actionType"][value="${actionType}"]`).checked = true;
+        
+        // App path
+        if (shortcut.appPath) {
+            selectedAppPath = shortcut.appPath;
+            document.getElementById('appPathInput').value = shortcut.appPath;
+        }
+        
+        // Grupları göster/gizle
+        handleActionTypeChange({ target: document.querySelector(`input[name="actionType"][value="${actionType}"]`) });
         
         // İkon önizleme
         if (shortcut.icon) {
@@ -238,6 +261,9 @@ function openShortcutModal(shortcut = null) {
         document.getElementById('modalTitle').textContent = 'Yeni Kısayol Ekle';
         shortcutForm.reset();
         recordedKeys = [];
+        document.querySelector('input[name="actionType"][value="keys"]').checked = true;
+        document.getElementById('keysGroup').style.display = 'block';
+        document.getElementById('appGroup').style.display = 'none';
         hideIconPreview();
     }
     
@@ -250,6 +276,7 @@ function closeShortcutModal() {
     recordedKeys = [];
     recordingKeys = false;
     selectedIcon = null;
+    selectedAppPath = null;
     hideIconPreview();
 }
 
@@ -259,19 +286,34 @@ async function handleShortcutSubmit(e) {
     const label = document.getElementById('labelInput').value;
     const keys = recordedKeys;
     const color = document.getElementById('colorInput').value;
-    const icon = selectedIcon || ''; // selectedIcon kullan
+    const icon = selectedIcon || '';
+    const actionType = document.querySelector('input[name="actionType"]:checked').value;
+    const appPath = selectedAppPath || '';
     
-    if (keys.length === 0) {
+    // Validasyon
+    if (actionType === 'keys' && keys.length === 0) {
         alert('Lütfen en az bir tuş seçin');
+        return;
+    }
+    
+    if (actionType === 'app' && !appPath) {
+        alert('Lütfen bir uygulama seçin');
+        return;
+    }
+    
+    if (actionType === 'both' && (keys.length === 0 || !appPath)) {
+        alert('Lütfen hem tuşları hem de uygulamayı seçin');
         return;
     }
     
     const shortcut = {
         id: editingShortcutId || Date.now(),
         label,
-        keys,
+        keys: keys.length > 0 ? keys : undefined,
         color,
-        icon
+        icon,
+        actionType,
+        appPath: appPath || undefined
     };
     
     if (editingShortcutId) {
@@ -365,6 +407,43 @@ async function removeTrustedDevice(deviceId) {
 function handleSearch(e) {
     const query = e.target.value;
     renderShortcuts(query);
+}
+
+// Action type change handler
+function handleActionTypeChange(e) {
+    const actionType = e.target.value;
+    const keysGroup = document.getElementById('keysGroup');
+    const appGroup = document.getElementById('appGroup');
+    
+    if (actionType === 'keys') {
+        keysGroup.style.display = 'block';
+        appGroup.style.display = 'none';
+    } else if (actionType === 'app') {
+        keysGroup.style.display = 'none';
+        appGroup.style.display = 'block';
+    } else if (actionType === 'both') {
+        keysGroup.style.display = 'block';
+        appGroup.style.display = 'block';
+    }
+}
+
+// App selection
+async function selectAppFile() {
+    try {
+        const result = await window.electronAPI.selectApp();
+        
+        if (result.canceled) {
+            return;
+        }
+        
+        selectedAppPath = result.appPath;
+        document.getElementById('appPathInput').value = result.appPath;
+        
+        console.log('✅ Uygulama seçildi:', result.appPath);
+    } catch (error) {
+        console.error('Uygulama seçimi hatası:', error);
+        alert('Uygulama seçilirken hata oluştu');
+    }
 }
 
 // Icon selection

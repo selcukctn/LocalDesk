@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   approvePairing: (deviceId, approved) => ipcRenderer.invoke('approve-pairing', deviceId, approved),
   
   // İkon seçimi
-  selectIcon: () => ipcRenderer.invoke('select-icon')
+  selectIcon: () => ipcRenderer.invoke('select-icon'),
+  
+  // Uygulama seçimi
+  selectApp: () => ipcRenderer.invoke('select-app')
 });
 

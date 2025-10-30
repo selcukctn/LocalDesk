@@ -1,5 +1,5 @@
 const dgram = require('dgram');
-const Bonjour = require('bonjour-service');
+const { Bonjour } = require('bonjour-service');
 
 const UDP_PORT = 45454;
 const DISCOVER_REQUEST = 'LOCALDESK_DISCOVER_REQUEST';

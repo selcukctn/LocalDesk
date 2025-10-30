@@ -126,12 +126,39 @@
                     </div>
 
                     <div class="form-group">
+                        <label>Eylem Tipi</label>
+                        <div class="action-type-wrapper">
+                            <label class="radio-label">
+                                <input type="radio" name="actionType" value="keys" checked>
+                                <span>⌨️ Klavye Kısayolu</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="actionType" value="app">
+                                <span>🚀 Uygulama Başlat</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="actionType" value="both">
+                                <span>🔗 Her İkisi</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="keysGroup">
                         <label>Tuşlar</label>
                         <div class="keys-input-wrapper">
                             <input type="text" id="keysDisplay" placeholder="Tuşlara basın..." readonly>
                             <button type="button" class="btn btn-secondary" id="recordKeysBtn">🎹 Tuşları Kaydet</button>
                         </div>
                         <small>Örn: Ctrl + Alt + O</small>
+                    </div>
+
+                    <div class="form-group" id="appGroup" style="display: none;">
+                        <label>Uygulama (.exe)</label>
+                        <div class="icon-input-wrapper">
+                            <input type="text" id="appPathInput" placeholder="C:\Program Files\OBS\obs64.exe" readonly>
+                            <button type="button" class="btn btn-secondary" id="selectAppBtn">📂 Uygulama Seç</button>
+                        </div>
+                        <small>Başlatılacak uygulamanın .exe dosyasını seçin</small>
                     </div>
 
                     <div class="form-group">
