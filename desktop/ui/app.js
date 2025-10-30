@@ -11,6 +11,8 @@ let selectedIcon = null; // İkon dosya adı veya emoji
 let selectedAppPath = null; // Başlatılacak uygulama yolu
 let pageModal = null;
 let selectedPageIcon = null; // Sayfa için ikon
+let confirmModal = null;
+let confirmResolve = null; // Promise resolver for confirm
 
 // DOM Elements
 const shortcutsGrid = document.getElementById('shortcutsGrid');
@@ -114,6 +116,9 @@ function setupEventListeners() {
         if (e.target === pageModal) {
             closePageModal();
         }
+        if (e.target === confirmModal) {
+            handleConfirmResponse(false);
+        }
     });
     
     // Keyboard shortcuts for recording
@@ -135,6 +140,14 @@ function setupEventListeners() {
             hidePageIconPreview();
         }
     });
+
+    // Confirm modal handlers
+    confirmModal = document.getElementById('confirmModal');
+    const confirmOkBtn = document.getElementById('confirmOkBtn');
+    const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    
+    if (confirmOkBtn) confirmOkBtn.addEventListener('click', () => handleConfirmResponse(true));
+    if (confirmCancelBtn) confirmCancelBtn.addEventListener('click', () => handleConfirmResponse(false));
 }
 
 function switchTab(tabName) {
@@ -174,6 +187,8 @@ function renderPages() {
     const pagesContainer = document.getElementById('pagesSelector');
     if (!pagesContainer) return;
     
+    const canDelete = pages.length > 1; // Tek sayfa kalırsa silinemez
+    
     pagesContainer.innerHTML = pages.map(page => `
         <div class="page-tab-wrapper">
             <button class="page-tab ${page.id === currentPageId ? 'active' : ''}" 
@@ -183,7 +198,7 @@ function renderPages() {
             </button>
             <div class="page-actions">
                 <button class="page-action-btn" onclick="event.stopPropagation(); startEditPageName('${page.id}')" title="Düzenle">✏️</button>
-                <button class="page-action-btn" onclick="event.stopPropagation(); deletePage('${page.id}')" title="Sil">🗑️</button>
+                ${canDelete ? `<button class="page-action-btn" onclick="event.stopPropagation(); deletePage('${page.id}')" title="Sil">🗑️</button>` : ''}
             </div>
         </div>
     `).join('') + `
@@ -217,9 +232,14 @@ function openPageModal() {
     pageModal.classList.add('active');
     
     // Modal açıldıktan sonra ilk input'a focus yap
-    setTimeout(() => {
-        document.getElementById('pageNameInput').focus();
-    }, 100);
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            const pageNameInput = document.getElementById('pageNameInput');
+            if (pageNameInput) {
+                pageNameInput.focus();
+            }
+        });
+    });
 }
 
 function closePageModal() {
@@ -253,7 +273,7 @@ async function selectPageIconFile() {
         console.log('✅ Sayfa ikonu seçildi:', result.iconPath);
     } catch (error) {
         console.error('Sayfa ikonu seçimi hatası:', error);
-        alert('İkon seçilirken hata oluştu');
+        await showAlert('Hata', 'İkon seçilirken hata oluştu', '❌');
     }
 }
 
@@ -344,11 +364,17 @@ async function savePageName(pageId, newName) {
 // Delete page
 async function deletePage(pageId) {
     if (pages.length <= 1) {
-        alert('Son sayfa silinemez!');
+        await showAlert('Uyarı', 'Son sayfa silinemez!', '⚠️');
         return;
     }
     
-    if (!confirm('Bu sayfayı silmek istediğinizden emin misiniz?')) {
+    const confirmed = await showConfirm(
+        'Sayfayı Sil', 
+        'Bu sayfayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', 
+        '🗑️'
+    );
+    
+    if (!confirmed) {
         return;
     }
     
@@ -556,11 +582,16 @@ function openShortcutModal(shortcut = null) {
     shortcutModal.classList.add('active');
     
     // Modal açıldıktan sonra ilk input'a focus yap (hem yeni hem düzenle için)
-    setTimeout(() => {
-        const labelInput = document.getElementById('labelInput');
-        labelInput.focus();
-        labelInput.select(); // Düzenlerken tüm metni seç
-    }, 100);
+    // requestAnimationFrame kullanarak DOM güncellemesinin tamamlanmasını bekle
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            const labelInput = document.getElementById('labelInput');
+            if (labelInput) {
+                labelInput.focus();
+                labelInput.select(); // Düzenlerken tüm metni seç
+            }
+        });
+    });
 }
 
 function closeShortcutModal() {
@@ -585,17 +616,17 @@ async function handleShortcutSubmit(e) {
     
     // Validasyon
     if (actionType === 'keys' && keys.length === 0) {
-        alert('Lütfen en az bir tuş seçin');
+        await showAlert('Eksik Bilgi', 'Lütfen en az bir tuş seçin', '⚠️');
         return;
     }
     
     if (actionType === 'app' && !appPath) {
-        alert('Lütfen bir uygulama seçin');
+        await showAlert('Eksik Bilgi', 'Lütfen bir uygulama seçin', '⚠️');
         return;
     }
     
     if (actionType === 'both' && (keys.length === 0 || !appPath)) {
-        alert('Lütfen hem tuşları hem de uygulamayı seçin');
+        await showAlert('Eksik Bilgi', 'Lütfen hem tuşları hem de uygulamayı seçin', '⚠️');
         return;
     }
     
@@ -674,7 +705,13 @@ function editShortcut(id) {
 }
 
 async function deleteShortcut(id) {
-    if (!confirm('Bu kısayolu silmek istediğinizden emin misiniz?')) {
+    const confirmed = await showConfirm(
+        'Kısayolu Sil', 
+        'Bu kısayolu silmek istediğinizden emin misiniz?', 
+        '🗑️'
+    );
+    
+    if (!confirmed) {
         return;
     }
     
@@ -684,7 +721,13 @@ async function deleteShortcut(id) {
 
 // Device actions
 async function removeTrustedDevice(deviceId) {
-    if (!confirm('Bu cihazı güvenilir listesinden kaldırmak istediğinizden emin misiniz?')) {
+    const confirmed = await showConfirm(
+        'Cihazı Kaldır', 
+        'Bu cihazı güvenilir listesinden kaldırmak istediğinizden emin misiniz?', 
+        '📱'
+    );
+    
+    if (!confirmed) {
         return;
     }
     
@@ -726,7 +769,7 @@ async function selectAppFile() {
         console.log('✅ Uygulama seçildi:', result.appPath);
     } catch (error) {
         console.error('Uygulama seçimi hatası:', error);
-        alert('Uygulama seçilirken hata oluştu');
+        await showAlert('Hata', 'Uygulama seçilirken hata oluştu', '❌');
     }
 }
 
@@ -746,7 +789,7 @@ async function selectIconFile() {
         console.log('✅ İkon seçildi:', result.iconPath);
     } catch (error) {
         console.error('İkon seçimi hatası:', error);
-        alert('İkon seçilirken hata oluştu');
+        await showAlert('Hata', 'İkon seçilirken hata oluştu', '❌');
     }
 }
 
@@ -784,7 +827,7 @@ function hideIconPreview() {
 async function saveDeviceName() {
     const name = document.getElementById('deviceNameInput').value;
     // Would need backend implementation
-    alert('Cihaz adı kaydedildi: ' + name);
+    await showAlert('Başarılı', `Cihaz adı kaydedildi: ${name}`, '✅');
 }
 
 // Pairing
@@ -804,6 +847,82 @@ async function approvePairing(approved) {
         if (approved) {
             await loadTrustedDevices();
         }
+    }
+}
+
+// Custom Confirm Dialog
+function showConfirm(title, message, icon = '⚠️') {
+    return new Promise((resolve) => {
+        confirmResolve = resolve;
+        
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        document.getElementById('confirmIcon').textContent = icon;
+        
+        // Buton metnini dinamik yapma
+        const okBtn = document.getElementById('confirmOkBtn');
+        if (title.includes('Sil')) {
+            okBtn.textContent = 'Evet, Sil';
+            okBtn.className = 'btn btn-danger';
+        } else {
+            okBtn.textContent = 'Evet';
+            okBtn.className = 'btn btn-primary';
+        }
+        
+        confirmModal.classList.add('active');
+        
+        // ESC tuşu ile iptal
+        const escHandler = (e) => {
+            if (e.key === 'Escape' && confirmModal.classList.contains('active')) {
+                handleConfirmResponse(false);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    });
+}
+
+// Custom Alert Dialog (sadece bilgilendirme için)
+function showAlert(title, message, icon = 'ℹ️') {
+    return new Promise((resolve) => {
+        confirmResolve = resolve;
+        
+        document.getElementById('confirmTitle').textContent = title;
+        document.getElementById('confirmMessage').textContent = message;
+        document.getElementById('confirmIcon').textContent = icon;
+        
+        // Alert için sadece Tamam butonu göster
+        const okBtn = document.getElementById('confirmOkBtn');
+        okBtn.textContent = 'Tamam';
+        okBtn.className = 'btn btn-primary';
+        
+        // İptal butonunu gizle
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        cancelBtn.style.display = 'none';
+        
+        confirmModal.classList.add('active');
+        
+        // ESC tuşu ile kapat
+        const escHandler = (e) => {
+            if (e.key === 'Escape' && confirmModal.classList.contains('active')) {
+                handleConfirmResponse(true);
+                document.removeEventListener('keydown', escHandler);
+            }
+        };
+        document.addEventListener('keydown', escHandler);
+    });
+}
+
+function handleConfirmResponse(result) {
+    confirmModal.classList.remove('active');
+    
+    // İptal butonunu tekrar göster (alert'ten sonra)
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+    cancelBtn.style.display = '';
+    
+    if (confirmResolve) {
+        confirmResolve(result);
+        confirmResolve = null;
     }
 }
 
