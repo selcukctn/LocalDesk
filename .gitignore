@@ -1,0 +1,55 @@
+# Node modules
+node_modules/
+*/node_modules/
+
+# Build outputs
+build/
+dist/
+*.exe
+*.dmg
+*.app
+
+# C++ build artifacts
+*.o
+*.obj
+*.node
+*.so
+*.dll
+*.dylib
+desktop/server/keyboard-addon/build/
+
+# Data files (user-specific)
+desktop/server/data/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# React Native
+LocalDesk/.bundle/
+LocalDesk/android/app/build/
+LocalDesk/android/.gradle/
+LocalDesk/ios/Pods/
+LocalDesk/ios/build/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Environment variables
+.env
+.env.local
+

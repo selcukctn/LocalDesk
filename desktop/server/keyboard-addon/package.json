@@ -1,0 +1,14 @@
+{
+  "name": "keyboard-addon",
+  "version": "1.0.0",
+  "description": "Windows SendInput C++ Addon for Local Desk",
+  "main": "index.js",
+  "gypfile": true,
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0"
+  }
+}
+

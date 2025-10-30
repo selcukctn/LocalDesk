@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Desk - Desktop Controller</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <h1>🎮 Local Desk</h1>
+                <span class="subtitle">Desktop Controller</span>
+            </div>
+            <div class="header-right">
+                <div class="status-badge">
+                    <span class="status-dot"></span>
+                    <span id="statusText">Bağlantı Bekleniyor</span>
+                </div>
+                <div class="server-info">
+                    <span id="deviceName">-</span> | 
+                    <span id="deviceId">-</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-nav">
+            <button class="tab-btn active" data-tab="shortcuts">⌨️ Kısayollar</button>
+            <button class="tab-btn" data-tab="devices">📱 Bağlı Cihazlar</button>
+            <button class="tab-btn" data-tab="settings">⚙️ Ayarlar</button>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+            <!-- Shortcuts Tab -->
+            <div class="tab-pane active" id="shortcuts-tab">
+                <div class="toolbar">
+                    <button class="btn btn-primary" id="addShortcutBtn">
+                        ➕ Yeni Kısayol Ekle
+                    </button>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="🔍 Kısayol ara...">
+                    </div>
+                </div>
+
+                <div class="shortcuts-grid" id="shortcutsGrid">
+                    <!-- Shortcuts will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Devices Tab -->
+            <div class="tab-pane" id="devices-tab">
+                <div class="section">
+                    <h2>Güvenilir Cihazlar</h2>
+                    <div class="devices-list" id="trustedDevicesList">
+                        <div class="empty-state">
+                            <p>Henüz güvenilir cihaz yok</p>
+                            <small>Mobil uygulamadan bağlanarak cihaz ekleyebilirsiniz</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Bağlantı Bilgileri</h2>
+                    <div class="connection-info">
+                        <div class="info-row">
+                            <span class="label">IP Adresleri:</span>
+                            <span class="value" id="ipAddresses">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Port:</span>
+                            <span class="value" id="serverPort">-</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Aktif Bağlantılar:</span>
+                            <span class="value" id="activeConnections">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-pane" id="settings-tab">
+                <div class="section">
+                    <h2>Genel Ayarlar</h2>
+                    <div class="settings-group">
+                        <label>
+                            <input type="text" id="deviceNameInput" placeholder="Cihaz Adı">
+                            <span>Cihaz Adı</span>
+                        </label>
+                        <button class="btn btn-secondary" id="saveDeviceNameBtn">Kaydet</button>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Hakkında</h2>
+                    <div class="about-info">
+                        <p><strong>Local Desk Desktop</strong></p>
+                        <p>Versiyon: 1.0.0</p>
+                        <p>Stream Deck benzeri klavye kısayol kontrolcüsü</p>
+                        <p style="margin-top: 20px;">
+                            <small>Mobil uygulama ile lokal ağda bağlanarak<br>
+                            masaüstü bilgisayarınıza klavye kısayolları gönderebilirsiniz.</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Shortcut Modal -->
+    <div class="modal" id="shortcutModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Yeni Kısayol Ekle</h2>
+                <button class="close-btn" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="shortcutForm">
+                    <div class="form-group">
+                        <label>Etiket</label>
+                        <input type="text" id="labelInput" placeholder="Örn: OBS Başlat" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tuşlar</label>
+                        <div class="keys-input-wrapper">
+                            <input type="text" id="keysDisplay" placeholder="Tuşlara basın..." readonly>
+                            <button type="button" class="btn btn-secondary" id="recordKeysBtn">🎹 Tuşları Kaydet</button>
+                        </div>
+                        <small>Örn: Ctrl + Alt + O</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Renk</label>
+                        <input type="color" id="colorInput" value="#1F6FEB">
+                    </div>
+
+                    <div class="form-group">
+                        <label>İkon (İsteğe bağlı)</label>
+                        <input type="text" id="iconInput" placeholder="icon.png">
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelBtn">İptal</button>
+                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pairing Request Modal -->
+    <div class="modal" id="pairingModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔐 Bağlantı İsteği</h2>
+            </div>
+            <div class="modal-body">
+                <p>Aşağıdaki cihaz bağlanmak istiyor:</p>
+                <div class="pairing-device-info">
+                    <div class="device-icon">📱</div>
+                    <div class="device-details">
+                        <h3 id="pairingDeviceName">-</h3>
+                        <p id="pairingDeviceId">-</p>
+                    </div>
+                </div>
+                <p style="margin-top: 20px;">Bu cihazı güvenilir cihazlar listesine eklemek istiyor musunuz?</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" id="rejectPairingBtn">Reddet</button>
+                    <button type="button" class="btn btn-success" id="approvePairingBtn">Onayla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
