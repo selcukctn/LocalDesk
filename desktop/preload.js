@@ -4,7 +4,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // Sayfalar yönetimi
   getPages: () => ipcRenderer.invoke('get-pages'),
-  addPage: (name) => ipcRenderer.invoke('add-page', name),
+  addPage: (name, icon) => ipcRenderer.invoke('add-page', name, icon),
   updatePageName: (pageId, newName) => ipcRenderer.invoke('update-page-name', pageId, newName),
   deletePage: (pageId) => ipcRenderer.invoke('delete-page', pageId),
   addShortcutToPage: (pageId, shortcut) => ipcRenderer.invoke('add-shortcut-to-page', pageId, shortcut),

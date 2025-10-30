@@ -67,8 +67,8 @@ ipcMain.handle('get-pages', async () => {
   return server.getPages();
 });
 
-ipcMain.handle('add-page', async (event, name) => {
-  return server.addPage(name);
+ipcMain.handle('add-page', async (event, name, icon) => {
+  return server.addPage(name, icon);
 });
 
 ipcMain.handle('update-page-name', async (event, pageId, newName) => {

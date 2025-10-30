@@ -607,10 +607,11 @@ class LocalDeskServer extends EventEmitter {
   }
 
   // Sayfa yönetimi metodları
-  async addPage(name) {
+  async addPage(name, icon) {
     const newPage = {
       id: 'page-' + Date.now(),
       name: name || 'Yeni Sayfa',
+      icon: icon || undefined,
       shortcuts: []
     };
     this.pages.push(newPage);

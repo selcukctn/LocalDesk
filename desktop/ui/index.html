@@ -229,6 +229,40 @@
         </div>
     </div>
 
+    <!-- New Page Modal -->
+    <div class="modal" id="pageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Yeni Sayfa</h2>
+                <button class="close-btn" id="closePageModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="pageForm">
+                    <div class="form-group">
+                        <label>Sayfa Adı</label>
+                        <input type="text" id="pageNameInput" placeholder="Örn: Multimedya" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Sayfa İkonu (İsteğe bağlı)</label>
+                        <div class="icon-input-wrapper">
+                            <input type="text" id="pageIconInput" placeholder="icon.png veya emoji 📄">
+                            <button type="button" class="btn btn-secondary" id="selectPageIconBtn">📁 Dosya Seç</button>
+                            <button type="button" class="btn btn-secondary" id="usePageEmojiBtn">😊 Emoji Kullan</button>
+                        </div>
+                        <small>Dosya seçin veya direkt emoji yazın</small>
+                        <div id="pageIconPreview" class="icon-preview"></div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelPageBtn">İptal</button>
+                        <button type="submit" class="btn btn-primary">Oluştur</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

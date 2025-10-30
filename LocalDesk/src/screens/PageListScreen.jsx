@@ -5,7 +5,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  StatusBar
+  StatusBar,
+  Image
 } from 'react-native';
 
 export const PageListScreen = ({
@@ -90,7 +91,19 @@ export const PageListScreen = ({
                 activeOpacity={0.7}
               >
                 <View style={styles.pageCardLeft}>
-                  <Text style={styles.pageIcon}>📄</Text>
+                  {page.icon ? (
+                    page.icon.length <= 4 ? (
+                      <Text style={styles.pageIcon}>{page.icon}</Text>
+                    ) : (
+                      <Image
+                        source={{ uri: `http://${device.host}:${device.port}/icons/${page.icon}` }}
+                        style={styles.pageIconImage}
+                        resizeMode="contain"
+                      />
+                    )
+                  ) : (
+                    <Text style={styles.pageIcon}>📄</Text>
+                  )}
                   <View style={styles.pageInfo}>
                     <Text style={styles.pageName}>{page.name}</Text>
                     <Text style={styles.pageShortcutCount}>
@@ -219,6 +232,11 @@ const styles = StyleSheet.create({
   },
   pageIcon: {
     fontSize: 32
+  },
+  pageIconImage: {
+    width: 36,
+    height: 36,
+    marginRight: 8
   },
   pageInfo: {
     flex: 1

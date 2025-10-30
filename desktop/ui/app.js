@@ -9,6 +9,8 @@ let recordedKeys = [];
 let currentPairingRequest = null;
 let selectedIcon = null; // İkon dosya adı veya emoji
 let selectedAppPath = null; // Başlatılacak uygulama yolu
+let pageModal = null;
+let selectedPageIcon = null; // Sayfa için ikon
 
 // DOM Elements
 const shortcutsGrid = document.getElementById('shortcutsGrid');
@@ -51,6 +53,15 @@ function setupEventListeners() {
     document.getElementById('addShortcutBtn').addEventListener('click', () => {
         openShortcutModal();
     });
+    
+    // New Page modal elements
+    pageModal = document.getElementById('pageModal');
+    const closePageModalBtn = document.getElementById('closePageModalBtn');
+    const cancelPageBtn = document.getElementById('cancelPageBtn');
+    const pageForm = document.getElementById('pageForm');
+    const pageIconInput = document.getElementById('pageIconInput');
+    const selectPageIconBtn = document.getElementById('selectPageIconBtn');
+    const usePageEmojiBtn = document.getElementById('usePageEmojiBtn');
     
     // Modal close
     document.getElementById('closeModalBtn').addEventListener('click', closeShortcutModal);
@@ -103,11 +114,30 @@ function setupEventListeners() {
         if (e.target === pairingModal) {
             // Don't close pairing modal on outside click
         }
+        if (e.target === pageModal) {
+            closePageModal();
+        }
     });
     
     // Keyboard shortcuts for recording
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+
+    // Page modal handlers
+    if (closePageModalBtn) closePageModalBtn.addEventListener('click', closePageModal);
+    if (cancelPageBtn) cancelPageBtn.addEventListener('click', closePageModal);
+    if (pageForm) pageForm.addEventListener('submit', handlePageSubmit);
+    if (selectPageIconBtn) selectPageIconBtn.addEventListener('click', selectPageIconFile);
+    if (usePageEmojiBtn) usePageEmojiBtn.addEventListener('click', usePageEmoji);
+    if (pageIconInput) pageIconInput.addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        if (value) {
+            selectedPageIcon = value;
+            showPageIconPreview(value);
+        } else {
+            hidePageIconPreview();
+        }
+    });
 }
 
 function switchTab(tabName) {
@@ -173,14 +203,75 @@ async function selectPage(pageId) {
 
 // Add new page
 async function addNewPage() {
-    const name = prompt('Yeni sayfa adı:', 'Yeni Sayfa');
+    openPageModal();
+}
+
+// Page Modal
+function openPageModal() {
+    selectedPageIcon = null;
+    document.getElementById('pageForm').reset();
+    hidePageIconPreview();
+    pageModal.classList.add('active');
+}
+
+function closePageModal() {
+    if (!pageModal) return;
+    pageModal.classList.remove('active');
+    selectedPageIcon = null;
+    hidePageIconPreview();
+}
+
+async function handlePageSubmit(e) {
+    e.preventDefault();
+    const name = document.getElementById('pageNameInput').value.trim();
     if (!name) return;
-    
-    const newPage = await window.electronAPI.addPage(name);
+    const icon = selectedPageIcon || undefined;
+    const newPage = await window.electronAPI.addPage(name, icon);
+    closePageModal();
     await loadPages();
     currentPageId = newPage.id;
     renderPages();
     renderShortcuts();
+}
+
+// Page icon selection
+async function selectPageIconFile() {
+    try {
+        const result = await window.electronAPI.selectIcon();
+        if (result.canceled) return;
+        selectedPageIcon = result.iconPath;
+        document.getElementById('pageIconInput').value = result.iconPath;
+        showPageIconPreview(result.iconPath);
+        console.log('✅ Sayfa ikonu seçildi:', result.iconPath);
+    } catch (error) {
+        console.error('Sayfa ikonu seçimi hatası:', error);
+        alert('İkon seçilirken hata oluştu');
+    }
+}
+
+function usePageEmoji() {
+    const emoji = prompt('Emoji girin (örn: 📄, 🎮, 🎬):', '📄');
+    if (emoji && emoji.trim()) {
+        selectedPageIcon = emoji.trim();
+        document.getElementById('pageIconInput').value = emoji.trim();
+        showPageIconPreview(emoji.trim());
+    }
+}
+
+function showPageIconPreview(icon) {
+    const preview = document.getElementById('pageIconPreview');
+    preview.classList.add('active');
+    if (icon && icon.length <= 4) {
+        preview.innerHTML = `<div class="emoji">${icon}</div>`;
+    } else if (icon) {
+        preview.innerHTML = `<img src="http://localhost:3100/icons/${icon}" alt="İkon Önizleme">`;
+    }
+}
+
+function hidePageIconPreview() {
+    const preview = document.getElementById('pageIconPreview');
+    preview.classList.remove('active');
+    preview.innerHTML = '';
 }
 
 // Rename page
