@@ -42,6 +42,7 @@ class DiscoveryService {
 
       this.udpSocket.on('message', (msg, rinfo) => {
         const message = msg.toString();
+        console.log('📨 UDP mesaj alındı:', message.substring(0, 50), 'from', rinfo.address);
         
         // Discovery isteği geldi mi?
         if (message.startsWith(DISCOVER_REQUEST)) {

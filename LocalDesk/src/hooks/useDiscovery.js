@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import dgram from 'react-native-udp';
 import Zeroconf from 'react-native-zeroconf';
 import { Buffer } from 'buffer';
@@ -13,25 +13,80 @@ export const useDiscovery = () => {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState(null);
   
-  const zeroconf = new Zeroconf();
-  let udpSocket = null;
-  let scanInterval = null;
+  // Refs for persistent references
+  const udpSocketRef = useRef(null);
+  const scanIntervalRef = useRef(null);
+  const zeroconfRef = useRef(null);
+
+  // Cihaz ekle veya güncelle
+  const addOrUpdateDevice = useCallback((device) => {
+    setDevices((prev) => {
+      const existingIndex = prev.findIndex(d => d.id === device.id);
+      
+      if (existingIndex >= 0) {
+        // Güncelle
+        const updated = [...prev];
+        updated[existingIndex] = { ...updated[existingIndex], ...device };
+        return updated;
+      } else {
+        // Yeni ekle
+        console.log('✅ Yeni cihaz bulundu:', device.name);
+        return [...prev, device];
+      }
+    });
+  }, []);
+
+  // UDP Discovery Request Gönder
+  const sendDiscoveryRequest = useCallback(() => {
+    const socket = udpSocketRef.current;
+    if (!socket) {
+      console.warn('⚠️ UDP socket hazır değil');
+      return;
+    }
+    
+    try {
+      const message = Buffer.from(DISCOVER_REQUEST);
+      
+      console.log('📡 Discovery request gönderiliyor...');
+      
+      // Broadcast adresine gönder
+      socket.send(
+        message,
+        0,
+        message.length,
+        UDP_PORT,
+        '255.255.255.255',
+        (err) => {
+          if (err) {
+            console.error('Discovery request gönderme hatası:', err);
+          } else {
+            console.log('✅ Discovery request gönderildi');
+          }
+        }
+      );
+    } catch (err) {
+      console.error('Discovery request hatası:', err);
+    }
+  }, []);
 
   // UDP Discovery
   const startUDPDiscovery = useCallback(() => {
     try {
       // Socket oluştur
-      udpSocket = dgram.createSocket({ type: 'udp4' });
+      const socket = dgram.createSocket({ type: 'udp4' });
+      udpSocketRef.current = socket;
       
       // Mesaj dinle
-      udpSocket.on('message', (msg, rinfo) => {
+      socket.on('message', (msg, rinfo) => {
         try {
           const message = msg.toString();
+          console.log('📨 UDP mesaj alındı:', message.substring(0, 50));
           
           if (message.includes(DISCOVER_RESPONSE)) {
             const response = JSON.parse(message);
             
             if (response.type === DISCOVER_RESPONSE) {
+              console.log('✅ Desktop bulundu:', response.deviceName, rinfo.address);
               addOrUpdateDevice({
                 id: response.deviceId,
                 name: response.deviceName,
@@ -48,58 +103,42 @@ export const useDiscovery = () => {
         }
       });
       
+      socket.on('error', (err) => {
+        console.error('UDP socket hatası:', err);
+      });
+      
       // Broadcast etkinleştir
-      udpSocket.bind(UDP_PORT, () => {
-        udpSocket.setBroadcast(true);
-        console.log('✅ UDP socket hazır');
+      socket.bind(UDP_PORT, () => {
+        socket.setBroadcast(true);
+        console.log('✅ UDP socket hazır, broadcast etkin');
         
         // İlk taramayı hemen başlat
-        sendDiscoveryRequest();
+        setTimeout(() => {
+          sendDiscoveryRequest();
+        }, 500);
         
         // Periyodik tarama
-        scanInterval = setInterval(() => {
+        const interval = setInterval(() => {
           sendDiscoveryRequest();
         }, DISCOVERY_INTERVAL);
+        
+        scanIntervalRef.current = interval;
       });
       
     } catch (err) {
       console.error('UDP discovery başlatma hatası:', err);
-      setError('UDP discovery başlatılamadı');
+      setError('UDP discovery başlatılamadı: ' + err.message);
     }
-  }, []);
-
-  // UDP Discovery Request Gönder
-  const sendDiscoveryRequest = useCallback(() => {
-    if (!udpSocket) return;
-    
-    try {
-      const message = Buffer.from(DISCOVER_REQUEST);
-      
-      // Broadcast adresine gönder
-      udpSocket.send(
-        message,
-        0,
-        message.length,
-        UDP_PORT,
-        '255.255.255.255',
-        (err) => {
-          if (err) {
-            console.error('Discovery request gönderme hatası:', err);
-          } else {
-            console.log('📡 Discovery request gönderildi');
-          }
-        }
-      );
-    } catch (err) {
-      console.error('Discovery request hatası:', err);
-    }
-  }, [udpSocket]);
+  }, [addOrUpdateDevice, sendDiscoveryRequest]);
 
   // mDNS Discovery
   const startMDNSDiscovery = useCallback(() => {
     try {
+      const zeroconf = new Zeroconf();
+      zeroconfRef.current = zeroconf;
+      
       zeroconf.on('resolved', (service) => {
-        console.log('🔍 mDNS servisi bulundu:', service.name);
+        console.log('🔍 mDNS servisi bulundu:', service.name, service.host);
         
         if (service.txt && service.txt.deviceId) {
           addOrUpdateDevice({
@@ -126,25 +165,7 @@ export const useDiscovery = () => {
       console.error('mDNS discovery başlatma hatası:', err);
       // mDNS başarısız olsa bile devam et (UDP yeterli)
     }
-  }, []);
-
-  // Cihaz ekle veya güncelle
-  const addOrUpdateDevice = useCallback((device) => {
-    setDevices((prev) => {
-      const existingIndex = prev.findIndex(d => d.id === device.id);
-      
-      if (existingIndex >= 0) {
-        // Güncelle
-        const updated = [...prev];
-        updated[existingIndex] = { ...updated[existingIndex], ...device };
-        return updated;
-      } else {
-        // Yeni ekle
-        console.log('✅ Yeni cihaz bulundu:', device.name);
-        return [...prev, device];
-      }
-    });
-  }, []);
+  }, [addOrUpdateDevice]);
 
   // Discovery başlat
   const startDiscovery = useCallback(() => {
@@ -164,28 +185,31 @@ export const useDiscovery = () => {
     setIsScanning(false);
     
     // UDP'yi kapat
-    if (udpSocket) {
+    if (udpSocketRef.current) {
       try {
-        udpSocket.close();
-        udpSocket = null;
+        udpSocketRef.current.close();
+        udpSocketRef.current = null;
       } catch (err) {
         console.error('UDP kapatma hatası:', err);
       }
     }
     
     // Interval'i temizle
-    if (scanInterval) {
-      clearInterval(scanInterval);
-      scanInterval = null;
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
     }
     
     // mDNS'i durdur
-    try {
-      zeroconf.stop();
-    } catch (err) {
-      console.error('mDNS durdurma hatası:', err);
+    if (zeroconfRef.current) {
+      try {
+        zeroconfRef.current.stop();
+        zeroconfRef.current = null;
+      } catch (err) {
+        console.error('mDNS durdurma hatası:', err);
+      }
     }
-  }, [udpSocket, scanInterval]);
+  }, []);
 
   // Otomatik temizlik
   useEffect(() => {
@@ -216,4 +240,3 @@ export const useDiscovery = () => {
     stopDiscovery
   };
 };
-
