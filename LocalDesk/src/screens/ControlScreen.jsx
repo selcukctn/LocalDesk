@@ -11,10 +11,12 @@ import { ButtonGrid } from '../components/ButtonGrid';
 
 export const ControlScreen = ({
   device,
+  page,
   shortcuts,
   isConnected,
   isPairing,
   onExecuteShortcut,
+  onBack,
   onDisconnect
 }) => {
   const [showMenu, setShowMenu] = useState(false);
@@ -52,8 +54,14 @@ export const ControlScreen = ({
       
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.title}>🎮 Local Desk</Text>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={onBack}
+        >
+          <Text style={styles.backIcon}>‹</Text>
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <Text style={styles.title}>{page?.name || 'Kısayollar'}</Text>
           <View style={styles.connectionInfo}>
             <View style={[styles.statusDot, { backgroundColor: getStatusColor() }]} />
             <Text style={styles.deviceName}>{device?.name || 'Bilinmeyen'}</Text>
@@ -138,6 +146,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center'
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8
+  },
+  backIcon: {
+    fontSize: 32,
+    color: '#CCCCCC',
+    fontWeight: '300'
+  },
+  headerCenter: {
+    flex: 1
   },
   headerLeft: {
     flex: 1

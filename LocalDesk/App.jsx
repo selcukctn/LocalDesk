@@ -7,16 +7,19 @@ import {
   Alert
 } from 'react-native';
 import { DiscoveryScreen } from './src/screens/DiscoveryScreen';
+import { PageListScreen } from './src/screens/PageListScreen';
 import { ControlScreen } from './src/screens/ControlScreen';
 import { useConnection } from './src/hooks/useConnection';
 
 function App() {
   const [selectedDevice, setSelectedDevice] = useState(null);
+  const [selectedPage, setSelectedPage] = useState(null);
   
   const {
     isConnected,
     isPairing,
     currentDevice,
+    pages,
     shortcuts,
     error,
     connect,
@@ -34,6 +37,17 @@ function App() {
   const handleDisconnect = () => {
     disconnect();
     setSelectedDevice(null);
+    setSelectedPage(null);
+  };
+
+  // Sayfa seçimi
+  const handlePageSelect = (page) => {
+    setSelectedPage(page);
+  };
+
+  // Sayfa listesine geri dön
+  const handleBackToPages = () => {
+    setSelectedPage(null);
   };
 
   // Kısayol çalıştır
@@ -73,16 +87,28 @@ function App() {
       <StatusBar barStyle="light-content" backgroundColor="#1e1e1e" />
       
       {!selectedDevice ? (
-        // Discovery ekranı
+        // Discovery ekranı - Cihaz seçimi
         <DiscoveryScreen onDeviceSelect={handleDeviceSelect} />
+      ) : !selectedPage ? (
+        // Sayfa listesi ekranı - Bağlandıktan sonra
+        <PageListScreen
+          device={currentDevice || selectedDevice}
+          pages={pages}
+          isConnected={isConnected}
+          isPairing={isPairing}
+          onPageSelect={handlePageSelect}
+          onDisconnect={handleDisconnect}
+        />
       ) : (
-        // Control ekranı
+        // Control ekranı - Sayfa seçildikten sonra
         <ControlScreen
           device={currentDevice || selectedDevice}
-          shortcuts={shortcuts}
+          page={selectedPage}
+          shortcuts={selectedPage.shortcuts || []}
           isConnected={isConnected}
           isPairing={isPairing}
           onExecuteShortcut={handleExecuteShortcut}
+          onBack={handleBackToPages}
           onDisconnect={handleDisconnect}
         />
       )}

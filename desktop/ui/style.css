@@ -86,6 +86,50 @@ body {
     color: var(--text-secondary);
 }
 
+/* Pages Selector */
+.pages-selector {
+    display: flex;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.page-tab {
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.page-tab:hover {
+    background: var(--bg-hover);
+}
+
+.page-tab.active {
+    background: var(--accent-blue);
+    border-color: var(--accent-blue);
+    color: white;
+}
+
+.page-tab.page-add {
+    background: transparent;
+    border-style: dashed;
+    color: var(--text-secondary);
+}
+
+.page-tab.page-add:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
 /* Tab Navigation */
 .tab-nav {
     display: flex;

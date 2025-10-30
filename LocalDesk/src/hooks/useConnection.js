@@ -17,7 +17,8 @@ export const useConnection = () => {
   const [isConnected, setIsConnected] = useState(false);
   const [isPairing, setIsPairing] = useState(false);
   const [currentDevice, setCurrentDevice] = useState(null);
-  const [shortcuts, setShortcuts] = useState([]); // Başlangıçta boş array
+  const [pages, setPages] = useState([]); // Sayfalar listesi
+  const [shortcuts, setShortcuts] = useState([]); // Geriye uyumluluk için
   const [error, setError] = useState(null);
   const [deviceInfo, setDeviceInfo] = useState(null);
   
@@ -99,9 +100,32 @@ export const useConnection = () => {
         handlePairingResponse(response, device);
       });
       
+      // Yeni format: pages-update
+      socket.on('pages-update', (updatedPages) => {
+        console.log('📥 Sayfalar güncellendi:', updatedPages.length);
+        setPages(updatedPages);
+        
+        // Geriye uyumluluk için ilk sayfanın shortcuts'larını da set et
+        if (updatedPages.length > 0 && updatedPages[0].shortcuts) {
+          setShortcuts(updatedPages[0].shortcuts);
+        } else {
+          setShortcuts([]);
+        }
+      });
+      
+      // Eski format: shortcuts-update (geriye uyumluluk)
       socket.on('shortcuts-update', (updatedShortcuts) => {
-        console.log('📥 Kısayollar güncellendi:', updatedShortcuts.length);
+        console.log('📥 Kısayollar güncellendi (eski format):', updatedShortcuts.length);
         setShortcuts(updatedShortcuts);
+        
+        // Eğer pages boşsa, eski formatı pages'e çevir
+        if (pages.length === 0) {
+          setPages([{
+            id: 'default',
+            name: 'Genel',
+            shortcuts: updatedShortcuts
+          }]);
+        }
       });
       
       socket.on('execute-result', (result) => {
@@ -153,8 +177,8 @@ export const useConnection = () => {
         await addTrustedDevice(device);
       }
       
-      // Kısayolları yükle (cihaz bilgisini geçir)
-      await loadShortcuts(device);
+      // Sayfaları yükle (cihaz bilgisini geçir)
+      await loadPages(device);
     } else {
       console.error('❌ Pairing reddedildi:', response.message);
       setError(response.message || 'Bağlantı reddedildi');
@@ -190,20 +214,20 @@ export const useConnection = () => {
     }
   };
 
-  // Kısayolları yükle
-  const loadShortcuts = useCallback(async (device) => {
+  // Sayfaları yükle
+  const loadPages = useCallback(async (device) => {
     try {
       const targetDevice = device || currentDevice;
       if (!targetDevice) {
-        console.warn('⚠️ Kısayol yüklemek için cihaz bilgisi yok');
+        console.warn('⚠️ Sayfa yüklemek için cihaz bilgisi yok');
         return;
       }
       
-      console.log('📡 Kısayollar yükleniyor:', `http://${targetDevice.host}:${targetDevice.port}/shortcuts`);
+      console.log('📡 Sayfalar yükleniyor:', `http://${targetDevice.host}:${targetDevice.port}/pages`);
       
-      // HTTP üzerinden kısayolları al
+      // HTTP üzerinden sayfaları al
       const response = await fetch(
-        `http://${targetDevice.host}:${targetDevice.port}/shortcuts`,
+        `http://${targetDevice.host}:${targetDevice.port}/pages`,
         { timeout: 5000 }
       );
       
@@ -212,13 +236,23 @@ export const useConnection = () => {
       }
       
       const data = await response.json();
-      setShortcuts(data);
-      console.log('📥 Kısayollar yüklendi:', data.length, 'adet');
+      setPages(data);
+      console.log('📥 Sayfalar yüklendi:', data.length, 'adet');
+      
+      // Geriye uyumluluk için ilk sayfanın shortcuts'larını da set et
+      if (data.length > 0 && data[0].shortcuts) {
+        setShortcuts(data[0].shortcuts);
+      }
     } catch (err) {
-      console.error('❌ Kısayol yükleme hatası:', err);
-      setError('Kısayollar yüklenemedi: ' + err.message);
+      console.error('❌ Sayfa yükleme hatası:', err);
+      setError('Sayfalar yüklenemedi: ' + err.message);
     }
   }, [currentDevice]);
+
+  // Kısayolları yükle (geriye uyumluluk)
+  const loadShortcuts = useCallback(async (device) => {
+    await loadPages(device);
+  }, [loadPages]);
 
   // Kısayol çalıştır
   const executeShortcut = useCallback((shortcut) => {
@@ -248,6 +282,7 @@ export const useConnection = () => {
     
     setIsConnected(false);
     setCurrentDevice(null);
+    setPages([]);
     setShortcuts([]);
   }, []);
 
@@ -264,6 +299,7 @@ export const useConnection = () => {
     isConnected,
     isPairing,
     currentDevice,
+    pages,
     shortcuts,
     error,
     connect,

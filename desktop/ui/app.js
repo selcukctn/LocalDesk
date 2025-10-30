@@ -1,5 +1,7 @@
 // Global state
-let shortcuts = [];
+let pages = []; // Sayfalar listesi
+let currentPageId = null; // Seçili sayfa
+let shortcuts = []; // Mevcut sayfanın shortcut'ları
 let trustedDevices = [];
 let editingShortcutId = null;
 let recordingKeys = false;
@@ -20,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Local Desk UI başlatılıyor...');
     
     // Load data
-    await loadShortcuts();
+    await loadPages();
     await loadTrustedDevices();
     await loadServerInfo();
     
@@ -120,14 +122,97 @@ function switchTab(tabName) {
     });
 }
 
-// Load shortcuts
-async function loadShortcuts() {
+// Load pages
+async function loadPages() {
     try {
-        shortcuts = await window.electronAPI.getShortcuts();
+        pages = await window.electronAPI.getPages();
+        
+        // İlk sayfayı seç
+        if (pages.length > 0) {
+            currentPageId = pages[0].id;
+            shortcuts = pages[0].shortcuts || [];
+        } else {
+            shortcuts = [];
+        }
+        
+        renderPages();
         renderShortcuts();
     } catch (error) {
-        console.error('Kısayollar yüklenemedi:', error);
+        console.error('Sayfalar yüklenemedi:', error);
     }
+}
+
+// Render pages selector
+function renderPages() {
+    const pagesContainer = document.getElementById('pagesSelector');
+    if (!pagesContainer) return;
+    
+    pagesContainer.innerHTML = pages.map(page => `
+        <button class="page-tab ${page.id === currentPageId ? 'active' : ''}" 
+                data-page-id="${page.id}"
+                onclick="selectPage('${page.id}')">
+            ${page.name}
+        </button>
+    `).join('') + `
+        <button class="page-tab page-add" onclick="addNewPage()">
+            + Yeni Sayfa
+        </button>
+    `;
+}
+
+// Select page
+async function selectPage(pageId) {
+    currentPageId = pageId;
+    const page = pages.find(p => p.id === pageId);
+    if (page) {
+        shortcuts = page.shortcuts || [];
+        renderPages();
+        renderShortcuts();
+    }
+}
+
+// Add new page
+async function addNewPage() {
+    const name = prompt('Yeni sayfa adı:', 'Yeni Sayfa');
+    if (!name) return;
+    
+    const newPage = await window.electronAPI.addPage(name);
+    await loadPages();
+    currentPageId = newPage.id;
+    renderPages();
+    renderShortcuts();
+}
+
+// Rename page
+async function renamePage(pageId) {
+    const page = pages.find(p => p.id === pageId);
+    if (!page) return;
+    
+    const newName = prompt('Sayfa adı:', page.name);
+    if (!newName) return;
+    
+    await window.electronAPI.updatePageName(pageId, newName);
+    await loadPages();
+}
+
+// Delete page
+async function deletePage(pageId) {
+    if (pages.length <= 1) {
+        alert('Son sayfa silinemez!');
+        return;
+    }
+    
+    if (!confirm('Bu sayfayı silmek istediğinizden emin misiniz?')) {
+        return;
+    }
+    
+    await window.electronAPI.deletePage(pageId);
+    await loadPages();
+}
+
+// Load shortcuts (geriye uyumluluk)
+async function loadShortcuts() {
+    await loadPages();
 }
 
 function renderShortcuts(filter = '') {
@@ -366,7 +451,6 @@ async function handleShortcutSubmit(e) {
     }
     
     const shortcut = {
-        id: editingShortcutId || Date.now(),
         label,
         keys: keys.length > 0 ? keys : undefined,
         color,
@@ -377,15 +461,13 @@ async function handleShortcutSubmit(e) {
     
     if (editingShortcutId) {
         // Edit existing
-        const index = shortcuts.findIndex(s => s.id === editingShortcutId);
-        shortcuts[index] = shortcut;
+        await window.electronAPI.updateShortcutInPage(currentPageId, editingShortcutId, shortcut);
     } else {
         // Add new
-        shortcuts.push(shortcut);
+        await window.electronAPI.addShortcutToPage(currentPageId, shortcut);
     }
     
-    await window.electronAPI.saveShortcuts(shortcuts);
-    await loadShortcuts();
+    await loadPages();
     closeShortcutModal();
 }
 
@@ -447,9 +529,8 @@ async function deleteShortcut(id) {
         return;
     }
     
-    shortcuts = shortcuts.filter(s => s.id !== id);
-    await window.electronAPI.saveShortcuts(shortcuts);
-    await loadShortcuts();
+    await window.electronAPI.deleteShortcutFromPage(currentPageId, id);
+    await loadPages();
 }
 
 // Device actions

@@ -62,6 +62,36 @@ app.on('before-quit', () => {
 });
 
 // IPC Event Handlers
+// Sayfa yönetimi
+ipcMain.handle('get-pages', async () => {
+  return server.getPages();
+});
+
+ipcMain.handle('add-page', async (event, name) => {
+  return server.addPage(name);
+});
+
+ipcMain.handle('update-page-name', async (event, pageId, newName) => {
+  return server.updatePageName(pageId, newName);
+});
+
+ipcMain.handle('delete-page', async (event, pageId) => {
+  return server.deletePage(pageId);
+});
+
+ipcMain.handle('add-shortcut-to-page', async (event, pageId, shortcut) => {
+  return server.addShortcutToPage(pageId, shortcut);
+});
+
+ipcMain.handle('update-shortcut-in-page', async (event, pageId, shortcutId, shortcut) => {
+  return server.updateShortcutInPage(pageId, shortcutId, shortcut);
+});
+
+ipcMain.handle('delete-shortcut-from-page', async (event, pageId, shortcutId) => {
+  return server.deleteShortcutFromPage(pageId, shortcutId);
+});
+
+// Geriye uyumluluk için shortcuts
 ipcMain.handle('get-shortcuts', async () => {
   return server.getShortcuts();
 });

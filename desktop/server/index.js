@@ -19,7 +19,7 @@ class LocalDeskServer extends EventEmitter {
     this.port = 3100;
     this.deviceId = null;
     this.deviceName = os.hostname();
-    this.shortcuts = [];
+    this.pages = []; // Artık shortcuts yerine pages kullanıyoruz
     this.trustedDevices = [];
     this.connectedClients = new Map();
     this.pendingPairings = new Map();
@@ -27,7 +27,7 @@ class LocalDeskServer extends EventEmitter {
     
     // Veri dosyaları
     this.dataDir = path.join(__dirname, 'data');
-    this.shortcutsFile = path.join(this.dataDir, 'shortcuts.json');
+    this.pagesFile = path.join(this.dataDir, 'pages.json'); // shortcuts.json -> pages.json
     this.trustedFile = path.join(this.dataDir, 'trusted.json');
     this.configFile = path.join(this.dataDir, 'config.json');
   }
@@ -40,7 +40,7 @@ class LocalDeskServer extends EventEmitter {
     
     // Konfigürasyonu yükle
     await this.loadConfig();
-    await this.loadShortcuts();
+    await this.loadPages();
     await this.loadTrustedDevices();
     
     // Klavye addon'unu yükle (Windows'ta)
@@ -120,9 +120,15 @@ class LocalDeskServer extends EventEmitter {
       });
     });
     
-    // Kısayol listesi
+    // Sayfa listesi (yeni API)
+    this.app.get('/pages', (req, res) => {
+      res.json(this.pages);
+    });
+    
+    // Geriye uyumluluk için shortcuts endpoint'i (ilk sayfanın shortcut'larını döndür)
     this.app.get('/shortcuts', (req, res) => {
-      res.json(this.shortcuts);
+      const firstPage = this.pages[0];
+      res.json(firstPage ? firstPage.shortcuts : []);
     });
     
     // İkon servisi (static middleware ile hallediliyor)
@@ -164,9 +170,9 @@ class LocalDeskServer extends EventEmitter {
           });
           this.connectedClients.set(socket.id, { deviceId, deviceName, socket });
           
-          // Kısayolları hemen gönder
-          console.log('📤 Kısayollar gönderiliyor (otomatik):', this.shortcuts.length, 'adet');
-          socket.emit('shortcuts-update', this.shortcuts);
+          // Sayfaları hemen gönder
+          console.log('📤 Sayfalar gönderiliyor (otomatik):', this.pages.length, 'adet');
+          socket.emit('pages-update', this.pages);
           return;
         }
         
@@ -270,9 +276,9 @@ class LocalDeskServer extends EventEmitter {
           socket: pairing.socket
         });
         
-        // Kısayolları gönder (Socket.IO ile)
-        console.log('📤 Kısayollar gönderiliyor:', this.shortcuts.length, 'adet');
-        pairing.socket.emit('shortcuts-update', this.shortcuts);
+        // Sayfaları gönder (Socket.IO ile)
+        console.log('📤 Sayfalar gönderiliyor:', this.pages.length, 'adet');
+        pairing.socket.emit('pages-update', this.pages);
       }
       
       this.pendingPairings.delete(deviceId);
@@ -415,52 +421,103 @@ class LocalDeskServer extends EventEmitter {
     await fs.writeFile(this.configFile, JSON.stringify(config, null, 2));
   }
 
-  async loadShortcuts() {
+  async loadPages() {
     try {
-      const data = await fs.readFile(this.shortcutsFile, 'utf8');
-      this.shortcuts = JSON.parse(data);
-      console.log(`✅ ${this.shortcuts.length} kısayol yüklendi`);
-    } catch (error) {
-      // Varsayılan kısayollar
-      this.shortcuts = [
+      // Önce yeni formatta kontrol et
+      try {
+        const data = await fs.readFile(this.pagesFile, 'utf8');
+        this.pages = JSON.parse(data);
+        console.log(`✅ ${this.pages.length} sayfa yüklendi`);
+        return;
+      } catch (e) {
+        // pages.json bulunamadı, eski shortcuts.json'dan migrate et
+      }
+      
+      // Eski shortcuts.json'u kontrol et
+      const oldShortcutsFile = path.join(this.dataDir, 'shortcuts.json');
+      try {
+        const oldData = await fs.readFile(oldShortcutsFile, 'utf8');
+        const oldShortcuts = JSON.parse(oldData);
+        
+        // Eski formatı yeni formata çevir
+        this.pages = [
+          {
+            id: 'page-' + Date.now(),
+            name: 'Genel',
+            shortcuts: oldShortcuts
+          }
+        ];
+        
+        console.log(`✅ Eski format tespit edildi, ${oldShortcuts.length} kısayol migrate edildi`);
+        await this.savePages(this.pages);
+        
+        // Eski dosyayı yedekle
+        await fs.rename(oldShortcutsFile, oldShortcutsFile + '.backup');
+        return;
+      } catch (e) {
+        // Eski dosya da yok
+      }
+      
+      // Hiçbir dosya yok, varsayılan sayfa oluştur
+      this.pages = [
         {
-          id: 1,
-          label: 'Kaydet',
-          icon: '💾',
-          keys: ['CONTROL', 'S'],
-          color: '#00C853',
-          actionType: 'keys'
-        },
-        {
-          id: 2,
-          label: 'Kopyala',
-          icon: '📋',
-          keys: ['CONTROL', 'C'],
-          color: '#FF9800',
-          actionType: 'keys'
-        },
-        {
-          id: 3,
-          label: 'Yapıştır',
-          icon: '📌',
-          keys: ['CONTROL', 'V'],
-          color: '#9C27B0',
-          actionType: 'keys'
+          id: 'page-' + Date.now(),
+          name: 'Genel',
+          shortcuts: [
+            {
+              id: 1,
+              label: 'Kaydet',
+              icon: '💾',
+              keys: ['CONTROL', 'S'],
+              color: '#00C853',
+              actionType: 'keys'
+            },
+            {
+              id: 2,
+              label: 'Kopyala',
+              icon: '📋',
+              keys: ['CONTROL', 'C'],
+              color: '#FF9800',
+              actionType: 'keys'
+            },
+            {
+              id: 3,
+              label: 'Yapıştır',
+              icon: '📌',
+              keys: ['CONTROL', 'V'],
+              color: '#9C27B0',
+              actionType: 'keys'
+            }
+          ]
         }
       ];
-      await this.saveShortcuts(this.shortcuts);
+      await this.savePages(this.pages);
+      console.log('✅ Varsayılan sayfa oluşturuldu');
+    } catch (error) {
+      console.error('Sayfa yükleme hatası:', error);
+      this.pages = [];
     }
   }
 
-  async saveShortcuts(shortcuts) {
-    this.shortcuts = shortcuts;
-    await fs.writeFile(this.shortcutsFile, JSON.stringify(shortcuts, null, 2));
+  async savePages(pages) {
+    this.pages = pages;
+    await fs.writeFile(this.pagesFile, JSON.stringify(pages, null, 2));
     
     // Tüm bağlı istemcilere güncellemeyi gönder (eğer server başlatıldıysa)
     if (this.io) {
-      this.io.emit('shortcuts-update', shortcuts);
+      this.io.emit('pages-update', pages);
     }
     
+    return { success: true };
+  }
+
+  // Geriye uyumluluk için shortcuts kaydetme
+  async saveShortcuts(shortcuts) {
+    // İlk sayfanın shortcuts'larını güncelle
+    if (this.pages.length > 0) {
+      this.pages[0].shortcuts = shortcuts;
+      await this.savePages(this.pages);
+    }
     return { success: true };
   }
 
@@ -484,8 +541,13 @@ class LocalDeskServer extends EventEmitter {
     return { success: true };
   }
 
+  getPages() {
+    return this.pages;
+  }
+
   getShortcuts() {
-    return this.shortcuts;
+    // Geriye uyumluluk için ilk sayfanın shortcuts'larını döndür
+    return this.pages.length > 0 ? this.pages[0].shortcuts : [];
   }
 
   getTrustedDevices() {
@@ -493,12 +555,14 @@ class LocalDeskServer extends EventEmitter {
   }
 
   getServerInfo() {
+    const totalShortcuts = this.pages.reduce((sum, page) => sum + (page.shortcuts?.length || 0), 0);
     return {
       deviceId: this.deviceId,
       deviceName: this.deviceName,
       port: this.port,
       connectedClients: this.connectedClients.size,
-      shortcuts: this.shortcuts.length,
+      shortcuts: totalShortcuts,
+      pages: this.pages.length,
       trustedDevices: this.trustedDevices.length
     };
   }
@@ -540,6 +604,78 @@ class LocalDeskServer extends EventEmitter {
     
     // Sadece dosya adını döndür (URL için)
     return uniqueFileName;
+  }
+
+  // Sayfa yönetimi metodları
+  async addPage(name) {
+    const newPage = {
+      id: 'page-' + Date.now(),
+      name: name || 'Yeni Sayfa',
+      shortcuts: []
+    };
+    this.pages.push(newPage);
+    await this.savePages(this.pages);
+    return newPage;
+  }
+
+  async updatePageName(pageId, newName) {
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) {
+      return { success: false, message: 'Sayfa bulunamadı' };
+    }
+    page.name = newName;
+    await this.savePages(this.pages);
+    return { success: true, page };
+  }
+
+  async deletePage(pageId) {
+    // En az bir sayfa kalmalı
+    if (this.pages.length <= 1) {
+      return { success: false, message: 'Son sayfa silinemez' };
+    }
+    
+    this.pages = this.pages.filter(p => p.id !== pageId);
+    await this.savePages(this.pages);
+    return { success: true };
+  }
+
+  async addShortcutToPage(pageId, shortcut) {
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) {
+      return { success: false, message: 'Sayfa bulunamadı' };
+    }
+    
+    shortcut.id = shortcut.id || Date.now();
+    page.shortcuts.push(shortcut);
+    await this.savePages(this.pages);
+    return { success: true, shortcut };
+  }
+
+  async updateShortcutInPage(pageId, shortcutId, updatedShortcut) {
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) {
+      return { success: false, message: 'Sayfa bulunamadı' };
+    }
+    
+    const index = page.shortcuts.findIndex(s => s.id === shortcutId);
+    if (index === -1) {
+      return { success: false, message: 'Kısayol bulunamadı' };
+    }
+    
+    page.shortcuts[index] = { ...updatedShortcut, id: shortcutId };
+    await this.savePages(this.pages);
+    return { success: true, shortcut: page.shortcuts[index] };
+  }
+
+  async deleteShortcutFromPage(pageId, shortcutId) {
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) {
+      return { success: false, message: 'Sayfa bulunamadı' };
+    }
+    
+    page.shortcuts = page.shortcuts.filter(s => s.id !== shortcutId);
+    await this.savePages(this.pages);
+    return { success: true };
   }
 }
 
