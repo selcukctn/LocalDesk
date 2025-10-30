@@ -4,10 +4,6 @@
 <dict>
 	<key>com.apple.developer.networking.multicast</key>
 	<true/>
-	<key>com.apple.developer.networking.networkextension</key>
-	<array>
-		<string>packet-tunnel-provider</string>
-	</array>
 </dict>
 </plist>
 

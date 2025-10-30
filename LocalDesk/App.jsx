@@ -9,6 +9,7 @@ import {
 import { DiscoveryScreen } from './src/screens/DiscoveryScreen';
 import { ControlScreen } from './src/screens/ControlScreen';
 import { useConnection } from './src/hooks/useConnection';
+import IdleTimerManager from 'react-native-idle-timer';
 
 function App() {
   const [selectedDevice, setSelectedDevice] = useState(null);
@@ -23,6 +24,14 @@ function App() {
     disconnect,
     executeShortcut
   } = useConnection();
+
+  // Ekranı uyanık tut
+  React.useEffect(() => {
+    IdleTimerManager.setIdleTimerDisabled(true);
+    return () => {
+      IdleTimerManager.setIdleTimerDisabled(false);
+    };
+  }, []);
 
   // Cihaz seçildiğinde bağlan
   const handleDeviceSelect = async (device) => {
