@@ -10,6 +10,7 @@ function createWindow() {
     height: 800,
     minWidth: 800,
     minHeight: 600,
+    icon: path.join(__dirname, 'src', 'icon.ico'), // Uygulama ikonu
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

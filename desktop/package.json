@@ -23,6 +23,35 @@
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
     "electron-rebuild": "^3.2.9"
+  },
+  "build": {
+    "appId": "com.localdesk.desktop",
+    "productName": "Local Desk",
+    "win": {
+      "icon": "src/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    },
+    "files": [
+      "**/*",
+      "!node_modules/**/*",
+      "node_modules/express/**/*",
+      "node_modules/socket.io/**/*",
+      "node_modules/dgram/**/*",
+      "node_modules/bonjour-service/**/*",
+      "node_modules/uuid/**/*",
+      "node_modules/node-gyp/**/*"
+    ]
   }
 }
 
