@@ -141,7 +141,13 @@
 
                     <div class="form-group">
                         <label>İkon (İsteğe bağlı)</label>
-                        <input type="text" id="iconInput" placeholder="icon.png">
+                        <div class="icon-input-wrapper">
+                            <input type="text" id="iconInput" placeholder="icon.png veya emoji 🎮">
+                            <button type="button" class="btn btn-secondary" id="selectIconBtn">📁 Dosya Seç</button>
+                            <button type="button" class="btn btn-secondary" id="useEmojiBtn">😊 Emoji Kullan</button>
+                        </div>
+                        <small>Dosya seçin veya direkt emoji yazın</small>
+                        <div id="iconPreview" class="icon-preview"></div>
                     </div>
 
                     <div class="modal-actions">

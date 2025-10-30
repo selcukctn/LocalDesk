@@ -17,6 +17,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onPairingRequest: (callback) => {
     ipcRenderer.on('pairing-request', (event, deviceInfo) => callback(deviceInfo));
   },
-  approvePairing: (deviceId, approved) => ipcRenderer.invoke('approve-pairing', deviceId, approved)
+  approvePairing: (deviceId, approved) => ipcRenderer.invoke('approve-pairing', deviceId, approved),
+  
+  // İkon seçimi
+  selectIcon: () => ipcRenderer.invoke('select-icon')
 });
 

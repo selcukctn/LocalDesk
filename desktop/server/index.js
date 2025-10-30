@@ -340,8 +340,10 @@ class LocalDeskServer extends EventEmitter {
     this.shortcuts = shortcuts;
     await fs.writeFile(this.shortcutsFile, JSON.stringify(shortcuts, null, 2));
     
-    // Tüm bağlı istemcilere güncellemeyi gönder
-    this.io.emit('shortcuts-update', shortcuts);
+    // Tüm bağlı istemcilere güncellemeyi gönder (eğer server başlatıldıysa)
+    if (this.io) {
+      this.io.emit('shortcuts-update', shortcuts);
+    }
     
     return { success: true };
   }
@@ -383,6 +385,32 @@ class LocalDeskServer extends EventEmitter {
       shortcuts: this.shortcuts.length,
       trustedDevices: this.trustedDevices.length
     };
+  }
+
+  async copyIconFile(sourcePath) {
+    const path = require('path');
+    const fs = require('fs').promises;
+    
+    // Dosya adını al
+    const fileName = path.basename(sourcePath);
+    const ext = path.extname(fileName);
+    
+    // Benzersiz isim oluştur (timestamp + orijinal isim)
+    const timestamp = Date.now();
+    const uniqueFileName = `icon-${timestamp}${ext}`;
+    
+    // Hedef klasör
+    const iconsDir = path.join(this.dataDir, 'icons');
+    await fs.mkdir(iconsDir, { recursive: true });
+    
+    // Dosyayı kopyala
+    const targetPath = path.join(iconsDir, uniqueFileName);
+    await fs.copyFile(sourcePath, targetPath);
+    
+    console.log('✅ İkon kopyalandı:', uniqueFileName);
+    
+    // Sadece dosya adını döndür (URL için)
+    return uniqueFileName;
   }
 }
 

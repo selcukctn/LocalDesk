@@ -5,6 +5,7 @@ let editingShortcutId = null;
 let recordingKeys = false;
 let recordedKeys = [];
 let currentPairingRequest = null;
+let selectedIcon = null; // İkon dosya adı veya emoji
 
 // DOM Elements
 const shortcutsGrid = document.getElementById('shortcutsGrid');
@@ -57,6 +58,21 @@ function setupEventListeners() {
     
     // Record keys
     document.getElementById('recordKeysBtn').addEventListener('click', toggleKeyRecording);
+    
+    // Icon selection
+    document.getElementById('selectIconBtn').addEventListener('click', selectIconFile);
+    document.getElementById('useEmojiBtn').addEventListener('click', useEmoji);
+    
+    // Icon input değişikliği
+    document.getElementById('iconInput').addEventListener('input', (e) => {
+        const value = e.target.value.trim();
+        if (value) {
+            selectedIcon = value;
+            showIconPreview(value);
+        } else {
+            hideIconPreview();
+        }
+    });
     
     // Pairing buttons
     document.getElementById('approvePairingBtn').addEventListener('click', () => approvePairing(true));
@@ -119,17 +135,32 @@ function renderShortcuts(filter = '') {
         return;
     }
     
-    shortcutsGrid.innerHTML = filtered.map(shortcut => `
-        <div class="shortcut-card" style="border-left: 4px solid ${shortcut.color}">
-            <div class="shortcut-actions">
-                <button class="action-btn" onclick="editShortcut(${shortcut.id})">✏️</button>
-                <button class="action-btn" onclick="deleteShortcut(${shortcut.id})">🗑️</button>
+    shortcutsGrid.innerHTML = filtered.map(shortcut => {
+        // İkon gösterimi - emoji mi dosya mı?
+        let iconHtml;
+        if (shortcut.icon && shortcut.icon.length <= 4) {
+            // Emoji
+            iconHtml = shortcut.icon;
+        } else if (shortcut.icon) {
+            // Dosya
+            iconHtml = `<img src="http://localhost:3100/icons/${shortcut.icon}" style="width: 40px; height: 40px; object-fit: contain;">`;
+        } else {
+            // Varsayılan
+            iconHtml = '⌨️';
+        }
+        
+        return `
+            <div class="shortcut-card" style="border-left: 4px solid ${shortcut.color}">
+                <div class="shortcut-actions">
+                    <button class="action-btn" onclick="editShortcut(${shortcut.id})">✏️</button>
+                    <button class="action-btn" onclick="deleteShortcut(${shortcut.id})">🗑️</button>
+                </div>
+                <div class="shortcut-icon">${iconHtml}</div>
+                <div class="shortcut-label">${shortcut.label}</div>
+                <div class="shortcut-keys">${shortcut.keys.join(' + ')}</div>
             </div>
-            <div class="shortcut-icon">${shortcut.icon || '⌨️'}</div>
-            <div class="shortcut-label">${shortcut.label}</div>
-            <div class="shortcut-keys">${shortcut.keys.join(' + ')}</div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Load trusted devices
@@ -188,6 +219,7 @@ async function loadServerInfo() {
 // Shortcut Modal
 function openShortcutModal(shortcut = null) {
     editingShortcutId = shortcut?.id || null;
+    selectedIcon = null;
     
     if (shortcut) {
         document.getElementById('modalTitle').textContent = 'Kısayolu Düzenle';
@@ -195,11 +227,18 @@ function openShortcutModal(shortcut = null) {
         document.getElementById('keysDisplay').value = shortcut.keys.join(' + ');
         document.getElementById('colorInput').value = shortcut.color;
         document.getElementById('iconInput').value = shortcut.icon || '';
+        selectedIcon = shortcut.icon || null;
         recordedKeys = [...shortcut.keys];
+        
+        // İkon önizleme
+        if (shortcut.icon) {
+            showIconPreview(shortcut.icon);
+        }
     } else {
         document.getElementById('modalTitle').textContent = 'Yeni Kısayol Ekle';
         shortcutForm.reset();
         recordedKeys = [];
+        hideIconPreview();
     }
     
     shortcutModal.classList.add('active');
@@ -210,6 +249,8 @@ function closeShortcutModal() {
     editingShortcutId = null;
     recordedKeys = [];
     recordingKeys = false;
+    selectedIcon = null;
+    hideIconPreview();
 }
 
 async function handleShortcutSubmit(e) {
@@ -218,7 +259,7 @@ async function handleShortcutSubmit(e) {
     const label = document.getElementById('labelInput').value;
     const keys = recordedKeys;
     const color = document.getElementById('colorInput').value;
-    const icon = document.getElementById('iconInput').value;
+    const icon = selectedIcon || ''; // selectedIcon kullan
     
     if (keys.length === 0) {
         alert('Lütfen en az bir tuş seçin');
@@ -324,6 +365,56 @@ async function removeTrustedDevice(deviceId) {
 function handleSearch(e) {
     const query = e.target.value;
     renderShortcuts(query);
+}
+
+// Icon selection
+async function selectIconFile() {
+    try {
+        const result = await window.electronAPI.selectIcon();
+        
+        if (result.canceled) {
+            return;
+        }
+        
+        selectedIcon = result.iconPath;
+        document.getElementById('iconInput').value = result.iconPath;
+        showIconPreview(result.iconPath);
+        
+        console.log('✅ İkon seçildi:', result.iconPath);
+    } catch (error) {
+        console.error('İkon seçimi hatası:', error);
+        alert('İkon seçilirken hata oluştu');
+    }
+}
+
+function useEmoji() {
+    const emoji = prompt('Emoji girin (örn: 🎮, 🎬, 📱):', '🎮');
+    
+    if (emoji && emoji.trim()) {
+        selectedIcon = emoji.trim();
+        document.getElementById('iconInput').value = emoji.trim();
+        showIconPreview(emoji.trim());
+    }
+}
+
+function showIconPreview(icon) {
+    const preview = document.getElementById('iconPreview');
+    preview.classList.add('active');
+    
+    // Emoji mi yoksa dosya mı?
+    if (icon && icon.length <= 4) {
+        // Muhtemelen emoji
+        preview.innerHTML = `<div class="emoji">${icon}</div>`;
+    } else if (icon) {
+        // Dosya - HTTP üzerinden göster
+        preview.innerHTML = `<img src="http://localhost:3100/icons/${icon}" alt="İkon Önizleme">`;
+    }
+}
+
+function hideIconPreview() {
+    const preview = document.getElementById('iconPreview');
+    preview.classList.remove('active');
+    preview.innerHTML = '';
 }
 
 // Settings

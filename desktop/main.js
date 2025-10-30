@@ -93,3 +93,27 @@ ipcMain.handle('approve-pairing', async (event, deviceId, approved) => {
   return server.handlePairingResponse(deviceId, approved);
 });
 
+// İkon seçimi
+ipcMain.handle('select-icon', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'İkon Seç',
+    filters: [
+      { name: 'Resim Dosyaları', extensions: ['png', 'jpg', 'jpeg', 'svg', 'gif', 'ico'] }
+    ],
+    properties: ['openFile']
+  });
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return { canceled: true };
+  }
+  
+  // Seçilen dosyayı server'a gönder (kopyalama için)
+  const iconPath = await server.copyIconFile(result.filePaths[0]);
+  
+  return {
+    canceled: false,
+    iconPath: iconPath,
+    originalPath: result.filePaths[0]
+  };
+});
+

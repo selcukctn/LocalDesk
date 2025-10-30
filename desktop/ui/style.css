@@ -463,6 +463,44 @@ body {
     gap: 8px;
 }
 
+.icon-input-wrapper {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.icon-input-wrapper input {
+    flex: 1;
+}
+
+.icon-input-wrapper .btn {
+    white-space: nowrap;
+}
+
+.icon-preview {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    text-align: center;
+    min-height: 60px;
+    display: none;
+}
+
+.icon-preview.active {
+    display: block;
+}
+
+.icon-preview img {
+    max-width: 48px;
+    max-height: 48px;
+    object-fit: contain;
+}
+
+.icon-preview .emoji {
+    font-size: 48px;
+}
+
 .modal-actions {
     display: flex;
     justify-content: flex-end;
