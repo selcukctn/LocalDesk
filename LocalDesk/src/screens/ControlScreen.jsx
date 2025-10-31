@@ -140,109 +140,163 @@ export const ControlScreen = ({
       {/* Menu Dropdown */}
       {menuOpen && (
         <View style={styles.menuDropdown}>
-          <TouchableOpacity
-            style={styles.menuItem}
-            onPress={() => {
-              handleHeaderExpandedChange(!headerExpanded);
-              setMenuOpen(false);
-            }}
+          <ScrollView 
+            style={styles.menuScrollView}
+            showsVerticalScrollIndicator={true}
+            persistentScrollbar={true}
           >
-            <Text style={styles.menuItemText}>
-              {headerExpanded ? 'Header\'ı Gizle' : 'Header\'ı Göster'}
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.menuDivider} />
-
-          <View style={styles.menuSection}>
-            <Text style={styles.menuSectionTitle}>Kart Görünümü</Text>
-            
             <TouchableOpacity
-              style={[
-                styles.menuItem,
-                viewMode === 'both' && styles.menuItemActive
-              ]}
+              style={styles.menuItem}
               onPress={() => {
-                handleViewModeChange('both');
+                handleHeaderExpandedChange(!headerExpanded);
                 setMenuOpen(false);
               }}
             >
-              <Text style={styles.menuItemText}>İkon + Yazı</Text>
-              {viewMode === 'both' && (
-                <Text style={styles.menuItemCheck}>✓</Text>
-              )}
+              <Text style={styles.menuItemText}>
+                {headerExpanded ? 'Header\'ı Gizle' : 'Header\'ı Göster'}
+              </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                viewMode === 'iconOnly' && styles.menuItemActive
-              ]}
-              onPress={() => {
-                handleViewModeChange('iconOnly');
-                setMenuOpen(false);
-              }}
-            >
-              <Text style={styles.menuItemText}>Sadece İkon</Text>
-              {viewMode === 'iconOnly' && (
-                <Text style={styles.menuItemCheck}>✓</Text>
-              )}
-            </TouchableOpacity>
+            <View style={styles.menuDivider} />
 
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                viewMode === 'textOnly' && styles.menuItemActive
-              ]}
-              onPress={() => {
-                handleViewModeChange('textOnly');
-                setMenuOpen(false);
-              }}
-            >
-              <Text style={styles.menuItemText}>Sadece Yazı</Text>
-              {viewMode === 'textOnly' && (
-                <Text style={styles.menuItemCheck}>✓</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+            <View style={styles.menuSection}>
+              <Text style={styles.menuSectionTitle}>Kart Görünümü</Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  viewMode === 'both' && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleViewModeChange('both');
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>İkon + Yazı</Text>
+                {viewMode === 'both' && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
 
-          <View style={styles.menuDivider} />
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  viewMode === 'iconOnly' && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleViewModeChange('iconOnly');
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>Sadece İkon</Text>
+                {viewMode === 'iconOnly' && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
 
-          <View style={styles.menuSection}>
-            <Text style={styles.menuSectionTitle}>Grid Boyutu</Text>
-            
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                gridSize === 4 && styles.menuItemActive
-              ]}
-              onPress={() => {
-                handleGridSizeChange(4);
-                setMenuOpen(false);
-              }}
-            >
-              <Text style={styles.menuItemText}>4x4 Grid</Text>
-              {gridSize === 4 && (
-                <Text style={styles.menuItemCheck}>✓</Text>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  viewMode === 'textOnly' && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleViewModeChange('textOnly');
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>Sadece Yazı</Text>
+                {viewMode === 'textOnly' && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+            </View>
 
-            <TouchableOpacity
-              style={[
-                styles.menuItem,
-                gridSize === 8 && styles.menuItemActive
-              ]}
-              onPress={() => {
-                handleGridSizeChange(8);
-                setMenuOpen(false);
-              }}
-            >
-              <Text style={styles.menuItemText}>8x8 Grid</Text>
-              {gridSize === 8 && (
-                <Text style={styles.menuItemCheck}>✓</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+            <View style={styles.menuDivider} />
+
+            <View style={styles.menuSection}>
+              <Text style={styles.menuSectionTitle}>Grid Boyutu</Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  gridSize === 4 && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleGridSizeChange(4);
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>4x4 Grid</Text>
+                {gridSize === 4 && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  gridSize === 5 && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleGridSizeChange(5);
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>5x5 Grid</Text>
+                {gridSize === 5 && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  gridSize === 6 && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleGridSizeChange(6);
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>6x6 Grid</Text>
+                {gridSize === 6 && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  gridSize === 7 && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleGridSizeChange(7);
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>7x7 Grid</Text>
+                {gridSize === 7 && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  gridSize === 8 && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  handleGridSizeChange(8);
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>8x8 Grid</Text>
+                {gridSize === 8 && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
       )}
 
@@ -429,12 +483,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2A3150',
     minWidth: 220,
+    maxHeight: height - 80,
     zIndex: 1000,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 10
+  },
+  menuScrollView: {
+    maxHeight: height - 80
   },
   menuSection: {
     paddingVertical: 4
