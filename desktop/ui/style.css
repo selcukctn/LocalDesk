@@ -806,3 +806,45 @@ body {
     background: var(--bg-hover);
 }
 
+/* App List */
+.app-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 16px 0;
+}
+
+.app-list-item {
+    cursor: pointer;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+    background: var(--bg-secondary);
+}
+
+.app-list-item:hover {
+    background: var(--bg-hover);
+    border-color: var(--accent-blue);
+}
+
+.app-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.app-info strong {
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.app-info small {
+    color: var(--text-secondary);
+    font-size: 12px;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+

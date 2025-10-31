@@ -4,8 +4,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('electronAPI', {
   // Sayfalar yönetimi
   getPages: () => ipcRenderer.invoke('get-pages'),
-  addPage: (name, icon) => ipcRenderer.invoke('add-page', name, icon),
+  addPage: (name, icon, targetApp) => ipcRenderer.invoke('add-page', name, icon, targetApp),
   updatePageName: (pageId, newName) => ipcRenderer.invoke('update-page-name', pageId, newName),
+  updatePageTargetApp: (pageId, targetApp) => ipcRenderer.invoke('update-page-target-app', pageId, targetApp),
   deletePage: (pageId) => ipcRenderer.invoke('delete-page', pageId),
   addShortcutToPage: (pageId, shortcut) => ipcRenderer.invoke('add-shortcut-to-page', pageId, shortcut),
   updateShortcutInPage: (pageId, shortcutId, shortcut) => ipcRenderer.invoke('update-shortcut-in-page', pageId, shortcutId, shortcut),
@@ -33,6 +34,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectIcon: () => ipcRenderer.invoke('select-icon'),
   
   // Uygulama seçimi
-  selectApp: () => ipcRenderer.invoke('select-app')
+  selectApp: () => ipcRenderer.invoke('select-app'),
+  
+  // Çalışan uygulamaları listele
+  getWindows: () => ipcRenderer.invoke('get-windows'),
+  
+  // Hedef uygulama seç (sayfa için)
+  selectTargetApp: () => ipcRenderer.invoke('select-target-app')
 });
 

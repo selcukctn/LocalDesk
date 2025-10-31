@@ -11,6 +11,7 @@ let selectedIcon = null; // İkon dosya adı veya emoji
 let selectedAppPath = null; // Başlatılacak uygulama yolu
 let pageModal = null;
 let selectedPageIcon = null; // Sayfa için ikon
+let selectedPageTargetApp = null; // Sayfa için hedef uygulama (exe adı)
 let confirmModal = null;
 let confirmResolve = null; // Promise resolver for confirm
 
@@ -64,6 +65,8 @@ function setupEventListeners() {
     const pageIconInput = document.getElementById('pageIconInput');
     const selectPageIconBtn = document.getElementById('selectPageIconBtn');
     const usePageEmojiBtn = document.getElementById('usePageEmojiBtn');
+    const selectTargetAppBtn = document.getElementById('selectTargetAppBtn');
+    const clearTargetAppBtn = document.getElementById('clearTargetAppBtn');
     
     // Modal close
     document.getElementById('closeModalBtn').addEventListener('click', closeShortcutModal);
@@ -140,6 +143,10 @@ function setupEventListeners() {
             hidePageIconPreview();
         }
     });
+    
+    // Target app selection
+    if (selectTargetAppBtn) selectTargetAppBtn.addEventListener('click', selectTargetApp);
+    if (clearTargetAppBtn) clearTargetAppBtn.addEventListener('click', clearTargetApp);
 
     // Confirm modal handlers
     confirmModal = document.getElementById('confirmModal');
@@ -227,8 +234,10 @@ async function addNewPage() {
 // Page Modal
 function openPageModal() {
     selectedPageIcon = null;
+    selectedPageTargetApp = null;
     document.getElementById('pageForm').reset();
     hidePageIconPreview();
+    clearTargetAppUI();
     pageModal.classList.add('active');
     
     // Modal açıldıktan sonra ilk input'a focus yap
@@ -246,7 +255,9 @@ function closePageModal() {
     if (!pageModal) return;
     pageModal.classList.remove('active');
     selectedPageIcon = null;
+    selectedPageTargetApp = null;
     hidePageIconPreview();
+    clearTargetAppUI();
 }
 
 async function handlePageSubmit(e) {
@@ -254,7 +265,11 @@ async function handlePageSubmit(e) {
     const name = document.getElementById('pageNameInput').value.trim();
     if (!name) return;
     const icon = selectedPageIcon || undefined;
-    const newPage = await window.electronAPI.addPage(name, icon);
+    const targetApp = selectedPageTargetApp || undefined;
+    
+    // Sayfa oluştur (targetApp ile birlikte)
+    const newPage = await window.electronAPI.addPage(name, icon, targetApp);
+    
     closePageModal();
     await loadPages();
     currentPageId = newPage.id;
@@ -924,5 +939,179 @@ function handleConfirmResponse(result) {
         confirmResolve(result);
         confirmResolve = null;
     }
+}
+
+// Hedef uygulama seçme
+async function selectTargetApp() {
+    try {
+        // Önce kullanıcıya seçenek sun
+        const choice = await showConfirm(
+            'Uygulama Seçimi', 
+            'Nasıl seçmek istersiniz?\n\n"Evet" = Çalışan uygulamalardan seç\n"İptal" = Dosya seçici ile .exe seç',
+            '🖥️'
+        );
+        
+        if (choice) {
+            // Çalışan uygulamalardan seç
+            await selectFromRunningApps();
+        } else {
+            // Dosya seçici ile .exe seç
+            await selectExeFile();
+        }
+    } catch (error) {
+        console.error('Hedef uygulama seçimi hatası:', error);
+        await showAlert('Hata', 'Uygulama seçimi başarısız: ' + error.message, '❌');
+    }
+}
+
+// Çalışan uygulamalardan seç
+async function selectFromRunningApps() {
+    try {
+        const result = await window.electronAPI.selectTargetApp();
+        if (result.canceled) {
+            if (result.message) {
+                await showAlert('Uyarı', result.message, '⚠️');
+            }
+            return;
+        }
+        
+        const windows = result.windows;
+        if (!windows || windows.length === 0) {
+            await showAlert('Uyarı', 'Çalışan uygulama bulunamadı. Dosya seçici ile deneyin.', '⚠️');
+            return;
+        }
+        
+        // Modal ile liste göster
+        showAppSelectionModal(windows);
+    } catch (error) {
+        console.error('Çalışan uygulama seçimi hatası:', error);
+        await showAlert('Hata', 'Liste alınamadı: ' + error.message, '❌');
+    }
+}
+
+// Dosya seçici ile .exe seç
+async function selectExeFile() {
+    try {
+        const result = await window.electronAPI.selectApp();
+        if (result.canceled) return;
+        
+        // Dosya yolundan sadece exe adını al (hem / hem \ destekle)
+        const exeName = result.appPath.replace(/\\/g, '/').split('/').pop(); // Son kısmı al (örn: chrome.exe)
+        
+        selectedPageTargetApp = exeName;
+        
+        // UI'ı güncelle
+        document.getElementById('pageTargetAppInput').value = exeName;
+        document.getElementById('selectedTargetApp').textContent = `✅ ${exeName} (Dosyadan seçildi)`;
+        document.getElementById('selectedTargetApp').style.color = '#4CAF50';
+        document.getElementById('clearTargetAppBtn').style.display = 'inline-block';
+        
+        console.log('✅ Hedef uygulama seçildi (dosyadan):', exeName);
+    } catch (error) {
+        console.error('Exe dosyası seçimi hatası:', error);
+        await showAlert('Hata', 'Dosya seçimi başarısız: ' + error.message, '❌');
+    }
+}
+
+// App selection modal göster
+function showAppSelectionModal(windows) {
+    // Modal elementi oluştur (eğer yoksa)
+    let modal = document.getElementById('appSelectionModal');
+    if (!modal) {
+        // Modal HTML'de yok, dinamik oluştur
+        modal = document.createElement('div');
+        modal.id = 'appSelectionModal';
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Hedef Uygulama Seç</h2>
+                    <button class="close-btn" id="closeAppSelectionBtn">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Çalışan uygulamalardan birini seçin:</p>
+                    <div id="appListContainer" class="app-list"></div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" id="cancelAppSelectionBtn">İptal</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        // Event listeners
+        document.getElementById('closeAppSelectionBtn').addEventListener('click', closeAppSelectionModal);
+        document.getElementById('cancelAppSelectionBtn').addEventListener('click', closeAppSelectionModal);
+    }
+    
+    // Liste oluştur
+    const listContainer = document.getElementById('appListContainer');
+    listContainer.innerHTML = '';
+    
+    windows.forEach((win, index) => {
+        const item = document.createElement('div');
+        item.className = 'app-list-item';
+        item.innerHTML = `
+            <div class="app-info">
+                <strong>${win.exeName}</strong>
+                <small>${win.title}</small>
+            </div>
+        `;
+        item.style.cursor = 'pointer';
+        item.style.padding = '12px';
+        item.style.border = '1px solid #444';
+        item.style.borderRadius = '8px';
+        item.style.marginBottom = '8px';
+        item.style.transition = 'all 0.2s';
+        
+        item.addEventListener('mouseenter', () => {
+            item.style.backgroundColor = '#2a2a2a';
+            item.style.borderColor = '#1F6FEB';
+        });
+        
+        item.addEventListener('mouseleave', () => {
+            item.style.backgroundColor = '';
+            item.style.borderColor = '#444';
+        });
+        
+        item.addEventListener('click', () => {
+            selectAppFromModal(win);
+            closeAppSelectionModal();
+        });
+        
+        listContainer.appendChild(item);
+    });
+    
+    modal.classList.add('active');
+}
+
+function closeAppSelectionModal() {
+    const modal = document.getElementById('appSelectionModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+function selectAppFromModal(app) {
+    selectedPageTargetApp = app.exeName;
+    
+    // UI'ı güncelle
+    document.getElementById('pageTargetAppInput').value = app.exeName;
+    document.getElementById('selectedTargetApp').textContent = `✅ ${app.exeName} - ${app.title}`;
+    document.getElementById('selectedTargetApp').style.color = '#4CAF50';
+    document.getElementById('clearTargetAppBtn').style.display = 'inline-block';
+    
+    console.log('✅ Hedef uygulama seçildi:', app.exeName);
+}
+
+function clearTargetApp() {
+    selectedPageTargetApp = null;
+    clearTargetAppUI();
+}
+
+function clearTargetAppUI() {
+    document.getElementById('pageTargetAppInput').value = '';
+    document.getElementById('selectedTargetApp').textContent = '';
+    document.getElementById('clearTargetAppBtn').style.display = 'none';
 }
 

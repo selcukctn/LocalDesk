@@ -192,7 +192,7 @@ class LocalDeskServer extends EventEmitter {
       // Kısayol çalıştırma
       socket.on('execute-shortcut', (data) => {
         console.log('⌨️ Kısayol çalıştırılıyor:', data);
-        const { shortcutId, keys, appPath, actionType } = data;
+        const { shortcutId, keys, appPath, actionType, pageId } = data;
         
         // Cihaz güvenilir mi kontrol et
         const client = this.connectedClients.get(socket.id);
@@ -210,14 +210,46 @@ class LocalDeskServer extends EventEmitter {
         }
         
         console.log('✅ Cihaz doğrulandı:', client.deviceName);
-        console.log('📋 Eylem:', actionType, '| Keys:', keys, '| AppPath:', appPath);
+        console.log('📋 Eylem:', actionType, '| Keys:', keys, '| AppPath:', appPath, '| PageId:', pageId);
+        
+        // Sayfa bilgisini kontrol et (targetApp için)
+        // Önce pageId ile, yoksa shortcutId'den page'i bul
+        let targetWindowHandle = null;
+        let targetPage = null;
+        
+        if (pageId) {
+          targetPage = this.pages.find(p => p.id === pageId);
+        } else {
+          // pageId yoksa shortcutId'den page'i bul
+          for (const page of this.pages) {
+            const shortcut = page.shortcuts?.find(s => s.id === shortcutId);
+            if (shortcut) {
+              targetPage = page;
+              break;
+            }
+          }
+        }
+        
+        if (targetPage && targetPage.targetApp) {
+          console.log('🎯 Hedef uygulama tespit edildi:', targetPage.targetApp, '| Page:', targetPage.name);
+          // Window handle'ı bul
+          targetWindowHandle = this.findWindowHandle(targetPage.targetApp);
+          if (targetWindowHandle) {
+            console.log('✅ Window handle bulundu:', targetWindowHandle);
+          } else {
+            console.warn('⚠️ Hedef uygulama çalışmıyor veya bulunamadı:', targetPage.targetApp);
+            console.warn('⚠️ Global moda geçiliyor (aktif pencereye gönderilecek)');
+          }
+        } else {
+          console.log('🌐 Hedef uygulama yok, global mod (aktif pencereye gönderilecek)');
+        }
         
         // Eylem tipine göre çalıştır
         if (actionType === 'keys' || actionType === 'both') {
           // Klavye girdisini gönder
           if (keys && keys.length > 0) {
             console.log('⌨️ Klavye tuşları gönderiliyor:', keys);
-            this.executeKeys(keys);
+            this.executeKeys(keys, targetWindowHandle);
           } else {
             console.warn('⚠️ Keys boş, klavye girdisi atlanıyor');
           }
@@ -297,9 +329,10 @@ class LocalDeskServer extends EventEmitter {
     }
   }
 
-  executeKeys(keys) {
+  executeKeys(keys, targetWindowHandle = null) {
     console.log('🔍 executeKeys çağrıldı, gelen tuşlar:', keys);
     console.log('🔍 Addon durumu:', this.keyboardAddon ? 'Yüklü ✅' : 'Yüklü değil ❌');
+    console.log('🔍 Hedef pencere:', targetWindowHandle || 'Global (aktif pencere)');
     
     if (!this.keyboardAddon) {
       console.warn('⚠️  Klavye addon yüklenmedi, simüle edilecek:', keys);
@@ -307,13 +340,60 @@ class LocalDeskServer extends EventEmitter {
     }
     
     try {
-      // C++ addon ile gerçek klavye girdisi
-      console.log('🚀 C++ addon\'a tuşlar gönderiliyor:', keys);
-      this.keyboardAddon.sendKeys(keys);
-      console.log('✅ Klavye girdisi gönderildi:', keys);
+      if (targetWindowHandle) {
+        // Belirli bir pencereye gönder (focus olmadan)
+        console.log('🎯 Belirli pencereye tuşlar gönderiliyor:', keys, '→ HWND:', targetWindowHandle);
+        this.keyboardAddon.sendKeysToWindow(targetWindowHandle, keys);
+        console.log('✅ Klavye girdisi belirli pencereye gönderildi:', keys);
+      } else {
+        // Global olarak gönder (aktif pencereye)
+        console.log('🌐 Global klavye tuşları gönderiliyor:', keys);
+        this.keyboardAddon.sendKeys(keys);
+        console.log('✅ Klavye girdisi gönderildi:', keys);
+      }
     } catch (error) {
       console.error('❌ Klavye girdisi hatası:', error);
       console.error('❌ Hata detayı:', error.stack);
+    }
+  }
+
+  findWindowHandle(targetAppExe) {
+    if (!this.keyboardAddon || !this.keyboardAddon.getWindowList) {
+      console.warn('⚠️  getWindowList fonksiyonu yok');
+      return null;
+    }
+    
+    try {
+      const windows = this.keyboardAddon.getWindowList();
+      console.log('🔍 Toplam pencere sayısı:', windows.length);
+      
+      // targetAppExe ile eşleşen ilk pencereyi bul (case-insensitive)
+      const targetExeLower = targetAppExe.toLowerCase();
+      const matchedWindow = windows.find(w => w.exeName.toLowerCase() === targetExeLower);
+      
+      if (matchedWindow) {
+        console.log('✅ Eşleşen pencere bulundu:', matchedWindow.title, '|', matchedWindow.exeName);
+        return matchedWindow.hwnd;
+      }
+      
+      console.warn('⚠️ Eşleşen pencere bulunamadı:', targetAppExe);
+      return null;
+    } catch (error) {
+      console.error('❌ findWindowHandle hatası:', error);
+      return null;
+    }
+  }
+
+  getWindowList() {
+    if (!this.keyboardAddon || !this.keyboardAddon.getWindowList) {
+      return [];
+    }
+    
+    try {
+      return this.keyboardAddon.getWindowList();
+    } catch (error) {
+      console.error('❌ getWindowList hatası:', error);
+      return [];
     }
   }
 
@@ -607,16 +687,27 @@ class LocalDeskServer extends EventEmitter {
   }
 
   // Sayfa yönetimi metodları
-  async addPage(name, icon) {
+  async addPage(name, icon, targetApp) {
     const newPage = {
       id: 'page-' + Date.now(),
       name: name || 'Yeni Sayfa',
       icon: icon || undefined,
+      targetApp: targetApp || undefined,
       shortcuts: []
     };
     this.pages.push(newPage);
     await this.savePages(this.pages);
     return newPage;
+  }
+
+  async updatePageTargetApp(pageId, targetApp) {
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) {
+      return { success: false, message: 'Sayfa bulunamadı' };
+    }
+    page.targetApp = targetApp || undefined;
+    await this.savePages(this.pages);
+    return { success: true, page };
   }
 
   async updatePageName(pageId, newName) {

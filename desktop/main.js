@@ -69,8 +69,12 @@ ipcMain.handle('get-pages', async () => {
   return server.getPages();
 });
 
-ipcMain.handle('add-page', async (event, name, icon) => {
-  return server.addPage(name, icon);
+ipcMain.handle('add-page', async (event, name, icon, targetApp) => {
+  return server.addPage(name, icon, targetApp);
+});
+
+ipcMain.handle('update-page-target-app', async (event, pageId, targetApp) => {
+  return server.updatePageTargetApp(pageId, targetApp);
 });
 
 ipcMain.handle('update-page-name', async (event, pageId, newName) => {
@@ -171,6 +175,37 @@ ipcMain.handle('select-app', async () => {
   return {
     canceled: false,
     appPath: result.filePaths[0]
+  };
+});
+
+// Çalışan uygulamaların listesini al
+ipcMain.handle('get-windows', async () => {
+  return server.getWindowList();
+});
+
+// Sayfa için hedef uygulama seç
+ipcMain.handle('select-target-app', async () => {
+  // Çalışan uygulamaları al
+  const windows = server.getWindowList();
+  
+  if (windows.length === 0) {
+    return { canceled: true, message: 'Çalışan uygulama bulunamadı' };
+  }
+  
+  // Tekrar eden exe'leri filtrele, sadece benzersiz olanları göster
+  const uniqueApps = [];
+  const seenExes = new Set();
+  
+  for (const win of windows) {
+    if (!seenExes.has(win.exeName.toLowerCase())) {
+      seenExes.add(win.exeName.toLowerCase());
+      uniqueApps.push(win);
+    }
+  }
+  
+  return {
+    canceled: false,
+    windows: uniqueApps
   };
 });
 

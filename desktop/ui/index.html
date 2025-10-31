@@ -269,6 +269,17 @@
                         <div id="pageIconPreview" class="icon-preview"></div>
                     </div>
 
+                    <div class="form-group">
+                        <label>🎯 Hedef Uygulama (İsteğe bağlı)</label>
+                        <div class="icon-input-wrapper">
+                            <input type="text" id="pageTargetAppInput" placeholder="Seçilmedi - Tüm tuşlar global gönderilecek" readonly>
+                            <button type="button" class="btn btn-secondary" id="selectTargetAppBtn">🖥️ Uygulama Seç</button>
+                            <button type="button" class="btn btn-danger" id="clearTargetAppBtn" style="display: none;">❌ Temizle</button>
+                        </div>
+                        <small>Bu sayfadaki tüm kısayollar seçilen uygulamaya gönderilir (focus olmadan)</small>
+                        <div id="selectedTargetApp" style="margin-top: 8px; font-size: 12px; color: #888;"></div>
+                    </div>
+
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" id="cancelPageBtn">İptal</button>
                         <button type="submit" class="btn btn-primary">Oluştur</button>

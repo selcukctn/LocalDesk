@@ -194,7 +194,99 @@ void PressKeys(const std::vector<std::string>& keys) {
     }
 }
 
-// N-API fonksiyonu
+// Belirli bir pencereye tuş gönder (Focus edip SendInput ile)
+void SendKeysToWindow(HWND hwnd, const std::vector<std::string>& keys) {
+    if (!IsWindow(hwnd)) {
+        return; // Geçersiz window handle
+    }
+    
+    // Mevcut aktif pencereyi kaydet
+    HWND hwndForeground = GetForegroundWindow();
+    DWORD dwForegroundThreadId = GetWindowThreadProcessId(hwndForeground, NULL);
+    DWORD dwTargetThreadId = GetWindowThreadProcessId(hwnd, NULL);
+    
+    // Thread input'unu attach et (SetForegroundWindow çalışması için gerekli)
+    if (dwForegroundThreadId != dwTargetThreadId) {
+        AttachThreadInput(dwForegroundThreadId, dwTargetThreadId, TRUE);
+    }
+    
+    // Pencereyi öne getir ve focus yap
+    if (IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE); // Minimize ise restore et
+    }
+    
+    BringWindowToTop(hwnd);
+    SetForegroundWindow(hwnd);
+    SetFocus(hwnd);
+    
+    // Kısa bir delay (pencere focus olması için)
+    Sleep(50);
+    
+    // Normal SendInput kullan (PressKeys fonksiyonu)
+    // Bu zaten aktif pencereye gönderir, biz de aktif pencereyi ayarladık
+    PressKeys(keys);
+    
+    // Thread input'unu detach et
+    if (dwForegroundThreadId != dwTargetThreadId) {
+        AttachThreadInput(dwForegroundThreadId, dwTargetThreadId, FALSE);
+    }
+    
+    // Orijinal pencereye geri dön (opsiyonel, isterseniz kaldırabilirsiniz)
+    // SetForegroundWindow(hwndForeground);
+}
+
+// Çalışan pencereleri listele
+struct WindowInfo {
+    HWND hwnd;
+    std::string title;
+    std::string exeName;
+};
+
+std::vector<WindowInfo> windowList;
+
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+    // Görünür ve başlık barı olan pencereler
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    
+    char title[256];
+    GetWindowTextA(hwnd, title, sizeof(title));
+    
+    if (strlen(title) == 0) return TRUE; // Başlıksız pencereler
+    
+    // Process ID'yi al
+    DWORD processId;
+    GetWindowThreadProcessId(hwnd, &processId);
+    
+    // Process handle'ı aç
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+    if (hProcess) {
+        char exePath[MAX_PATH];
+        DWORD size = MAX_PATH;
+        
+        // Exe adını al
+        if (QueryFullProcessImageNameA(hProcess, 0, exePath, &size)) {
+            // Sadece dosya adını al (path olmadan)
+            char* exeName = strrchr(exePath, '\\');
+            if (exeName) {
+                exeName++; // '\' karakterini atla
+            } else {
+                exeName = exePath;
+            }
+            
+            WindowInfo info;
+            info.hwnd = hwnd;
+            info.title = title;
+            info.exeName = exeName;
+            windowList.push_back(info);
+        }
+        
+        CloseHandle(hProcess);
+    }
+    
+    return TRUE;
+}
+
+// N-API: sendKeys (Mevcut - Global)
 Napi::Value SendKeys(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     
@@ -223,9 +315,74 @@ Napi::Value SendKeys(const Napi::CallbackInfo& info) {
     return Napi::Boolean::New(env, true);
 }
 
+// N-API: sendKeysToWindow (Yeni - Belirli pencereye)
+Napi::Value SendKeysToWindowAPI(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    
+    if (info.Length() < 2) {
+        Napi::TypeError::New(env, "hwnd ve keys array bekleniyor").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    
+    if (!info[0].IsNumber() || !info[1].IsArray()) {
+        Napi::TypeError::New(env, "Geçersiz parametreler").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    
+    // HWND'yi al (64-bit güvenli)
+    int64_t hwndValue = info[0].As<Napi::Number>().Int64Value();
+    HWND hwnd = reinterpret_cast<HWND>(hwndValue);
+    
+    // Keys'i al
+    Napi::Array keysArray = info[1].As<Napi::Array>();
+    std::vector<std::string> keys;
+    
+    for (uint32_t i = 0; i < keysArray.Length(); i++) {
+        Napi::Value val = keysArray[i];
+        if (val.IsString()) {
+            keys.push_back(val.As<Napi::String>().Utf8Value());
+        }
+    }
+    
+    if (keys.empty()) {
+        Napi::Error::New(env, "En az bir tuş gerekli").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+    
+    SendKeysToWindow(hwnd, keys);
+    
+    return Napi::Boolean::New(env, true);
+}
+
+// N-API: getWindowList (Yeni)
+Napi::Value GetWindowListAPI(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    
+    // Liste temizle
+    windowList.clear();
+    
+    // Pencereleri listele
+    EnumWindows(EnumWindowsProc, 0);
+    
+    // JavaScript array oluştur
+    Napi::Array result = Napi::Array::New(env, windowList.size());
+    
+    for (size_t i = 0; i < windowList.size(); i++) {
+        Napi::Object obj = Napi::Object::New(env);
+        obj.Set("hwnd", Napi::Number::New(env, reinterpret_cast<int64_t>(windowList[i].hwnd)));
+        obj.Set("title", Napi::String::New(env, windowList[i].title));
+        obj.Set("exeName", Napi::String::New(env, windowList[i].exeName));
+        result[i] = obj;
+    }
+    
+    return result;
+}
+
 // Modül başlatma
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "sendKeys"), Napi::Function::New(env, SendKeys));
+    exports.Set(Napi::String::New(env, "sendKeysToWindow"), Napi::Function::New(env, SendKeysToWindowAPI));
+    exports.Set(Napi::String::New(env, "getWindowList"), Napi::Function::New(env, GetWindowListAPI));
     return exports;
 }
 
@@ -240,8 +397,21 @@ Napi::Value SendKeys(const Napi::CallbackInfo& info) {
     return env.Null();
 }
 
+Napi::Value SendKeysToWindowAPI(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    Napi::Error::New(env, "Bu özellik sadece Windows'ta destekleniyor").ThrowAsJavaScriptException();
+    return env.Null();
+}
+
+Napi::Value GetWindowListAPI(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    return Napi::Array::New(env, 0);
+}
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "sendKeys"), Napi::Function::New(env, SendKeys));
+    exports.Set(Napi::String::New(env, "sendKeysToWindow"), Napi::Function::New(env, SendKeysToWindowAPI));
+    exports.Set(Napi::String::New(env, "getWindowList"), Napi::Function::New(env, GetWindowListAPI));
     return exports;
 }
 
