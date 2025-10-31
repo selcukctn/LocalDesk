@@ -61,6 +61,18 @@ function App() {
     }
   };
 
+  // Sayfalar güncellendiğinde seçili sayfayı da güncelle
+  React.useEffect(() => {
+    if (selectedPage && pages.length > 0) {
+      // Seçili sayfayı güncel pages listesinden bul
+      const updatedPage = pages.find(p => p.id === selectedPage.id);
+      if (updatedPage) {
+        setSelectedPage(updatedPage);
+        console.log('📄 Seçili sayfa güncellendi:', updatedPage.name, 'Kısayol sayısı:', updatedPage.shortcuts?.length);
+      }
+    }
+  }, [pages]);
+
   // Hata göster
   React.useEffect(() => {
     if (error) {

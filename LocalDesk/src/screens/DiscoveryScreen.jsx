@@ -38,13 +38,8 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
       </View>
       <View style={styles.deviceInfo}>
         <Text style={styles.deviceName}>{item.name}</Text>
-        <Text style={styles.deviceHost}>{item.host}:{item.port}</Text>
         <View style={styles.deviceMeta}>
           <Text style={styles.deviceType}>{item.type}</Text>
-          <View style={styles.dot} />
-          <Text style={styles.discoveryMethod}>
-            {item.discoveryMethod === 'udp' ? 'UDP' : 'mDNS'}
-          </Text>
         </View>
       </View>
       <View style={styles.deviceArrow}>
@@ -76,12 +71,16 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
           <Text style={styles.title}>🎮 Local Desk</Text>
           <Text style={styles.subtitle}>Cihaz Bul</Text>
         </View>
-        <View style={styles.statusBadge}>
-          {isScanning && <ActivityIndicator size="small" color="#00C853" />}
-          <Text style={styles.statusText}>
-            {isScanning ? 'Aranıyor...' : 'Durduruldu'}
-          </Text>
-        </View>
+        {
+          devices.length < 1 && (
+            <View style={styles.statusBadge}>
+              {isScanning && <ActivityIndicator size="small" color="#00C853" />}
+              <Text style={styles.statusText}>
+                {isScanning ? 'Aranıyor...' : 'Durduruldu'}
+              </Text>
+            </View>
+          )
+        }
       </View>
 
       {/* Device List */}
