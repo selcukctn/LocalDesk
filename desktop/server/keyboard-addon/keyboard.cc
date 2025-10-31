@@ -87,23 +87,37 @@ bool IsMediaKey(WORD vk) {
            vk == VK_BROWSER_FAVORITES;
 }
 
-// Tuşları basma fonksiyonu
+// Extended key mi kontrol et
+bool IsExtendedKey(WORD vk) {
+    return vk == VK_UP || vk == VK_DOWN || vk == VK_LEFT || vk == VK_RIGHT ||
+           vk == VK_HOME || vk == VK_END || vk == VK_PRIOR || vk == VK_NEXT ||
+           vk == VK_INSERT || vk == VK_DELETE ||
+           vk == VK_RMENU || vk == VK_RCONTROL || // Sağ Alt ve Ctrl
+           vk == VK_LWIN || vk == VK_RWIN;
+}
+
+// Tuşları basma fonksiyonu - Gerçek klavye gibi davranır
 void PressKeys(const std::vector<std::string>& keys) {
     // Medya tuşları için özel işlem (tek tuş ve medya tuşu ise)
     if (keys.size() == 1) {
         auto it = keyMap.find(keys[0]);
         if (it != keyMap.end() && IsMediaKey(it->second)) {
-            // Medya tuşları için ayrı ayrı gönder (PowerShell gibi)
+            // Medya tuşları için ayrı ayrı gönder
             INPUT inputs[2] = {0};
+            
+            // Scan code'u al
+            WORD scanCode = MapVirtualKeyEx(it->second, MAPVK_VK_TO_VSC, GetKeyboardLayout(0));
             
             // Key Down
             inputs[0].type = INPUT_KEYBOARD;
             inputs[0].ki.wVk = it->second;
+            inputs[0].ki.wScan = scanCode;
             inputs[0].ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
             
             // Key Up
             inputs[1].type = INPUT_KEYBOARD;
             inputs[1].ki.wVk = it->second;
+            inputs[1].ki.wScan = scanCode;
             inputs[1].ki.dwFlags = KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
             
             // İki eventi de gönder
@@ -122,15 +136,20 @@ void PressKeys(const std::vector<std::string>& keys) {
             continue; // Bilinmeyen tuş, atla
         }
         
+        WORD vk = it->second;
+        
+        // Scan code'u al - Gerçek klavye gibi davranmak için ZORUNLU
+        WORD scanCode = MapVirtualKeyEx(vk, MAPVK_VK_TO_VSC, GetKeyboardLayout(0));
+        
         INPUT input = {0};
         input.type = INPUT_KEYBOARD;
-        input.ki.wVk = it->second;
+        input.ki.wVk = vk;
+        input.ki.wScan = scanCode; // Scan code ekle
+        input.ki.dwFlags = 0;
         
-        // Medya ve özel tuşlar için EXTENDEDKEY flag'i ekle
-        if (IsMediaKey(it->second)) {
-            input.ki.dwFlags = KEYEVENTF_EXTENDEDKEY;
-        } else {
-            input.ki.dwFlags = 0; // Normal key down
+        // Extended key kontrolü
+        if (IsExtendedKey(vk) || IsMediaKey(vk)) {
+            input.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
         }
         
         inputs.push_back(input);
@@ -143,15 +162,20 @@ void PressKeys(const std::vector<std::string>& keys) {
             continue;
         }
         
+        WORD vk = keyIt->second;
+        
+        // Scan code'u al
+        WORD scanCode = MapVirtualKeyEx(vk, MAPVK_VK_TO_VSC, GetKeyboardLayout(0));
+        
         INPUT input = {0};
         input.type = INPUT_KEYBOARD;
-        input.ki.wVk = keyIt->second;
+        input.ki.wVk = vk;
+        input.ki.wScan = scanCode; // Scan code ekle
+        input.ki.dwFlags = KEYEVENTF_KEYUP;
         
-        // Medya ve özel tuşlar için EXTENDEDKEY + KEYUP flag'i
-        if (IsMediaKey(keyIt->second)) {
-            input.ki.dwFlags = KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP;
-        } else {
-            input.ki.dwFlags = KEYEVENTF_KEYUP;
+        // Extended key kontrolü
+        if (IsExtendedKey(vk) || IsMediaKey(vk)) {
+            input.ki.dwFlags |= KEYEVENTF_EXTENDEDKEY;
         }
         
         inputs.push_back(input);
@@ -160,8 +184,13 @@ void PressKeys(const std::vector<std::string>& keys) {
     // SendInput ile tuşları gönder
     if (!inputs.empty()) {
         UINT result = SendInput(inputs.size(), inputs.data(), sizeof(INPUT));
-        // Debug: Kaç input gönderildi?
-        // printf("SendInput result: %d of %zu\n", result, inputs.size());
+        
+        // Başarı kontrolü
+        if (result != inputs.size()) {
+            // Hata: Tüm inputlar gönderilemedi
+            DWORD error = GetLastError();
+            // printf("SendInput hatası: %lu, gönderilen: %u/%zu\n", error, result, inputs.size());
+        }
     }
 }
 

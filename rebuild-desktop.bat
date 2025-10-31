@@ -4,12 +4,13 @@ echo   C++ Addon Yeniden Derleme
 echo ========================================
 echo.
 
-cd desktop
+cd desktop/server/keyboard-addon
 
 echo [1/2] C++ Addon derleniyor...
 echo Bu islem 30-60 saniye surebilir...
 echo.
-call npm run rebuild
+echo npm install
+call npm install
 
 if %ERRORLEVEL% EQU 0 (
     echo.
