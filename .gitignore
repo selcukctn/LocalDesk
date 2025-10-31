@@ -53,3 +53,4 @@ LocalDesk/ios/build/
 .env
 .env.local
 
+package-lock.json

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,9 +7,18 @@ import {
   StatusBar,
   ScrollView,
   Image,
-  Dimensions
+  Dimensions,
+  TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { OrientationLocker, LANDSCAPE } from 'react-native-orientation-locker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const STORAGE_KEYS = {
+  HEADER_EXPANDED: '@localdesk_header_expanded',
+  VIEW_MODE: '@localdesk_view_mode',
+  GRID_SIZE: '@localdesk_grid_size'
+};
 
 export const ControlScreen = ({
   device,
@@ -22,26 +31,87 @@ export const ControlScreen = ({
   onDisconnect
 }) => {
   const [headerExpanded, setHeaderExpanded] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState('both'); // 'both', 'iconOnly', 'textOnly'
+  const [gridSize, setGridSize] = useState(4); // 4 veya 8
+  const [isLoading, setIsLoading] = useState(true);
 
-  const getStatusText = () => {
-    if (isPairing) return 'Eşleşiyor...';
-    if (isConnected) return 'Bağlı';
-    return 'Bağlanıyor...';
+  // Ayarları AsyncStorage'dan yükle
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  // Ayarları yükle
+  const loadSettings = async () => {
+    try {
+      const [savedHeaderExpanded, savedViewMode, savedGridSize] = await Promise.all([
+        AsyncStorage.getItem(STORAGE_KEYS.HEADER_EXPANDED),
+        AsyncStorage.getItem(STORAGE_KEYS.VIEW_MODE),
+        AsyncStorage.getItem(STORAGE_KEYS.GRID_SIZE)
+      ]);
+
+      if (savedHeaderExpanded !== null) {
+        setHeaderExpanded(savedHeaderExpanded === 'true');
+      }
+      if (savedViewMode !== null) {
+        setViewMode(savedViewMode);
+      }
+      if (savedGridSize !== null) {
+        setGridSize(parseInt(savedGridSize, 10));
+      }
+    } catch (error) {
+      console.error('Ayarlar yüklenirken hata:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const getStatusColor = () => {
-    if (isConnected) return '#00C853';
-    if (isPairing) return '#FF9800';
-    return '#808080';
+  // Header expanded ayarını kaydet
+  const handleHeaderExpandedChange = async (value) => {
+    setHeaderExpanded(value);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.HEADER_EXPANDED, value.toString());
+    } catch (error) {
+      console.error('Ayar kaydedilirken hata:', error);
+    }
   };
+
+  // View mode ayarını kaydet
+  const handleViewModeChange = async (mode) => {
+    setViewMode(mode);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
+    } catch (error) {
+      console.error('Ayar kaydedilirken hata:', error);
+    }
+  };
+
+  // Grid size ayarını kaydet
+  const handleGridSizeChange = async (size) => {
+    setGridSize(size);
+    try {
+      await AsyncStorage.setItem(STORAGE_KEYS.GRID_SIZE, size.toString());
+    } catch (error) {
+      console.error('Ayar kaydedilirken hata:', error);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+      <OrientationLocker orientation={LANDSCAPE} />
       <StatusBar barStyle="light-content" backgroundColor="#0A0E27" />
       
+      {/* Menu dışına tıklandığında kapat */}
+      {menuOpen && (
+        <TouchableWithoutFeedback onPress={() => setMenuOpen(false)}>
+          <View style={styles.menuOverlay} />
+        </TouchableWithoutFeedback>
+      )}
+
       {/* Header */}
       <View style={styles.header}>
-        {headerExpanded && (
+        {headerExpanded ? (
           <>
             <View style={styles.headerLeft}>
               <TouchableOpacity onPress={onBack}>
@@ -53,16 +123,128 @@ export const ControlScreen = ({
               <Text style={styles.title}>{page?.name || 'Control Hub'}</Text>
             </View>
           </>
+        ) : (
+          <View style={styles.headerLeft} />
         )}
-        <TouchableOpacity
-          style={[styles.settingsButton, !headerExpanded && styles.settingsButtonCollapsed]}
-          onPress={() => setHeaderExpanded(!headerExpanded)}
-        >
-          <Text style={styles.settingsIcon}>
-            {headerExpanded ? '⬆️' : '⬇️'}
-          </Text>
-        </TouchableOpacity>
+        
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setMenuOpen(!menuOpen)}
+          >
+            <Text style={styles.menuIcon}>⋮</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      {/* Menu Dropdown */}
+      {menuOpen && (
+        <View style={styles.menuDropdown}>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => {
+              handleHeaderExpandedChange(!headerExpanded);
+              setMenuOpen(false);
+            }}
+          >
+            <Text style={styles.menuItemText}>
+              {headerExpanded ? 'Header\'ı Gizle' : 'Header\'ı Göster'}
+            </Text>
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          <View style={styles.menuSection}>
+            <Text style={styles.menuSectionTitle}>Kart Görünümü</Text>
+            
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                viewMode === 'both' && styles.menuItemActive
+              ]}
+              onPress={() => {
+                handleViewModeChange('both');
+                setMenuOpen(false);
+              }}
+            >
+              <Text style={styles.menuItemText}>İkon + Yazı</Text>
+              {viewMode === 'both' && (
+                <Text style={styles.menuItemCheck}>✓</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                viewMode === 'iconOnly' && styles.menuItemActive
+              ]}
+              onPress={() => {
+                handleViewModeChange('iconOnly');
+                setMenuOpen(false);
+              }}
+            >
+              <Text style={styles.menuItemText}>Sadece İkon</Text>
+              {viewMode === 'iconOnly' && (
+                <Text style={styles.menuItemCheck}>✓</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                viewMode === 'textOnly' && styles.menuItemActive
+              ]}
+              onPress={() => {
+                handleViewModeChange('textOnly');
+                setMenuOpen(false);
+              }}
+            >
+              <Text style={styles.menuItemText}>Sadece Yazı</Text>
+              {viewMode === 'textOnly' && (
+                <Text style={styles.menuItemCheck}>✓</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.menuDivider} />
+
+          <View style={styles.menuSection}>
+            <Text style={styles.menuSectionTitle}>Grid Boyutu</Text>
+            
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                gridSize === 4 && styles.menuItemActive
+              ]}
+              onPress={() => {
+                handleGridSizeChange(4);
+                setMenuOpen(false);
+              }}
+            >
+              <Text style={styles.menuItemText}>4x4 Grid</Text>
+              {gridSize === 4 && (
+                <Text style={styles.menuItemCheck}>✓</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.menuItem,
+                gridSize === 8 && styles.menuItemActive
+              ]}
+              onPress={() => {
+                handleGridSizeChange(8);
+                setMenuOpen(false);
+              }}
+            >
+              <Text style={styles.menuItemText}>8x8 Grid</Text>
+              {gridSize === 8 && (
+                <Text style={styles.menuItemCheck}>✓</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       <ScrollView
         style={styles.scrollView}
@@ -90,6 +272,8 @@ export const ControlScreen = ({
                   onPress={onExecuteShortcut}
                   disabled={!isConnected}
                   device={device}
+                  viewMode={viewMode}
+                  gridSize={gridSize}
                 />
               ))}
             </View>
@@ -109,7 +293,7 @@ export const ControlScreen = ({
 };
 
 // Shortcut Card Component
-const ShortcutCard = ({ shortcut, onPress, disabled, device }) => {
+const ShortcutCard = ({ shortcut, onPress, disabled, device, viewMode = 'both', gridSize = 4 }) => {
   const handlePress = () => {
     if (!disabled && onPress) {
       onPress(shortcut);
@@ -125,49 +309,88 @@ const ShortcutCard = ({ shortcut, onPress, disabled, device }) => {
     ? `http://${device.host}:${device.port}/icons/${icon}` 
     : `http://localhost:3100/icons/${icon}`;
 
+  const showIcon = viewMode === 'both' || viewMode === 'iconOnly';
+  const showText = viewMode === 'both' || viewMode === 'textOnly';
+
+  // Grid size'a göre kart boyutunu hesapla
+  const { width } = Dimensions.get('window');
+  const padding = 16; // scrollContent padding (küçültüldü)
+  const gap = 8; // actionsGrid gap (küçültüldü)
+  const totalGaps = (gridSize - 1) * gap;
+  const cardWidth = (width - (padding * 16) - totalGaps) / gridSize;
+  const cardHeight = viewMode === 'textOnly' ? cardWidth * 0.6 : cardWidth*0.8;
+  
+  // İkon boyutunu gridSize'a göre ayarla
+  const iconSize = cardWidth * 0.7;
+  const iconFontSize = gridSize === 8 ? 16 : width/17;
+
   return (
     <TouchableOpacity
       style={[
         styles.actionCard,
-        disabled && styles.actionCardDisabled
+        { 
+          backgroundColor: shortcut?.color || '#1A1F3A',
+          width: cardWidth,
+          minHeight: cardHeight,
+        },
+        disabled && styles.actionCardDisabled,
+        viewMode === 'iconOnly' && styles.actionCardIconOnly,
+        viewMode === 'textOnly' && styles.actionCardTextOnly
       ]}
       onPress={handlePress}
       activeOpacity={0.7}
       disabled={disabled}
     >
-      <View style={[styles.iconCircle, { backgroundColor: shortcut?.color || '#1F6FEB' }]}>
-        {isEmoji ? (
-          <Text style={styles.cardIcon}>{icon}</Text>
-        ) : (
-          <Image
-            source={{ uri: iconUrl }}
-            style={styles.cardIconImage}
-            resizeMode="contain"
-          />
-        )}
-      </View>
-      <Text style={styles.cardTitle} numberOfLines={1}>
-        {shortcut?.label || 'Kısayol'}
-      </Text>
-      <Text style={styles.cardSubtitle} numberOfLines={1}>
-        {shortcut?.keys?.join(' + ') || 'Action'}
-      </Text>
+      {showIcon && (
+        <View style={[styles.iconCircle]}>
+          {isEmoji ? (
+            <Text style={[styles.cardIcon, { fontSize: iconFontSize }]}>{icon}</Text>
+          ) : (
+            <Image
+              source={{ uri: iconUrl }}
+              style={[styles.cardIconImage, { width: iconSize, height: iconSize }]}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      )}
+      {showText && (
+        <>
+          <Text style={styles.cardTitle} numberOfLines={1}>
+            {shortcut?.label || 'Kısayol'}
+          </Text>
+          {viewMode === 'both' && (
+            <Text style={styles.cardSubtitle} numberOfLines={1}>
+              {shortcut?.keys?.join(' + ') || 'Action'}
+            </Text>
+          )}
+        </>
+      )}
     </TouchableOpacity>
   );
 };
-const { width } = Dimensions.get('window');
+const { width, height } = Dimensions.get('window');
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0E27'
+    backgroundColor: '#1e1e1e'
+  },
+  menuOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 999
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#0A0E27'
+    width:width,
+    height:width/18,
+    backgroundColor: '#1e1e1e',
   },
   headerLeft: {
     width: 40,
@@ -186,22 +409,82 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center'
   },
-  settingsButton: {
+  headerRight: {
     width: 40,
     alignItems: 'flex-end'
   },
-  settingsButtonCollapsed: {
-    flex: 1,
-    alignItems: 'center'
+  menuButton: {
+    padding: 8
   },
-  settingsIcon: {
-    fontSize: 24
+  menuIcon: {
+    fontSize: 24,
+    color: '#FFFFFF'
+  },
+  menuDropdown: {
+    position: 'absolute',
+    top: 60,
+    right: 16,
+    backgroundColor: '#1A1F3A',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#2A3150',
+    minWidth: 220,
+    zIndex: 1000,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 10
+  },
+  menuSection: {
+    paddingVertical: 4
+  },
+  menuSectionTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8B92B0',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    paddingHorizontal: 16,
+    gap: 12
+  },
+  menuItemActive: {
+    backgroundColor: '#2A3150'
+  },
+  menuItemIcon: {
+    fontSize: 18,
+    width: 24,
+    textAlign: 'center'
+  },
+  menuItemText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '500'
+  },
+  menuItemCheck: {
+    fontSize: 16,
+    color: '#1F6FEB',
+    fontWeight: 'bold'
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#2A3150',
+    marginVertical: 4
   },
   scrollView: {
     flex: 1
   },
   scrollContent: {
-    padding: 20,
+    padding: 16,
     paddingBottom: 40
   },
   section: {
@@ -255,36 +538,37 @@ const styles = StyleSheet.create({
   actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'space-between'
+    gap: 8,
+    rowGap: 20,
+    justifyContent: 'space-around',
+    alignContent: 'space-around',
+    width: '100%'
   },
   actionCard: {
-    backgroundColor: '#1A1F3A',
     borderRadius: 16,
-    padding: 20,
-    width: width / 5,
+    padding: 12,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2A3150',
-    minHeight: 140
+    justifyContent: 'center'
+  },
+  actionCardIconOnly: {
+    padding: 10
+  },
+  actionCardTextOnly: {
+    padding: 10,
+    justifyContent: 'center'
   },
   actionCardDisabled: {
     opacity: 0.5
   },
   iconCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12
   },
   cardIcon: {
-    fontSize: 28
+    // fontSize dinamik olarak inline style ile ayarlanıyor
   },
   cardIconImage: {
-    width: 32,
-    height: 32
+    // width ve height dinamik olarak inline style ile ayarlanıyor
   },
   cardTitle: {
     fontSize: 14,
