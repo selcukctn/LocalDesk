@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
   StatusBar,
@@ -6,6 +6,7 @@ import {
   View,
   Alert
 } from 'react-native';
+import OrientationLocker from 'react-native-orientation-locker';
 import { DiscoveryScreen } from './src/screens/DiscoveryScreen';
 import { PageListScreen } from './src/screens/PageListScreen';
 import { ControlScreen } from './src/screens/ControlScreen';
@@ -26,6 +27,15 @@ function App() {
     disconnect,
     executeShortcut
   } = useConnection();
+
+  // Tüm uygulama için yatay mod zorla
+  useEffect(() => {
+    OrientationLocker.lockToLandscape();
+    
+    return () => {
+      OrientationLocker.unlockAllOrientations();
+    };
+  }, []);
 
   // Cihaz seçildiğinde bağlan
   const handleDeviceSelect = async (device) => {

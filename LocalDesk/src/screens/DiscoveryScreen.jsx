@@ -6,9 +6,14 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
-  StatusBar
+  StatusBar,
+  ScrollView,
+  Dimensions
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDiscovery } from '../hooks/useDiscovery';
+
+const { width } = Dimensions.get('window');
 
 export const DiscoveryScreen = ({ onDeviceSelect }) => {
   const { devices, isScanning, error, startDiscovery, stopDiscovery } = useDiscovery();
@@ -49,7 +54,7 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
   );
 
   const renderEmpty = () => (
-    <View style={styles.emptyContainer}>
+    <View style={styles.emptyState}>
       <Text style={styles.emptyIcon}>🔍</Text>
       <Text style={styles.emptyText}>Cihaz aranıyor...</Text>
       <Text style={styles.emptySubtext}>
@@ -62,44 +67,77 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       <StatusBar barStyle="light-content" backgroundColor="#1e1e1e" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Text style={styles.title}>🎮 Local Desk</Text>
-          <Text style={styles.subtitle}>Cihaz Bul</Text>
-        </View>
-        {
-          devices.length < 1 && (
-            <View style={styles.statusBadge}>
-              {isScanning && <ActivityIndicator size="small" color="#00C853" />}
-              <Text style={styles.statusText}>
-                {isScanning ? 'Aranıyor...' : 'Durduruldu'}
+      <View style={styles.mainContent}>
+        {/* Sol Panel - Menü ve Bilgiler */}
+        <View style={styles.leftPanel}>
+          <ScrollView 
+            style={styles.leftScrollView}
+            contentContainerStyle={styles.leftScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Logo ve Başlık */}
+            <View style={styles.logoSection}>
+              <View style={styles.logoContainer}>
+                <Text style={styles.logoIcon}>🎮</Text>
+                <Text style={styles.logoIcon2}>💻</Text>
+              </View>
+              <Text style={styles.appTitle}>Local Desk</Text>
+              <Text style={styles.appSubtitle}>Desktop Controller</Text>
+            </View>
+
+            {/* Durum */}
+            <View style={styles.statusSection}>
+              <Text style={styles.sectionLabel}>Durum</Text>
+              <View style={styles.statusBadge}>
+                {isScanning && <ActivityIndicator size="small" color="#4CAF50" />}
+                <Text style={styles.statusLabel}>
+                  {isScanning ? 'Aranıyor...' : 'Durduruldu'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Bulunan Cihaz Sayısı */}
+            <View style={styles.infoSection}>
+              <Text style={styles.sectionLabel}>Bulunan Cihazlar</Text>
+              <View style={styles.infoBox}>
+                <Text style={styles.infoNumber}>{devices.length}</Text>
+                <Text style={styles.infoLabel}>Cihaz</Text>
+              </View>
+            </View>
+
+            {/* Bilgi Kartı */}
+            <View style={styles.helpSection}>
+              <Text style={styles.helpIcon}>💡</Text>
+              <Text style={styles.helpText}>
+                Masaüstü uygulamanızı başlatın ve aynı Wi-Fi ağına bağlanın
               </Text>
             </View>
-          )
-        }
-      </View>
+          </ScrollView>
+        </View>
 
-      {/* Device List */}
-      <FlatList
-        data={devices}
-        renderItem={renderDevice}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        ListEmptyComponent={renderEmpty}
-        showsVerticalScrollIndicator={false}
-      />
+        {/* Sağ Panel - Cihaz Listesi */}
+        <View style={styles.rightPanel}>
+          <View style={styles.rightHeader}>
+            <Text style={styles.rightTitle}>Cihazlar</Text>
+            <Text style={styles.rightSubtitle}>
+              Bağlanmak için bir cihaz seçin
+            </Text>
+          </View>
 
-      {/* Info Footer */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          💡 Masaüstü uygulamanızı başlatın ve aynı Wi-Fi ağına bağlanın
-        </Text>
+          <FlatList
+            data={devices}
+            renderItem={renderDevice}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.deviceList}
+            ListEmptyComponent={renderEmpty}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -108,52 +146,143 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1e1e1e'
   },
-  header: {
-    backgroundColor: '#252526',
-    padding: 20,
-    paddingTop: 40,
-    borderBottomWidth: 1,
-    borderBottomColor: '#3e3e42',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
+  mainContent: {
+    flex: 1,
+    flexDirection: 'row'
   },
-  headerContent: {
+  // Sol Panel Stilleri
+  leftPanel: {
+    width: width * 0.28,
+    backgroundColor: '#252526',
+    borderRightWidth: 1,
+    borderRightColor: '#3e3e42'
+  },
+  leftScrollView: {
     flex: 1
   },
-  title: {
+  leftScrollContent: {
+    padding: 24,
+    paddingBottom: 16
+  },
+  logoSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+    paddingTop: 20
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16
+  },
+  logoIcon: {
+    fontSize: 36
+  },
+  logoIcon2: {
+    fontSize: 36
+  },
+  appTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#CCCCCC',
+    color: '#FFFFFF',
     marginBottom: 4
   },
-  subtitle: {
+  appSubtitle: {
     fontSize: 14,
     color: '#808080'
+  },
+  statusSection: {
+    marginBottom: 32
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#808080',
+    textTransform: 'uppercase',
+    marginBottom: 12,
+    letterSpacing: 0.5
   },
   statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2d2d30',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    gap: 8
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    gap: 10
   },
-  statusText: {
-    fontSize: 12,
-    color: '#CCCCCC'
+  statusLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF'
   },
-  listContent: {
-    padding: 16
+  infoSection: {
+    marginBottom: 32
+  },
+  infoBox: {
+    backgroundColor: '#2d2d30',
+    padding: 20,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  infoNumber: {
+    fontSize: 48,
+    fontWeight: '700',
+    color: '#4CAF50',
+    marginBottom: 4
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: '#808080',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5
+  },
+  helpSection: {
+    backgroundColor: '#2d2d30',
+    padding: 16,
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#4CAF50'
+  },
+  helpIcon: {
+    fontSize: 24,
+    marginBottom: 8
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#CCCCCC',
+    lineHeight: 18
+  },
+  // Sağ Panel Stilleri
+  rightPanel: {
+    flex: 1,
+    backgroundColor: '#1e1e1e'
+  },
+  rightHeader: {
+    padding: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3e3e42'
+  },
+  rightTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 6
+  },
+  rightSubtitle: {
+    fontSize: 14,
+    color: '#808080'
+  },
+  deviceList: {
+    padding: 24
   },
   deviceCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#252526',
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
+    padding: 20,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#3e3e42'
   },
@@ -164,7 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2d2d30',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12
+    marginRight: 16
   },
   deviceIconText: {
     fontSize: 24
@@ -173,15 +302,9 @@ const styles = StyleSheet.create({
     flex: 1
   },
   deviceName: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    color: '#CCCCCC',
-    marginBottom: 4
-  },
-  deviceHost: {
-    fontSize: 12,
-    color: '#808080',
-    fontFamily: 'monospace',
+    color: '#FFFFFF',
     marginBottom: 4
   },
   deviceMeta: {
@@ -190,29 +313,20 @@ const styles = StyleSheet.create({
     gap: 6
   },
   deviceType: {
-    fontSize: 11,
+    fontSize: 14,
     color: '#808080',
     textTransform: 'uppercase'
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: '#808080'
-  },
-  discoveryMethod: {
-    fontSize: 11,
-    color: '#1F6FEB',
-    fontWeight: '600'
   },
   deviceArrow: {
     marginLeft: 12
   },
   arrowText: {
-    fontSize: 24,
-    color: '#808080'
+    fontSize: 28,
+    color: '#808080',
+    fontWeight: '300'
   },
-  emptyContainer: {
+  emptyState: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 80,
@@ -225,7 +339,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#CCCCCC',
+    color: '#FFFFFF',
     marginBottom: 8,
     textAlign: 'center'
   },
@@ -240,18 +354,6 @@ const styles = StyleSheet.create({
     color: '#f44336',
     marginTop: 16,
     textAlign: 'center'
-  },
-  footer: {
-    backgroundColor: '#252526',
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#3e3e42'
-  },
-  footerText: {
-    fontSize: 12,
-    color: '#808080',
-    textAlign: 'center',
-    lineHeight: 18
   }
 });
 

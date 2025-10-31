@@ -11,7 +11,6 @@ import {
   TouchableWithoutFeedback
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { OrientationLocker, LANDSCAPE } from 'react-native-orientation-locker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEYS = {
@@ -99,7 +98,6 @@ export const ControlScreen = ({
 
   return (
     <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
-      <OrientationLocker orientation={LANDSCAPE} />
       <StatusBar barStyle="light-content" backgroundColor="#0A0E27" />
       
       {/* Menu dışına tıklandığında kapat */}
