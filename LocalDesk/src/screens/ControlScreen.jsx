@@ -116,6 +116,7 @@ export const ControlScreen = ({
             shortcuts={shortcuts}
             onPress={onExecuteShortcut}
             disabled={!isConnected}
+            device={device}
           />
         )}
       </View>

@@ -63,7 +63,12 @@ body {
     border-radius: 8px;
     flex-shrink: 0;
 }
-
+.menu-icons {
+    width: 19px;
+    height: 19px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
 .app-title-group {
     display: flex;
     flex-direction: column;

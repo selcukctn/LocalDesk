@@ -5,13 +5,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  ScrollView
+  ScrollView,
+  Image
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
 const BUTTON_SIZE = (width - 48) / 3; // 3 sütun, padding hariç
 
-export const ButtonGrid = ({ shortcuts, onPress, disabled }) => {
+export const ButtonGrid = ({ shortcuts, onPress, disabled, device }) => {
   if (!shortcuts || shortcuts.length === 0) {
     return (
       <View style={styles.emptyContainer}>
@@ -36,13 +37,14 @@ export const ButtonGrid = ({ shortcuts, onPress, disabled }) => {
           shortcut={shortcut}
           onPress={onPress}
           disabled={disabled}
+          device={device}
         />
       ))}
     </ScrollView>
   );
 };
 
-const ShortcutButton = ({ shortcut, onPress, disabled }) => {
+const ShortcutButton = ({ shortcut, onPress, disabled, device }) => {
   const handlePress = () => {
     if (!disabled && onPress) {
       onPress(shortcut);
@@ -51,6 +53,15 @@ const ShortcutButton = ({ shortcut, onPress, disabled }) => {
 
   // Güvenli keys kontrolü
   const keys = shortcut?.keys || [];
+
+  // İkon emoji mi dosya mı kontrol et
+  const icon = shortcut?.icon || '⌨️';
+  const isEmoji = icon.length <= 4;
+
+  // Resim URL'ini oluştur - device bilgisini kullan
+  const iconUrl = device 
+    ? `http://${device.host}:${device.port}/icons/${icon}` 
+    : `http://localhost:3100/icons/${icon}`;
 
   return (
     <TouchableOpacity
@@ -64,7 +75,15 @@ const ShortcutButton = ({ shortcut, onPress, disabled }) => {
       disabled={disabled}
     >
       <View style={styles.buttonContent}>
-        <Text style={styles.icon}>{shortcut?.icon || '⌨️'}</Text>
+        {isEmoji ? (
+          <Text style={styles.icon}>{icon}</Text>
+        ) : (
+          <Image
+            source={{ uri: iconUrl }}
+            style={styles.iconImage}
+            resizeMode="contain"
+          />
+        )}
         <Text style={styles.label} numberOfLines={2}>
           {shortcut?.label || 'Kısayol'}
         </Text>
@@ -122,6 +141,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 36,
+    marginBottom: 8
+  },
+  iconImage: {
+    width: 40,
+    height: 40,
     marginBottom: 8
   },
   label: {
