@@ -1,4 +1,12 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+/**
+ * Local Desk - Desktop Controller
+ * 
+ * @author Harun Selçuk Çetin
+ * @copyright Copyright © 2024 Harun Selçuk Çetin
+ * @license MIT
+ */
+
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const server = require('./server');
 
@@ -207,5 +215,15 @@ ipcMain.handle('select-target-app', async () => {
     canceled: false,
     windows: uniqueApps
   };
+});
+
+// Harici URL'i default tarayıcıda aç
+ipcMain.handle('open-external', async (event, url) => {
+  try {
+    await shell.openExternal(url);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
 });
 

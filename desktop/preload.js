@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getWindows: () => ipcRenderer.invoke('get-windows'),
   
   // Hedef uygulama seç (sayfa için)
-  selectTargetApp: () => ipcRenderer.invoke('select-target-app')
+  selectTargetApp: () => ipcRenderer.invoke('select-target-app'),
+  
+  // Harici URL aç (default tarayıcıda)
+  openExternal: (url) => ipcRenderer.invoke('open-external', url)
 });
 

@@ -148,6 +148,20 @@ function setupEventListeners() {
     if (selectTargetAppBtn) selectTargetAppBtn.addEventListener('click', selectTargetApp);
     if (clearTargetAppBtn) clearTargetAppBtn.addEventListener('click', clearTargetApp);
 
+    // Buy Me a Coffee link
+    const buyMeCoffeeLink = document.getElementById('buyMeCoffeeLink');
+    if (buyMeCoffeeLink) {
+        buyMeCoffeeLink.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const url = 'https://buymeacoffee.com/harunselcukcetin';
+            try {
+                await window.electronAPI.openExternal(url);
+            } catch (error) {
+                console.error('URL açma hatası:', error);
+            }
+        });
+    }
+
     // Confirm modal handlers
     confirmModal = document.getElementById('confirmModal');
     const confirmOkBtn = document.getElementById('confirmOkBtn');

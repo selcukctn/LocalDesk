@@ -46,6 +46,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
+    position: relative;
 }
 
 .sidebar-header {
@@ -846,5 +847,37 @@ body {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+/* Sidebar Footer - Buy Me a Coffee */
+.sidebar-footer {
+    margin-top: auto;
+    padding: 20px 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.buy-me-coffee-link {
+    display: inline-block;
+    text-decoration: none;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.buy-me-coffee-link:hover {
+    transform: scale(1.05);
+    opacity: 0.9;
+}
+
+.buy-me-coffee-link:active {
+    transform: scale(0.98);
+}
+
+.buy-me-coffee-img {
+    width: 180px;
+    height: auto;
+    display: block;
+    border-radius: 6px;
 }
 
