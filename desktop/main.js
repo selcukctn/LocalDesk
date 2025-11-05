@@ -105,6 +105,10 @@ ipcMain.handle('delete-shortcut-from-page', async (event, pageId, shortcutId) =>
   return server.deleteShortcutFromPage(pageId, shortcutId);
 });
 
+ipcMain.handle('reorder-shortcuts-in-page', async (event, pageId, shortcutIds) => {
+  return server.reorderShortcutsInPage(pageId, shortcutIds);
+});
+
 // Geriye uyumluluk için shortcuts
 ipcMain.handle('get-shortcuts', async () => {
   return server.getShortcuts();

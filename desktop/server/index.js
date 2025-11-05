@@ -769,6 +769,31 @@ class LocalDeskServer extends EventEmitter {
     await this.savePages(this.pages);
     return { success: true };
   }
+
+  async reorderShortcutsInPage(pageId, shortcutIds) {
+    const page = this.pages.find(p => p.id === pageId);
+    if (!page) {
+      return { success: false, message: 'Sayfa bulunamadı' };
+    }
+    
+    // Yeni sıralamaya göre shortcuts'ları yeniden düzenle
+    const shortcutsMap = new Map(page.shortcuts.map(s => [s.id, s]));
+    const reorderedShortcuts = shortcutIds
+      .map(id => shortcutsMap.get(id))
+      .filter(s => s !== undefined);
+    
+    // Kalan shortcuts'ları (eğer varsa) sona ekle
+    const remainingIds = new Set(shortcutIds);
+    const remainingShortcuts = page.shortcuts.filter(s => !remainingIds.has(s.id));
+    
+    page.shortcuts = [...reorderedShortcuts, ...remainingShortcuts];
+    await this.savePages(this.pages);
+    
+    // Tüm bağlı istemcilere güncellenmiş sayfaları gönder
+    this.io.emit('pages-update', this.pages);
+    
+    return { success: true, shortcuts: page.shortcuts };
+  }
 }
 
 // Singleton instance

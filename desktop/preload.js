@@ -11,6 +11,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   addShortcutToPage: (pageId, shortcut) => ipcRenderer.invoke('add-shortcut-to-page', pageId, shortcut),
   updateShortcutInPage: (pageId, shortcutId, shortcut) => ipcRenderer.invoke('update-shortcut-in-page', pageId, shortcutId, shortcut),
   deleteShortcutFromPage: (pageId, shortcutId) => ipcRenderer.invoke('delete-shortcut-from-page', pageId, shortcutId),
+  reorderShortcutsInPage: (pageId, shortcutIds) => ipcRenderer.invoke('reorder-shortcuts-in-page', pageId, shortcutIds),
   
   // Shortcuts yönetimi (geriye uyumluluk)
   getShortcuts: () => ipcRenderer.invoke('get-shortcuts'),

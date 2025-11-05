@@ -451,10 +451,17 @@ function renderShortcuts() {
         }
         
         return `
-            <div class="shortcut-card" style="border-left: 4px solid ${shortcut.color}">
+            <div class="shortcut-card" 
+                 draggable="true" 
+                 data-shortcut-id="${shortcut.id}"
+                 style="border-left: 4px solid ${shortcut.color}">
                 <div class="shortcut-actions">
-                    <button class="action-btn" onclick="editShortcut(${shortcut.id})">✏️</button>
-                    <button class="action-btn" onclick="deleteShortcut(${shortcut.id})">🗑️</button>
+                    <button class="action-btn" 
+                            onclick="event.stopPropagation(); editShortcut(${shortcut.id})"
+                            onmousedown="event.stopPropagation()">✏️</button>
+                    <button class="action-btn" 
+                            onclick="event.stopPropagation(); deleteShortcut(${shortcut.id})"
+                            onmousedown="event.stopPropagation()">🗑️</button>
                 </div>
                 <div class="shortcut-icon">${iconHtml}</div>
                 <div class="shortcut-label">${shortcut.label}</div>
@@ -462,6 +469,113 @@ function renderShortcuts() {
             </div>
         `;
     }).join('');
+    
+    // Drag and drop event listeners ekle
+    setupDragAndDrop();
+}
+
+// Drag and drop setup
+let draggedElement = null;
+let draggedOverElement = null;
+
+function setupDragAndDrop() {
+    const shortcutCards = document.querySelectorAll('.shortcut-card[draggable="true"]');
+    
+    shortcutCards.forEach(card => {
+        // Butonlara tıklandığında drag'i engelle
+        const actionButtons = card.querySelectorAll('.action-btn');
+        actionButtons.forEach(btn => {
+            btn.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                card.draggable = false;
+                // Kısa bir süre sonra tekrar etkinleştir
+                setTimeout(() => {
+                    card.draggable = true;
+                }, 100);
+            });
+        });
+        
+        // Drag başladığında
+        card.addEventListener('dragstart', (e) => {
+            // Eğer buton tıklanmışsa drag'i iptal et
+            if (e.target.closest('.action-btn')) {
+                e.preventDefault();
+                return false;
+            }
+            
+            draggedElement = card;
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', card.innerHTML);
+        });
+        
+        // Drag bittiğinde
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+            // Tüm kartlardan drag-over stillerini kaldır
+            document.querySelectorAll('.shortcut-card').forEach(c => {
+                c.classList.remove('drag-over');
+            });
+            draggedElement = null;
+            draggedOverElement = null;
+        });
+        
+        // Üzerine gelindiğinde
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (draggedElement && draggedElement !== card) {
+                card.classList.add('drag-over');
+                draggedOverElement = card;
+            }
+        });
+        
+        // Üzerinden çıkıldığında
+        card.addEventListener('dragleave', (e) => {
+            card.classList.remove('drag-over');
+        });
+        
+        // Bırakıldığında
+        card.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (draggedElement && draggedElement !== card) {
+                // DOM'da sıralamayı değiştir
+                const allCards = Array.from(shortcutsGrid.querySelectorAll('.shortcut-card'));
+                const draggedIndex = allCards.indexOf(draggedElement);
+                const targetIndex = allCards.indexOf(card);
+                
+                if (draggedIndex < targetIndex) {
+                    shortcutsGrid.insertBefore(draggedElement, card.nextSibling);
+                } else {
+                    shortcutsGrid.insertBefore(draggedElement, card);
+                }
+                
+                // Yeni sıralamayı al ve server'a gönder
+                saveShortcutsOrder();
+            }
+            
+            card.classList.remove('drag-over');
+        });
+    });
+}
+
+// Kısayolların sırasını kaydet
+async function saveShortcutsOrder() {
+    const allCards = Array.from(shortcutsGrid.querySelectorAll('.shortcut-card'));
+    const shortcutIds = allCards.map(card => parseInt(card.dataset.shortcutId));
+    
+    try {
+        await window.electronAPI.reorderShortcutsInPage(currentPageId, shortcutIds);
+        // Sayfaları yeniden yükle (güncel sıralamayı almak için)
+        await loadPages();
+    } catch (error) {
+        console.error('Kısayol sıralaması kaydedilemedi:', error);
+        // Hata durumunda sayfayı yeniden yükle
+        await loadPages();
+    }
 }
 
 // Load trusted devices
