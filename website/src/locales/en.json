@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "home": "Home",
+    "features": "Features",
+    "howItWorks": "How It Works",
+    "screenshots": "Screenshots"
+  },
+  "hero": {
+    "title": "Turn your phone into a Desktop Controller",
+    "subtitle": "No extra hardware required. Control your desktop with your smartphone instantly.",
+    "download": "Download for Desktop",
+    "learnMore": "Learn More"
+  },
+  "features": {
+    "title": "Powerful Features",
+    "subtitle": "Everything you need to control your desktop from your phone",
+    "noDevice": {
+      "title": "No Extra Device Needed",
+      "description": "Use your existing smartphone. No need to buy additional hardware or controllers."
+    },
+    "oneTap": {
+      "title": "One-Tap Shortcuts",
+      "description": "Execute keyboard shortcuts instantly with a single tap on your phone screen."
+    },
+    "customPages": {
+      "title": "Custom Control Pages",
+      "description": "Create and organize your shortcuts into custom pages for different workflows."
+    },
+    "instant": {
+      "title": "Instant Connection",
+      "description": "Automatic discovery and pairing. Connect in seconds over your local network."
+    },
+    "gaming": {
+      "title": "Gaming Control",
+      "description": "Perfect for gamers. Control your games and streaming software with ease."
+    },
+    "stream": {
+      "title": "Stream & Media Control",
+      "description": "Control OBS, media players, and streaming tools directly from your phone."
+    }
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "subtitle": "Get started in three simple steps",
+    "step1": {
+      "title": "Download & Install",
+      "description": "Download the Local Desk desktop app and install it on your computer."
+    },
+    "step2": {
+      "title": "Connect Your Phone",
+      "description": "Open the mobile app and it will automatically discover your desktop on the local network."
+    },
+    "step3": {
+      "title": "Start Controlling",
+      "description": "Tap shortcuts on your phone to execute keyboard commands and launch apps on your desktop."
+    }
+  },
+  "screenshots": {
+    "title": "See It In Action",
+    "subtitle": "Take a look at Local Desk in action"
+  },
+  "footer": {
+    "copyright": "© 2024 Local Desk. All rights reserved.",
+    "madeWith": "Made with ❤️ for productivity enthusiasts"
+  }
+}
+

@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "features": "Funktionen",
+    "howItWorks": "So funktioniert's",
+    "screenshots": "Screenshots"
+  },
+  "hero": {
+    "title": "Verwandle dein Smartphone in einen Desktop-Controller – ganz ohne Zusatzgerät!",
+    "subtitle": "Keine zusätzliche Hardware erforderlich. Steuern Sie Ihren Desktop sofort mit Ihrem Smartphone.",
+    "download": "Für Desktop herunterladen",
+    "learnMore": "Mehr erfahren"
+  },
+  "features": {
+    "title": "Leistungsstarke Funktionen",
+    "subtitle": "Alles, was Sie brauchen, um Ihren Desktop vom Telefon aus zu steuern",
+    "noDevice": {
+      "title": "Kein zusätzliches Gerät erforderlich",
+      "description": "Verwenden Sie Ihr vorhandenes Smartphone. Kein Kauf zusätzlicher Hardware oder Controller erforderlich."
+    },
+    "oneTap": {
+      "title": "Ein-Tipp-Kurzbefehle",
+      "description": "Führen Sie Tastenkombinationen sofort mit einem einzigen Tippen auf Ihrem Telefonbildschirm aus."
+    },
+    "customPages": {
+      "title": "Benutzerdefinierte Steuerungsseiten",
+      "description": "Erstellen und organisieren Sie Ihre Kurzbefehle in benutzerdefinierten Seiten für verschiedene Workflows."
+    },
+    "instant": {
+      "title": "Sofortige Verbindung",
+      "description": "Automatische Erkennung und Kopplung. Verbinden Sie sich in Sekunden über Ihr lokales Netzwerk."
+    },
+    "gaming": {
+      "title": "Spielsteuerung",
+      "description": "Perfekt für Gamer. Steuern Sie Ihre Spiele und Streaming-Software mit Leichtigkeit."
+    },
+    "stream": {
+      "title": "Stream- und Mediensteuerung",
+      "description": "Steuern Sie OBS, Mediaplayer und Streaming-Tools direkt von Ihrem Telefon aus."
+    }
+  },
+  "howItWorks": {
+    "title": "So funktioniert's",
+    "subtitle": "Starten Sie in drei einfachen Schritten",
+    "step1": {
+      "title": "Herunterladen & Installieren",
+      "description": "Laden Sie die Local Desk Desktop-App herunter und installieren Sie sie auf Ihrem Computer."
+    },
+    "step2": {
+      "title": "Telefon verbinden",
+      "description": "Öffnen Sie die mobile App und sie erkennt Ihren Desktop automatisch im lokalen Netzwerk."
+    },
+    "step3": {
+      "title": "Steuerung starten",
+      "description": "Tippen Sie auf Kurzbefehle auf Ihrem Telefon, um Tastenbefehle auszuführen und Apps auf Ihrem Desktop zu starten."
+    }
+  },
+  "screenshots": {
+    "title": "In Aktion sehen",
+    "subtitle": "Schauen Sie sich Local Desk in Aktion an"
+  },
+  "footer": {
+    "copyright": "© 2024 Local Desk. Alle Rechte vorbehalten.",
+    "madeWith": "Mit ❤️ für Produktivitäts-Enthusiasten gemacht"
+  }
+}
+

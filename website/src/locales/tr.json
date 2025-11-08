@@ -1,0 +1,67 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "features": "Özellikler",
+    "howItWorks": "Nasıl Çalışır",
+    "screenshots": "Ekran Görüntüleri"
+  },
+  "hero": {
+    "title": "Telefonunu ek bir cihaza ihtiyaç duymadan bir masaüstü kontrolcüsüne dönüştür!",
+    "subtitle": "Ekstra donanım gerekmez. Masaüstünüzü akıllı telefonunuzla anında kontrol edin.",
+    "download": "Masaüstü için İndir",
+    "learnMore": "Daha Fazla Bilgi"
+  },
+  "features": {
+    "title": "Güçlü Özellikler",
+    "subtitle": "Masaüstünüzü telefonunuzdan kontrol etmek için ihtiyacınız olan her şey",
+    "noDevice": {
+      "title": "Ekstra Cihaz Gerekmez",
+      "description": "Mevcut akıllı telefonunuzu kullanın. Ek donanım veya kontrolcü satın almanıza gerek yok."
+    },
+    "oneTap": {
+      "title": "Tek Dokunuşla Kısayollar",
+      "description": "Telefon ekranınızda tek bir dokunuşla klavye kısayollarını anında çalıştırın."
+    },
+    "customPages": {
+      "title": "Özel Kontrol Sayfaları",
+      "description": "Kısayollarınızı farklı iş akışları için özel sayfalara düzenleyin."
+    },
+    "instant": {
+      "title": "Anında Bağlantı",
+      "description": "Otomatik keşif ve eşleştirme. Yerel ağınız üzerinden saniyeler içinde bağlanın."
+    },
+    "gaming": {
+      "title": "Oyun Kontrolü",
+      "description": "Oyuncular için mükemmel. Oyunlarınızı ve yayın yazılımlarınızı kolayca kontrol edin."
+    },
+    "stream": {
+      "title": "Yayın ve Medya Kontrolü",
+      "description": "OBS, medya oynatıcılar ve yayın araçlarını doğrudan telefonunuzdan kontrol edin."
+    }
+  },
+  "howItWorks": {
+    "title": "Nasıl Çalışır",
+    "subtitle": "Üç basit adımda başlayın",
+    "step1": {
+      "title": "İndir ve Yükle",
+      "description": "Local Desk masaüstü uygulamasını indirin ve bilgisayarınıza yükleyin."
+    },
+    "step2": {
+      "title": "Telefonunu Bağla",
+      "description": "Mobil uygulamayı açın ve masaüstünüzü yerel ağda otomatik olarak keşfedecektir."
+    },
+    "step3": {
+      "title": "Kontrol Etmeye Başla",
+      "description": "Masaüstünüzde klavye komutlarını çalıştırmak ve uygulamaları başlatmak için telefonunuzdaki kısayollara dokunun."
+    }
+  },
+  "screenshots": {
+    "title": "Aksiyonda Görün",
+    "subtitle": "Local Desk'in aksiyon halindeki görüntülerine bir göz atın"
+  },
+  "footer": {
+    "copyright": "© 2024 Local Desk. Tüm hakları saklıdır.",
+    "madeWith": "Üretkenlik tutkunları için ❤️ ile yapıldı"
+  }
+}
+
