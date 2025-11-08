@@ -1,139 +1,139 @@
-# 🚀 Hızlı Başlangıç - Local Desk
+# 🚀 Quick Start - Local Desk
 
-## 1️⃣ Masaüstü Uygulamasını Başlat
+## 1️⃣ Start Desktop Application
 
 ```bash
 cd desktop
 npm start
 ```
 
-Göreceğiniz loglar:
+You will see these logs:
 ```
-🚀 Local Desk Server başlatılıyor...
-✅ 0 kısayol yüklendi (veya varsayılan kısayollar)
-✅ Klavye addon yüklendi
-✅ HTTP/Socket.IO server çalışıyor: 3100
-🔍 Discovery servisleri başlatılıyor...
-✅ UDP socket dinliyor: 0.0.0.0:45454
-✅ mDNS servisi yayınlanıyor
-✅ Discovery servisleri aktif
-✅ Local Desk server başlatıldı
-```
-
-## 2️⃣ Telefon Bağlantısı OLMADAN Kısayol Ekle
-
-**Telefon bağlı olmasa bile şimdi kısayol ekleyebilirsiniz!**
-
-### Adım 1: Masaüstü Penceresini Açın
-
-Electron uygulaması otomatik açılacak.
-
-### Adım 2: "⌨️ Kısayollar" Sekmesine Gidin
-
-Zaten açık olmalı (varsayılan).
-
-### Adım 3: "➕ Yeni Kısayol Ekle" Butonuna Tıklayın
-
-Modal pencere açılacak.
-
-### Adım 4: Kısayolu Doldurun
-
-#### Örnek 1: OBS Studio Başlatma
-
-```
-Etiket: OBS Studio
-Eylem Tipi: 🚀 Uygulama Başlat
-📂 Uygulama Seç: C:\Program Files\obs-studio\bin\64bit\obs64.exe
-İkon: 🎥 (Emoji Kullan butonundan)
-Renk: Mavi (#1F6FEB)
+🚀 Local Desk Server starting...
+✅ 0 shortcuts loaded (or default shortcuts)
+✅ Keyboard addon loaded
+✅ HTTP/Socket.IO server running: 3100
+🔍 Discovery services starting...
+✅ UDP socket listening: 0.0.0.0:45454
+✅ mDNS service broadcasting
+✅ Discovery services active
+✅ Local Desk server started
 ```
 
-#### Örnek 2: Klavye Kısayolu
+## 2️⃣ Add Shortcut WITHOUT Phone Connection
+
+**You can now add shortcuts even without your phone connected!**
+
+### Step 1: Open Desktop Window
+
+The Electron app will open automatically.
+
+### Step 2: Go to "⌨️ Shortcuts" Tab
+
+It should already be open (default).
+
+### Step 3: Click "➕ Add New Shortcut" Button
+
+A modal window will open.
+
+### Step 4: Fill in the Shortcut
+
+#### Example 1: Start OBS Studio
 
 ```
-Etiket: Screenshot Al
-Eylem Tipi: ⌨️ Klavye Kısayolu
-Tuşlar: WIN + SHIFT + S (🎹 Tuşları Kaydet butonuna basıp tuşlara bas)
-İkon: 📸
-Renk: Turuncu (#FF9800)
+Label: OBS Studio
+Action Type: 🚀 Launch Application
+📂 Select App: C:\Program Files\obs-studio\bin\64bit\obs64.exe
+Icon: 🎥 (from Use Emoji button)
+Color: Blue (#1F6FEB)
 ```
 
-#### Örnek 3: Her İkisi Birden
+#### Example 2: Keyboard Shortcut
 
 ```
-Etiket: Chrome Yeni Sekme
-Eylem Tipi: 🔗 Her İkisi
-Tuşlar: CONTROL + T
-📂 Uygulama: C:\Program Files\Google\Chrome\Application\chrome.exe
-İkon: 🌐
-Renk: Yeşil (#00C853)
+Label: Take Screenshot
+Action Type: ⌨️ Keyboard Shortcut
+Keys: WIN + SHIFT + S (click 🎹 Record Keys button and press keys)
+Icon: 📸
+Color: Orange (#FF9800)
 ```
 
-### Adım 5: Kaydet
+#### Example 3: Both Combined
 
-"Kaydet" butonuna tıklayın. Kısayol grid'de görünecek!
+```
+Label: Chrome New Tab
+Action Type: 🔗 Both
+Keys: CONTROL + T
+📂 Application: C:\Program Files\Google\Chrome\Application\chrome.exe
+Icon: 🌐
+Color: Green (#00C853)
+```
 
-## 3️⃣ Telefon Bağlandığında Otomatik Eşitleme
+### Step 5: Save
 
-### Telefon Bağlanınca Ne Olur?
+Click the "Save" button. The shortcut will appear in the grid!
 
-1. **Telefon ağda tarama yapar** → Masaüstünü bulur
-2. **Pairing isteği gönderir** → Masaüstünde popup çıkar
-3. **"Onayla" tıklayın** → Cihaz güvenilir listeye eklenir
-4. **Kısayollar otomatik gönderilir** → Telefonda tüm kısayollarınız görünür! 🎉
+## 3️⃣ Automatic Sync When Phone Connects
 
-### Kod Nasıl Çalışıyor?
+### What Happens When Phone Connects?
 
-**Pairing onaylandığında:**
+1. **Phone scans the network** → Finds desktop
+2. **Sends pairing request** → Popup appears on desktop
+3. **Click "Approve"** → Device is added to trusted list
+4. **Shortcuts are automatically sent** → All your shortcuts appear on phone! 🎉
+
+### How the Code Works?
+
+**When pairing is approved:**
 
 ```javascript
-// server/index.js - satır 226
+// server/index.js - line 226
 pairing.socket.emit('shortcuts-update', this.shortcuts);
 ```
 
-**Yeni kısayol eklendiğinde:**
+**When a new shortcut is added:**
 
 ```javascript
-// server/index.js - satır 388
+// server/index.js - line 388
 if (this.io) {
   this.io.emit('shortcuts-update', shortcuts);
 }
 ```
 
-Tüm bağlı mobil cihazlar anında güncellemeyi alır!
+All connected mobile devices receive the update instantly!
 
-## 4️⃣ Kısayolları Test Etme
+## 4️⃣ Testing Shortcuts
 
-### Masaüstünden Test
+### Test from Desktop
 
-Şu an için masaüstü UI'dan direkt test özelliği yok ama:
+Currently, there's no direct test feature from desktop UI, but:
 
-1. Grid'de kısayolları görebilirsiniz
-2. Düzenle/Sil yapabilirsiniz
-3. Renk ve ikonlarını görebilirsiniz
+1. You can view shortcuts in the grid
+2. You can edit/delete them
+3. You can see their colors and icons
 
-### Telefondan Test
+### Test from Phone
 
-1. Telefon uygulamasını açın
-2. Masaüstünüzü bulun ve bağlanın
-3. Kısayollar grid'de görünecek
-4. Bir butona tıklayın → Masaüstünde çalışır!
+1. Open phone app
+2. Find and connect to your desktop
+3. Shortcuts will appear in the grid
+4. Click a button → It works on desktop!
 
-## 5️⃣ Veri Dosyaları
+## 5️⃣ Data Files
 
-Tüm kısayollarınız burada saklanır:
+All your shortcuts are stored here:
 
 ```
 desktop/server/data/
-├── shortcuts.json       ← Kısayollarınız
-├── trusted.json         ← Güvenilir cihazlar
-├── config.json          ← Sunucu ayarları
-└── icons/               ← Özel ikonlar
+├── shortcuts.json       ← Your shortcuts
+├── trusted.json         ← Trusted devices
+├── config.json          ← Server settings
+└── icons/               ← Custom icons
     ├── icon-1730300000000.png
     └── ...
 ```
 
-### shortcuts.json Örneği
+### shortcuts.json Example
 
 ```json
 [
@@ -155,7 +155,7 @@ desktop/server/data/
   },
   {
     "id": 1730300000003,
-    "label": "Chrome Yeni Sekme",
+    "label": "Chrome New Tab",
     "icon": "🌐",
     "keys": ["CONTROL", "T"],
     "color": "#00C853",
@@ -165,14 +165,14 @@ desktop/server/data/
 ]
 ```
 
-## 6️⃣ Popüler Kısayol Örnekleri
+## 6️⃣ Popular Shortcut Examples
 
 ### 🎮 Gaming/Streaming
 
 ```javascript
-// OBS Kayıt Başlat/Durdur
+// OBS Start/Stop Recording
 {
-  "label": "OBS Kayıt",
+  "label": "OBS Record",
   "icon": "🔴",
   "keys": ["CONTROL", "ALT", "R"],
   "actionType": "keys"
@@ -180,13 +180,13 @@ desktop/server/data/
 
 // Discord Mute
 {
-  "label": "Mikrofon Kapat",
+  "label": "Mute Microphone",
   "icon": "🎤",
   "keys": ["CONTROL", "SHIFT", "M"],
   "actionType": "keys"
 }
 
-// Spotify Başlat
+// Start Spotify
 {
   "label": "Spotify",
   "icon": "🎵",
@@ -198,7 +198,7 @@ desktop/server/data/
 ### 💼 Productivity
 
 ```javascript
-// VS Code Aç
+// Open VS Code
 {
   "label": "VS Code",
   "icon": "💻",
@@ -206,17 +206,17 @@ desktop/server/data/
   "actionType": "app"
 }
 
-// Tüm Pencereleri Küçült
+// Minimize All Windows
 {
-  "label": "Masaüstü Göster",
+  "label": "Show Desktop",
   "icon": "🖥️",
   "keys": ["WIN", "D"],
   "actionType": "keys"
 }
 
-// Kaydet
+// Save
 {
-  "label": "Kaydet",
+  "label": "Save",
   "icon": "💾",
   "keys": ["CONTROL", "S"],
   "actionType": "keys"
@@ -234,7 +234,7 @@ desktop/server/data/
   "actionType": "app"
 }
 
-// Render Et
+// Render
 {
   "label": "Render",
   "icon": "⚙️",
@@ -243,41 +243,41 @@ desktop/server/data/
 }
 ```
 
-## 7️⃣ Sorun Giderme
+## 7️⃣ Troubleshooting
 
-### mDNS Hatası Görüyorum
+### I See mDNS Error
 
 ```
-mDNS başlatma hatası: TypeError: Bonjour is not a constructor
+mDNS startup error: TypeError: Bonjour is not a constructor
 ```
 
-**Çözüm:** Zaten düzeltildi! Kod güncel, sadece yeniden başlatın:
+**Solution:** Already fixed! Code is up to date, just restart:
 ```bash
-# Ctrl+C ile durdurun
+# Stop with Ctrl+C
 npm start
 ```
 
-### Kısayollar Kayboldu
+### Shortcuts Disappeared
 
-Endişelenmeyin! `desktop/server/data/shortcuts.json` dosyasında saklanıyor.
+Don't worry! They're stored in `desktop/server/data/shortcuts.json`.
 
-**Kontrol edin:**
+**Check:**
 ```bash
 cat desktop/server/data/shortcuts.json
 ```
 
-**Yedekleyin:**
+**Backup:**
 ```bash
 cp desktop/server/data/shortcuts.json shortcuts-backup.json
 ```
 
-### Klavye Addon Hatası
+### Keyboard Addon Error
 
 ```
-⚠️  Klavye addon yüklenemedi
+⚠️  Keyboard addon failed to load
 ```
 
-**Çözüm:**
+**Solution:**
 ```bash
 cd desktop/server/keyboard-addon
 npm install
@@ -285,32 +285,32 @@ cd ../../..
 npm start
 ```
 
-### Telefon Bulamıyor
+### Phone Can't Find Desktop
 
-1. **Aynı WiFi ağında mısınız?**
-   - Masaüstü ve telefon aynı router'a bağlı olmalı
+1. **Are you on the same WiFi network?**
+   - Desktop and phone must be connected to the same router
 
-2. **Güvenlik duvarı açık mı?**
-   - Windows Defender → Port 3100 ve 45454'ü açın
+2. **Is firewall open?**
+   - Windows Defender → Open ports 3100 and 45454
 
-3. **UDP çalışıyor mu?**
-   - Console'da "UDP socket dinliyor" mesajını görmelisiniz
+3. **Is UDP working?**
+   - You should see "UDP socket listening" message in console
 
-## 8️⃣ İleri Seviye
+## 8️⃣ Advanced
 
-### Manuel JSON Düzenleme
+### Manual JSON Editing
 
-`shortcuts.json` dosyasını direkt düzenleyebilirsiniz:
+You can directly edit the `shortcuts.json` file:
 
 ```bash
 notepad desktop/server/data/shortcuts.json
 ```
 
-Kaydedin ve uygulamayı yeniden başlatın.
+Save and restart the application.
 
 ### Bulk Import
 
-Çok sayıda kısayol eklemek için JSON array'ini direkt yapıştırın.
+Paste the JSON array directly to add many shortcuts at once.
 
 ### Backup & Restore
 
@@ -322,23 +322,22 @@ cp -r desktop/server/data desktop-backup
 cp -r desktop-backup desktop/server/data
 ```
 
-## 9️⃣ Sonraki Adımlar
+## 9️⃣ Next Steps
 
-1. ✅ Masaüstünden 5-10 kısayol ekleyin
-2. ✅ Telefonunuzu bağlayın
-3. ✅ Pairing yapın
-4. ✅ Kısayolları test edin
-5. ✅ Favori uygulamalarınızı ekleyin!
+1. ✅ Add 5-10 shortcuts from desktop
+2. ✅ Connect your phone
+3. ✅ Do pairing
+4. ✅ Test shortcuts
+5. ✅ Add your favorite apps!
 
 ---
 
-## 💡 Önemli Hatırlatmalar
+## 💡 Important Reminders
 
-- 📱 **Telefon bağlı olmasa bile** kısayol ekleyebilirsiniz
-- 🔄 **Otomatik senkronizasyon** - Telefon bağlanınca tüm kısayollar gelir
-- 💾 **Veriler kalıcı** - `data/` klasöründe saklanır
-- 🔐 **Güvenli** - Sadece onaylanan cihazlar bağlanabilir
-- ⚡ **Gerçek zamanlı** - Masaüstünde değişiklik → Telefonda anında görünür
+- 📱 **You can add shortcuts even without phone connected**
+- 🔄 **Automatic synchronization** - All shortcuts come when phone connects
+- 💾 **Data is persistent** - Stored in `data/` folder
+- 🔐 **Secure** - Only approved devices can connect
+- ⚡ **Real-time** - Changes on desktop → Instantly visible on phone
 
-**🎉 Keyifli kullanımlar!**
-
+**🎉 Enjoy using it!**

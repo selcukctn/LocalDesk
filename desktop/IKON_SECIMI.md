@@ -1,46 +1,46 @@
-# 🎨 İkon Seçimi Özelliği
+# 🎨 Icon Selection Feature
 
-Kısayol eklerken veya düzenlerken ikon seçimi için 3 farklı yöntem:
+When adding or editing shortcuts, there are 3 different methods for icon selection:
 
-## 1️⃣ Dosya Seçimi (📁 Dosya Seç butonu)
+## 1️⃣ File Selection (📁 Select File button)
 
-- **"📁 Dosya Seç"** butonuna tıklayın
-- Windows dosya seçici açılır
-- Desteklenen formatlar:
+- Click the **"📁 Select File"** button
+- Windows file picker will open
+- Supported formats:
   - PNG (.png)
   - JPEG (.jpg, .jpeg)
   - SVG (.svg)
   - GIF (.gif)
   - ICO (.ico)
-- Seçilen dosya otomatik olarak `server/data/icons/` klasörüne kopyalanır
-- Benzersiz isim verilir: `icon-1730300000000.png`
+- Selected file is automatically copied to `server/data/icons/` folder
+- Unique name is assigned: `icon-1730300000000.png`
 
-## 2️⃣ Emoji Kullanımı (😊 Emoji Kullan butonu)
+## 2️⃣ Emoji Usage (😊 Use Emoji button)
 
-- **"😊 Emoji Kullan"** butonuna tıklayın
-- Popup'ta istediğiniz emoji'yi girin
-- Örnekler:
-  - 🎮 (Oyun)
+- Click the **"😊 Use Emoji"** button
+- Enter your desired emoji in the popup
+- Examples:
+  - 🎮 (Gaming)
   - 🎬 (Video)
-  - 📱 (Mobil)
-  - 🎨 (Tasarım)
-  - ⚙️ (Ayarlar)
-  - 🔊 (Ses)
+  - 📱 (Mobile)
+  - 🎨 (Design)
+  - ⚙️ (Settings)
+  - 🔊 (Sound)
 
-## 3️⃣ Manuel Giriş
+## 3️⃣ Manual Entry
 
-- İkon input alanına direkt yazabilirsiniz:
+- You can directly type in the icon input field:
   - Emoji: `🚀`
-  - Dosya adı: `obs.png`
-  - Mevcut ikon dosyası: `icon-1730300000000.png`
+  - File name: `obs.png`
+  - Existing icon file: `icon-1730300000000.png`
 
-## 🔍 Önizleme
+## 🔍 Preview
 
-- İkon seçilince veya yazılınca **canlı önizleme** görünür
-- Emoji ise büyük boyutta gösterilir
-- Dosya ise HTTP üzerinden yüklenir ve gösterilir
+- When an icon is selected or typed, a **live preview** appears
+- If it's an emoji, it's displayed in large size
+- If it's a file, it's loaded and displayed via HTTP
 
-## 📂 İkon Depolama
+## 📂 Icon Storage
 
 ```
 desktop/
@@ -49,41 +49,41 @@ desktop/
         └── icons/
             ├── icon-1730300000000.png
             ├── icon-1730300001234.svg
-            └── ... (kullanıcının seçtiği ikonlar)
+            └── ... (user-selected icons)
 ```
 
-## 🌐 HTTP Servisi
+## 🌐 HTTP Service
 
-İkonlar HTTP üzerinden servis edilir:
+Icons are served via HTTP:
 ```
 http://localhost:3100/icons/icon-1730300000000.png
 ```
 
-Bu sayede hem masaüstü UI hem de mobil uygulama ikonları görebilir.
+This allows both desktop UI and mobile app to view icons.
 
-## 💡 İpuçları
+## 💡 Tips
 
-1. **Emoji kullanımı daha hızlıdır** - Dosya yükleme gerektirmez
-2. **Özel ikonlar için dosya seçin** - Marka logoları, özel tasarımlar
-3. **Önizlemeyi kontrol edin** - Kaydetmeden önce görünümünü görün
-4. **Boş bırakabilirsiniz** - Varsayılan ⌨️ emoji kullanılır
+1. **Using emojis is faster** - No file upload required
+2. **Select file for custom icons** - Brand logos, custom designs
+3. **Check the preview** - See how it looks before saving
+4. **You can leave it empty** - Default ⌨️ emoji will be used
 
-## 🎯 Kullanım Örnekleri
+## 🎯 Usage Examples
 
-### OBS Studio Kontrolü
+### OBS Studio Control
 ```json
 {
-  "label": "OBS Başlat",
+  "label": "Start OBS",
   "icon": "🎥",
   "keys": ["CONTROL", "ALT", "O"]
 }
 ```
 
-### Özel Logo ile
+### With Custom Logo
 ```json
 {
   "label": "Premiere Pro",
-  "icon": "icon-1730300000000.png",  // Adobe Premiere logosu
+  "icon": "icon-1730300000000.png",  // Adobe Premiere logo
   "keys": ["ALT", "SHIFT", "P"]
 }
 ```
@@ -91,13 +91,13 @@ Bu sayede hem masaüstü UI hem de mobil uygulama ikonları görebilir.
 ### Discord Mute
 ```json
 {
-  "label": "Mikrofon Kapat",
+  "label": "Mute Microphone",
   "icon": "🎤",
   "keys": ["CONTROL", "SHIFT", "M"]
 }
 ```
 
-## 🔧 Teknik Detaylar
+## 🔧 Technical Details
 
 ### Backend (server/index.js)
 
@@ -134,9 +134,9 @@ async function selectIconFile() {
 ```javascript
 ipcMain.handle('select-icon', async () => {
     const result = await dialog.showOpenDialog(mainWindow, {
-        title: 'İkon Seç',
+        title: 'Select Icon',
         filters: [
-            { name: 'Resim Dosyaları', extensions: ['png', 'jpg', 'jpeg', 'svg', 'gif', 'ico'] }
+            { name: 'Image Files', extensions: ['png', 'jpg', 'jpeg', 'svg', 'gif', 'ico'] }
         ],
         properties: ['openFile']
     });
@@ -150,7 +150,7 @@ ipcMain.handle('select-icon', async () => {
 });
 ```
 
-## 🎨 UI Stili
+## 🎨 UI Style
 
 ```css
 .icon-preview {
@@ -175,5 +175,4 @@ ipcMain.handle('select-icon', async () => {
 
 ---
 
-**✨ Artık kısayollarınız daha görsel ve kullanışlı!**
-
+**✨ Your shortcuts are now more visual and user-friendly!**

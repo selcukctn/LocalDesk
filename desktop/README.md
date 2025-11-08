@@ -1,57 +1,57 @@
 # Local Desk Desktop
 
-Local Desk masaüstü uygulaması - Stream Deck benzeri klavye kısayol yönetimi
+Local Desk desktop application - Stream Deck-like keyboard shortcut management
 
-## 🚀 Kurulum
+## 🚀 Installation
 
 ```bash
-# Bağımlılıkları yükle
+# Install dependencies
 npm install
 
-# C++ Addon'u derle (Windows gerekli)
+# Build C++ Addon (Windows required)
 cd server/keyboard-addon
 npm install
 cd ../..
 
-# Veya direkt olarak
+# Or directly
 npm run rebuild
 ```
 
-## 📦 Gereksinimler
+## 📦 Requirements
 
 - Node.js 20+
-- Windows (klavye addon için)
+- Windows (for keyboard addon)
 - Build tools:
   - Windows: `npm install --global windows-build-tools`
-  - Veya Visual Studio Build Tools 2019+
+  - Or Visual Studio Build Tools 2019+
 
-## ▶️ Çalıştırma
+## ▶️ Running
 
 ```bash
-# Geliştirme modu
+# Development mode
 npm start
 
-# Veya production build
+# Or production build
 npm run build
 ```
 
-## 🏗️ Mimari
+## 🏗️ Architecture
 
 ```
 desktop/
-├── main.js              # Electron ana process
+├── main.js              # Electron main process
 ├── preload.js           # IPC bridge
 ├── server/
 │   ├── index.js         # Socket.IO server & logic
 │   ├── discovery.js     # UDP + mDNS discovery
-│   ├── keyboard-addon/  # C++ SendInput modülü
-│   └── data/            # JSON veritabanı
+│   ├── keyboard-addon/  # C++ SendInput module
+│   └── data/            # JSON database
 │       ├── shortcuts.json
 │       ├── trusted.json
 │       └── config.json
 └── ui/
-    ├── index.html       # Ana UI
-    ├── style.css        # Stiller
+    ├── index.html       # Main UI
+    ├── style.css        # Styles
     └── app.js           # Frontend logic
 ```
 
@@ -59,23 +59,23 @@ desktop/
 
 ### HTTP REST API
 
-- `GET /device-info` - Cihaz bilgileri
-- `GET /shortcuts` - Kısayol listesi
-- `GET /icons/:filename` - İkon servisi
+- `GET /device-info` - Device information
+- `GET /shortcuts` - Shortcut list
+- `GET /icons/:filename` - Icon service
 - `GET /health` - Health check
 
 ### Socket.IO Events
 
 **Client → Server:**
-- `pair-request` - Pairing isteği
-- `execute-shortcut` - Kısayol çalıştır
+- `pair-request` - Pairing request
+- `execute-shortcut` - Execute shortcut
 
 **Server → Client:**
-- `pair-response` - Pairing yanıtı
-- `shortcuts-update` - Kısayollar güncellendi
-- `execute-result` - Çalıştırma sonucu
+- `pair-response` - Pairing response
+- `shortcuts-update` - Shortcuts updated
+- `execute-result` - Execution result
 
-## 🔍 Discovery Protokolü
+## 🔍 Discovery Protocol
 
 ### UDP Broadcast (Port 45454)
 
@@ -103,67 +103,66 @@ Service Type: `localdesk._tcp.local`
 TXT Records:
 - `deviceId`: Unique device identifier
 - `deviceType`: "desktop"
-- `version`: "1.0.0"
+- `version": "1.0.0"
 
 ## ⌨️ Keyboard Addon
 
-C++ Native addon kullanarak Windows SendInput API ile gerçek klavye girdisi gönderir.
+Uses C++ Native addon to send real keyboard input via Windows SendInput API.
 
-Desteklenen tuşlar:
-- Harf tuşları: A-Z
-- Sayı tuşları: 0-9
-- Fonksiyon tuşları: F1-F12
-- Modifier tuşları: CTRL, ALT, SHIFT
-- Özel tuşlar: ENTER, ESCAPE, TAB, SPACE, vs.
+Supported keys:
+- Letter keys: A-Z
+- Number keys: 0-9
+- Function keys: F1-F12
+- Modifier keys: CTRL, ALT, SHIFT
+- Special keys: ENTER, ESCAPE, TAB, SPACE, etc.
 
-Kullanım:
+Usage:
 ```javascript
 const keyboard = require('./keyboard-addon/build/Release/keyboard');
 keyboard.sendKeys(['CONTROL', 'ALT', 'O']);
 ```
 
-## 🔐 Güvenlik
+## 🔐 Security
 
-- İlk bağlantıda pairing gereklidir
-- Onaylanan cihazlar `trusted.json` içinde saklanır
-- Sadece güvenilir cihazlar komut gönderebilir
-- Auto-connect özelliği ile otomatik bağlanma
+- Pairing required on first connection
+- Approved devices stored in `trusted.json`
+- Only trusted devices can send commands
+- Auto-connect feature for automatic connection
 
-## 📝 Kısayol Formatı
+## 📝 Shortcut Format
 
 ```json
 {
   "id": 1,
-  "label": "OBS Başlat",
+  "label": "Start OBS",
   "icon": "obs.png",
   "keys": ["CONTROL", "ALT", "O"],
   "color": "#1F6FEB"
 }
 ```
 
-## 🎨 UI Özellikleri
+## 🎨 UI Features
 
-- Koyu tema
-- Kısayol yönetimi (ekle, düzenle, sil)
-- Güvenilir cihaz yönetimi
-- Canlı bağlantı durumu
-- Pairing onay sistemi
+- Dark theme
+- Shortcut management (add, edit, delete)
+- Trusted device management
+- Live connection status
+- Pairing approval system
 
 ## 🐛 Debug
 
-Geliştirme modunda DevTools otomatik açılır:
+DevTools automatically opens in development mode:
 ```bash
 NODE_ENV=development npm start
 ```
 
-Log seviyeleri:
-- ✅ Başarılı işlemler
-- 📡 Network olayları
-- ⌨️ Klavye girdileri
-- ❌ Hatalar
-- ⚠️ Uyarılar
+Log levels:
+- ✅ Successful operations
+- 📡 Network events
+- ⌨️ Keyboard inputs
+- ❌ Errors
+- ⚠️ Warnings
 
-## 📄 Lisans
+## 📄 License
 
 MIT
-

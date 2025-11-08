@@ -44,6 +44,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectTargetApp: () => ipcRenderer.invoke('select-target-app'),
   
   // Harici URL aç (default tarayıcıda)
-  openExternal: (url) => ipcRenderer.invoke('open-external', url)
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
+  
+  // Otomatik güncelleme
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  downloadUpdate: () => ipcRenderer.invoke('download-update'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  onUpdateAvailable: (callback) => {
+    ipcRenderer.on('update-available', (event, info) => callback(info));
+  },
+  onUpdateDownloaded: (callback) => {
+    ipcRenderer.on('update-downloaded', (event, info) => callback(info));
+  },
+  onUpdateProgress: (callback) => {
+    ipcRenderer.on('update-progress', (event, progress) => callback(progress));
+  }
 });
 

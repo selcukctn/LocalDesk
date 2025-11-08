@@ -7,6 +7,7 @@
  */
 
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const server = require('./server');
 
@@ -51,6 +52,11 @@ app.whenReady().then(async () => {
   } catch (error) {
     console.error('❌ Server başlatma hatası:', error);
     dialog.showErrorBox('Başlatma Hatası', 'Sunucu başlatılamadı: ' + error.message);
+  }
+
+  // Otomatik güncelleme kontrolü (sadece production'da)
+  if (process.env.NODE_ENV !== 'development') {
+    checkForUpdates();
   }
 
   app.on('activate', () => {
@@ -228,6 +234,125 @@ ipcMain.handle('open-external', async (event, url) => {
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
+  }
+});
+
+// Otomatik Güncelleme Sistemi
+function checkForUpdates() {
+  // Güncelleme kontrolü yapılıyor mesajı
+  autoUpdater.checkForUpdatesAndNotify();
+
+  // Güncelleme bulunduğunda
+  autoUpdater.on('update-available', (info) => {
+    console.log('🔄 Yeni güncelleme bulundu:', info.version);
+    
+    if (mainWindow) {
+      mainWindow.webContents.send('update-available', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes
+      });
+    }
+
+    // Kullanıcıya bildirim göster
+    dialog.showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'Yeni Güncelleme Mevcut',
+      message: `Yeni bir sürüm bulundu: v${info.version}`,
+      detail: 'Güncelleme arka planda indiriliyor. İndirme tamamlandığında uygulama yeniden başlatılacak.',
+      buttons: ['Tamam']
+    });
+  });
+
+  // Güncelleme indirildiğinde
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('✅ Güncelleme indirildi:', info.version);
+    
+    if (mainWindow) {
+      mainWindow.webContents.send('update-downloaded', {
+        version: info.version
+      });
+    }
+
+    // Kullanıcıya yeniden başlatma seçeneği sun
+    dialog.showMessageBox(mainWindow, {
+      type: 'info',
+      title: 'Güncelleme Hazır',
+      message: `Güncelleme indirildi: v${info.version}`,
+      detail: 'Uygulamayı şimdi yeniden başlatmak ister misiniz?',
+      buttons: ['Şimdi Yeniden Başlat', 'Daha Sonra'],
+      defaultId: 0,
+      cancelId: 1
+    }).then((result) => {
+      if (result.response === 0) {
+        // Kullanıcı "Şimdi Yeniden Başlat" seçti
+        autoUpdater.quitAndInstall(false, true);
+      }
+    });
+  });
+
+  // Güncelleme hatası
+  autoUpdater.on('error', (error) => {
+    console.error('❌ Güncelleme hatası:', error);
+    // Hata durumunda sessizce devam et, kullanıcıyı rahatsız etme
+  });
+
+  // Güncelleme kontrolü tamamlandı (güncelleme yok)
+  autoUpdater.on('update-not-available', (info) => {
+    console.log('✅ Uygulama güncel:', info.version);
+  });
+
+  // İndirme ilerlemesi
+  autoUpdater.on('download-progress', (progressObj) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('update-progress', {
+        percent: progressObj.percent,
+        transferred: progressObj.transferred,
+        total: progressObj.total
+      });
+    }
+  });
+}
+
+// Manuel güncelleme kontrolü için IPC handler
+ipcMain.handle('check-for-updates', async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+    return { 
+      success: true, 
+      updateInfo: result?.updateInfo || null 
+    };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+});
+
+// Güncellemeyi indir ve yükle
+ipcMain.handle('download-update', async () => {
+  try {
+    await autoUpdater.downloadUpdate();
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error.message 
+    };
+  }
+});
+
+// Güncellemeyi yükle ve yeniden başlat
+ipcMain.handle('install-update', async () => {
+  try {
+    autoUpdater.quitAndInstall(false, true);
+    return { success: true };
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error.message 
+    };
   }
 });
 

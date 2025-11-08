@@ -1,0 +1,72 @@
+name: 🚀 Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # v ile başlayan taglerde çalışır (örn: v1.0.0, v1.2.3)
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    steps:
+      - name: ✅ Repo Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Node.js Kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: 🔧 Bağımlılıkları Yükle
+        working-directory: ./desktop
+        run: npm ci
+
+      - name: 🏗️ Native Modülleri Derle
+        working-directory: ./desktop
+        run: npm run rebuild
+
+      - name: 📦 Electron Builder ile Build
+        working-directory: ./desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build
+
+      - name: 📝 Release Notlarını Oluştur
+        id: release_notes
+        working-directory: ./desktop
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag -replace '^v', ''
+          $changelog = ""
+          
+          if (Test-Path "CHANGELOG.md") {
+            $content = Get-Content "CHANGELOG.md" -Raw
+            $pattern = "(?s)##\s+\[?$version\]?.*?(?=##|$)"
+            if ($content -match $pattern) {
+              $changelog = $matches[0]
+            } else {
+              $changelog = "## 🚀 $tag`n`nYeni sürüm yayınlandı! 🎉"
+            }
+          } else {
+            $changelog = "## 🚀 $tag`n`nYeni sürüm yayınlandı! 🎉"
+          }
+          
+          echo "notes<<EOF" >> $env:GITHUB_OUTPUT
+          echo "$changelog" >> $env:GITHUB_OUTPUT
+          echo "EOF" >> $env:GITHUB_OUTPUT
+
+      - name: 🎉 GitHub Release Oluştur
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/dist/*.exe
+            desktop/dist/*.exe.blockmap
+          body: ${{ steps.release_notes.outputs.notes }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
