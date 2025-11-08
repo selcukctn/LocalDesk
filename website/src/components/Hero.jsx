@@ -16,7 +16,7 @@ function Hero() {
         <h1 className="hero-title">{t('hero.title')}</h1>
         <p className="hero-subtitle">{t('hero.subtitle')}</p>
         <div className="hero-cta">
-          <button className="btn btn-primary" onClick={() => scrollToSection('how-it-works')}>
+          <button className="btn btn-primary" onClick={() => window.location.href = 'https://github.com/selcukctn/localdesk/releases/latest'}>
             {t('hero.download')}
           </button>
           <button className="btn btn-secondary" onClick={() => scrollToSection('features')}>

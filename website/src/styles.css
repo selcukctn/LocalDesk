@@ -87,18 +87,19 @@ body {
   font-weight: 600;
   color: var(--text);
   text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }
 
-.logo-placeholder {
+.navbar-brand:hover {
+  opacity: 0.8;
+}
+
+.navbar-logo {
   width: 40px;
   height: 40px;
-  background: var(--primary);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  color: white;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .brand-name {
@@ -422,35 +423,158 @@ section {
   gap: 24px;
 }
 
-.screenshot-placeholder {
+.screenshot-item {
   aspect-ratio: 16 / 9;
   background: var(--bg);
   border-radius: 12px;
   border: 1px solid var(--border-color);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   transition: all 0.3s;
+  cursor: pointer;
 }
 
-.screenshot-placeholder:hover {
+.screenshot-item:hover {
   transform: scale(1.02);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  border-color: var(--primary);
 }
 
-.screenshot-content {
+.screenshot-image {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Lightbox */
+.lightbox {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--secondary) 0%, var(--bg) 100%);
+  padding: 20px;
+  animation: fadeIn 0.3s ease;
 }
 
-.screenshot-label {
-  color: var(--text-secondary);
-  font-size: 16px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lightbox-image {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.lightbox-close {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 40px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  z-index: 10001;
+  line-height: 1;
+  padding: 0;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.lightbox-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 50px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  z-index: 10001;
+  line-height: 1;
+  padding: 0;
+}
+
+.lightbox-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.lightbox-prev {
+  left: 20px;
+}
+
+.lightbox-next {
+  right: 20px;
+}
+
+@media (max-width: 768px) {
+  .lightbox-close {
+    top: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    font-size: 32px;
+  }
+
+  .lightbox-nav {
+    width: 50px;
+    height: 50px;
+    font-size: 40px;
+  }
+
+  .lightbox-prev {
+    left: 10px;
+  }
+
+  .lightbox-next {
+    right: 10px;
+  }
+
+  .lightbox-content {
+    max-width: 95vw;
+    max-height: 85vh;
+  }
 }
 
 /* Footer */
@@ -465,6 +589,85 @@ section {
   color: var(--text-secondary);
   margin-bottom: 8px;
   font-size: 14px;
+}
+
+.footer-link {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+/* Privacy Page */
+.privacy-page {
+  min-height: calc(100vh - 60px);
+  padding: 100px 0 60px;
+  background: var(--bg);
+}
+
+.privacy-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.privacy-back-link {
+  display: inline-block;
+  color: var(--primary);
+  text-decoration: none;
+  margin-bottom: 24px;
+  font-size: 16px;
+  transition: color 0.2s;
+}
+
+.privacy-back-link:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.privacy-title {
+  font-size: clamp(32px, 4vw, 42px);
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.privacy-last-updated {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 40px;
+}
+
+.privacy-section {
+  margin-bottom: 40px;
+}
+
+.privacy-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.privacy-section p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.privacy-section ul {
+  margin-left: 24px;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+
+.privacy-section li {
+  margin-bottom: 8px;
 }
 
 /* Responsive Design */

@@ -60,8 +60,52 @@
     "subtitle": "Local Desk'in aksiyon halindeki görüntülerine bir göz atın"
   },
   "footer": {
-    "copyright": "© 2024 Local Desk. Tüm hakları saklıdır.",
-    "madeWith": "Üretkenlik tutkunları için ❤️ ile yapıldı"
+    "copyright": "© 2026 Local Desk. Tüm hakları saklıdır.",
+    "madeWith": "Üretkenlik tutkunları için ❤️ ile yapıldı",
+    "privacy": "Gizlilik Sözleşmesi"
+  },
+  "privacy": {
+    "title": "Gizlilik Sözleşmesi",
+    "lastUpdated": "Son güncelleme: Ocak 2024",
+    "introduction": {
+      "title": "Giriş",
+      "content": "Local Desk, gizliliğinizi korumaya kararlıdır. Bu Gizlilik Sözleşmesi, uygulamamızı kullandığınızda bilgilerinizi nasıl topladığımızı, kullandığımızı ve koruduğumuzu açıklar."
+    },
+    "dataCollection": {
+      "title": "Veri Toplama",
+      "content": "Local Desk tamamen yerel ağınızda çalışır ve herhangi bir kişisel veriyi harici sunuculara toplamaz, saklamaz veya iletmez. Uygulama:",
+      "item1": "Yalnızca cihazınızda ve yerel ağınızda yerel olarak çalışır",
+      "item2": "Temel işlevsellik için internet bağlantısı gerektirmez",
+      "item3": "Kullanıcı analitiği, kişisel bilgi veya kullanım verisi toplamaz"
+    },
+    "dataUsage": {
+      "title": "Verileri Nasıl Kullanıyoruz",
+      "content": "Local Desk herhangi bir kişisel veri toplamadığı için açıklanacak veri kullanımı yoktur. Tüm işlevsellik, özel ağınız içindeki cihazlarınızda yerel olarak çalışır."
+    },
+    "dataStorage": {
+      "title": "Veri Depolama",
+      "content": "Kısayollar, cihaz eşleştirmeleri ve ayarlar dahil tüm veriler, masaüstü bilgisayarınızda yerel olarak saklanır. Bu veriler cihazınızdan veya yerel ağınızdan asla ayrılmaz. Saklanan bilgilerinize erişimimiz yoktur."
+    },
+    "dataSharing": {
+      "title": "Veri Paylaşımı",
+      "content": "Herhangi bir veri toplamadığımız için veri paylaşmıyor, satmıyor veya dağıtmıyoruz. Bilgileriniz gizli kalır ve tamamen sizin kontrolünüz altındadır."
+    },
+    "security": {
+      "title": "Güvenlik",
+      "content": "Local Desk, güvenlik için cihaz eşleştirmeli yerel ağ iletişimi (yerel ağınız üzerinden Socket.IO) kullanır. Tüm bağlantılar özel ağınız içinde kurulur ve cihaz eşleştirmesi için açık onay gerektirir."
+    },
+    "userRights": {
+      "title": "Haklarınız",
+      "content": "Kişisel veri toplamadığımız için erişilecek, değiştirilecek veya silinecek kişisel veri yoktur. Cihazınızda yerel olarak saklanan tüm veriler üzerinde tam kontrolünüz vardır ve uygulamayı ve verilerini istediğiniz zaman silebilirsiniz."
+    },
+    "changes": {
+      "title": "Bu Sözleşmedeki Değişiklikler",
+      "content": "Bu Gizlilik Sözleşmesini zaman zaman güncelleyebiliriz. Herhangi bir değişiklik, güncellenmiş bir revizyon tarihiyle bu sayfada yayınlanacaktır. Bu sözleşmeyi periyodik olarak gözden geçirmenizi öneririz."
+    },
+    "contact": {
+      "title": "Bize Ulaşın",
+      "content": "Bu Gizlilik Sözleşmesi hakkında herhangi bir sorunuz varsa, lütfen destek kanallarımız aracılığıyla bizimle iletişime geçin veya web sitemizi ziyaret edin."
+    }
   }
 }
 

@@ -60,8 +60,52 @@
     "subtitle": "Take a look at Local Desk in action"
   },
   "footer": {
-    "copyright": "© 2024 Local Desk. All rights reserved.",
-    "madeWith": "Made with ❤️ for productivity enthusiasts"
+    "copyright": "© 2026 Local Desk. All rights reserved.",
+    "madeWith": "Made with ❤️ for productivity enthusiasts",
+    "privacy": "Privacy Policy"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: January 2024",
+    "introduction": {
+      "title": "Introduction",
+      "content": "Local Desk is committed to protecting your privacy. This Privacy Policy explains how we collect, use, and safeguard your information when you use our application."
+    },
+    "dataCollection": {
+      "title": "Data Collection",
+      "content": "Local Desk operates entirely on your local network and does not collect, store, or transmit any personal data to external servers. The application:",
+      "item1": "Operates locally on your device and local network only",
+      "item2": "Does not require internet connection for core functionality",
+      "item3": "Does not collect user analytics, personal information, or usage data"
+    },
+    "dataUsage": {
+      "title": "How We Use Data",
+      "content": "Since Local Desk does not collect any personal data, there is no data usage to disclose. All functionality operates locally on your devices within your private network."
+    },
+    "dataStorage": {
+      "title": "Data Storage",
+      "content": "All data, including shortcuts, device pairings, and settings, are stored locally on your desktop computer. This data never leaves your device or local network. We do not have access to any of your stored information."
+    },
+    "dataSharing": {
+      "title": "Data Sharing",
+      "content": "We do not share, sell, or distribute any data because we do not collect any data. Your information remains private and under your complete control."
+    },
+    "security": {
+      "title": "Security",
+      "content": "Local Desk uses local network communication (Socket.IO over your local network) with device pairing for security. All connections are established within your private network and require explicit approval for device pairing."
+    },
+    "userRights": {
+      "title": "Your Rights",
+      "content": "Since we do not collect personal data, there is no personal data to access, modify, or delete. You have complete control over all data stored locally on your device, and you can delete the application and its data at any time."
+    },
+    "changes": {
+      "title": "Changes to This Policy",
+      "content": "We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated revision date. We encourage you to review this policy periodically."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "content": "If you have any questions about this Privacy Policy, please contact us through our support channels or visit our website."
+    }
   }
 }
 

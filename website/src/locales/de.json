@@ -60,8 +60,52 @@
     "subtitle": "Schauen Sie sich Local Desk in Aktion an"
   },
   "footer": {
-    "copyright": "© 2024 Local Desk. Alle Rechte vorbehalten.",
-    "madeWith": "Mit ❤️ für Produktivitäts-Enthusiasten gemacht"
+    "copyright": "© 2026 Local Desk. Alle Rechte vorbehalten.",
+    "madeWith": "Mit ❤️ für Produktivitäts-Enthusiasten gemacht",
+    "privacy": "Datenschutzerklärung"
+  },
+  "privacy": {
+    "title": "Datenschutzerklärung",
+    "lastUpdated": "Zuletzt aktualisiert: Januar 2024",
+    "introduction": {
+      "title": "Einführung",
+      "content": "Local Desk ist dem Schutz Ihrer Privatsphäre verpflichtet. Diese Datenschutzerklärung erläutert, wie wir Ihre Informationen sammeln, verwenden und schützen, wenn Sie unsere Anwendung verwenden."
+    },
+    "dataCollection": {
+      "title": "Datenerfassung",
+      "content": "Local Desk arbeitet vollständig in Ihrem lokalen Netzwerk und sammelt, speichert oder überträgt keine personenbezogenen Daten an externe Server. Die Anwendung:",
+      "item1": "Funktioniert nur lokal auf Ihrem Gerät und in Ihrem lokalen Netzwerk",
+      "item2": "Benötigt keine Internetverbindung für die Kernfunktionalität",
+      "item3": "Sammelt keine Benutzeranalysen, persönlichen Informationen oder Nutzungsdaten"
+    },
+    "dataUsage": {
+      "title": "Wie wir Daten verwenden",
+      "content": "Da Local Desk keine personenbezogenen Daten sammelt, gibt es keine offenzulegenden Datenverwendungen. Alle Funktionen arbeiten lokal auf Ihren Geräten innerhalb Ihres privaten Netzwerks."
+    },
+    "dataStorage": {
+      "title": "Datenspeicherung",
+      "content": "Alle Daten, einschließlich Kurzbefehle, Gerätepaarungen und Einstellungen, werden lokal auf Ihrem Desktop-Computer gespeichert. Diese Daten verlassen niemals Ihr Gerät oder Ihr lokales Netzwerk. Wir haben keinen Zugriff auf Ihre gespeicherten Informationen."
+    },
+    "dataSharing": {
+      "title": "Datenweitergabe",
+      "content": "Wir teilen, verkaufen oder verteilen keine Daten, weil wir keine Daten sammeln. Ihre Informationen bleiben privat und unter Ihrer vollständigen Kontrolle."
+    },
+    "security": {
+      "title": "Sicherheit",
+      "content": "Local Desk verwendet lokale Netzwerkkommunikation (Socket.IO über Ihr lokales Netzwerk) mit Gerätepaarung für die Sicherheit. Alle Verbindungen werden innerhalb Ihres privaten Netzwerks hergestellt und erfordern eine ausdrückliche Genehmigung für die Gerätepaarung."
+    },
+    "userRights": {
+      "title": "Ihre Rechte",
+      "content": "Da wir keine personenbezogenen Daten sammeln, gibt es keine personenbezogenen Daten, auf die zugegriffen, die geändert oder gelöscht werden können. Sie haben vollständige Kontrolle über alle lokal auf Ihrem Gerät gespeicherten Daten und können die Anwendung und ihre Daten jederzeit löschen."
+    },
+    "changes": {
+      "title": "Änderungen an dieser Richtlinie",
+      "content": "Wir können diese Datenschutzerklärung von Zeit zu Zeit aktualisieren. Alle Änderungen werden auf dieser Seite mit einem aktualisierten Revisionsdatum veröffentlicht. Wir empfehlen Ihnen, diese Richtlinie regelmäßig zu überprüfen."
+    },
+    "contact": {
+      "title": "Kontaktieren Sie uns",
+      "content": "Wenn Sie Fragen zu dieser Datenschutzerklärung haben, kontaktieren Sie uns bitte über unsere Support-Kanäle oder besuchen Sie unsere Website."
+    }
   }
 }
 

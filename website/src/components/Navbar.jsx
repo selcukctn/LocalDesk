@@ -15,10 +15,52 @@ function Navbar() {
   };
 
   const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setIsMenuOpen(false); // Menüyü kapat
+    setIsMenuOpen(false); // Menüyü kapat
+    
+    // Eğer privacy sayfasındaysak, önce ana sayfaya dön
+    if (window.location.hash === '#privacy') {
+      window.location.hash = '';
+      // Ana sayfa yüklendikten sonra ilgili bölüme scroll yap
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    } else {
+      // Zaten ana sayfadaysak, direkt scroll yap
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const goToPrivacy = (e) => {
+    e.preventDefault();
+    window.location.hash = 'privacy';
+    setIsMenuOpen(false);
+    window.scrollTo(0, 0);
+  };
+
+  const goToHome = (e) => {
+    e.preventDefault();
+    setIsMenuOpen(false);
+    // Hash'i temizle ve ana sayfaya dön
+    if (window.location.hash) {
+      window.location.hash = '';
+      // Hashchange event'ini tetiklemek için kısa bir gecikme
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 0);
+    } else {
+      // Zaten ana sayfadaysak, scroll yap
+      const homeElement = document.getElementById('home');
+      if (homeElement) {
+        homeElement.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        window.scrollTo(0, 0);
+      }
     }
   };
 
@@ -37,10 +79,10 @@ function Navbar() {
       )}
       <nav className="navbar">
         <div className="navbar-container">
-          <div className="navbar-brand">
-            <div className="logo-placeholder">LD</div>
+          <a href="#home" onClick={goToHome} className="navbar-brand">
+            <img src="/favicons/favicon.svg" alt="Local Desk" className="navbar-logo" />
             <span className="brand-name">Local Desk</span>
-          </div>
+          </a>
           
           <button 
             className="hamburger-menu"
@@ -54,7 +96,7 @@ function Navbar() {
           </button>
           
           <div className={`navbar-menu ${isMenuOpen ? 'open' : ''}`}>
-            <a href="#home" onClick={(e) => { e.preventDefault(); scrollToSection('home'); }} className="nav-link">
+            <a href="#home" onClick={(e) => { e.preventDefault(); goToHome(e); }} className="nav-link">
               {t('nav.home')}
             </a>
             <a href="#features" onClick={(e) => { e.preventDefault(); scrollToSection('features'); }} className="nav-link">
@@ -90,7 +132,7 @@ function Navbar() {
               </div>
               
               <a 
-                href="https://www.buymeacoffee.com/harunscetin" 
+                href="https://buymeacoffee.com/harunselcukcetin" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="buy-coffee-btn"
@@ -124,7 +166,7 @@ function Navbar() {
           </div>
           
           <a 
-            href="https://www.buymeacoffee.com/harunscetin" 
+            href="https://buymeacoffee.com/harunselcukcetin" 
             target="_blank" 
             rel="noopener noreferrer"
             className="buy-coffee-btn"

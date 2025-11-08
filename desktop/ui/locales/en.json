@@ -37,7 +37,7 @@
     "save": "Save",
     "language": "Language",
     "about": "About",
-    "version": "Version: 1.0.0",
+    "version": "Version: 0.0.1",
     "description": "Stream Deck-like keyboard shortcut controller",
     "aboutDescription": "Connect via mobile app on local network<br>to send keyboard shortcuts to your desktop computer."
   },
