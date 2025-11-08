@@ -1,41 +1,41 @@
 # 🎮 Local Desk
 
-**Stream Deck benzeri klavye kısayol kontrolcüsü - Lokal ağ üzerinden mobil kontrol**
+**Stream Deck-like keyboard shortcut controller - Mobile control over local network**
 
-Local Desk, mobil cihazınızı (iOS/Android) masaüstü bilgisayarınız için kablosuz bir kısayol kontrolcüsüne dönüştürür. Stream Deck benzeri bir arayüz ile OBS, video düzenleme, oyun streaming ve genel produktivite için klavye kısayollarını kolayca tetikleyebilirsiniz.
+Local Desk transforms your mobile device (iOS/Android) into a wireless shortcut controller for your desktop computer. With a Stream Deck-like interface, you can easily trigger keyboard shortcuts for OBS, video editing, game streaming, and general productivity.
 
-## ✨ Özellikler
+## ✨ Features
 
-### 🔍 Otomatik Cihaz Keşfi
-- UDP broadcast ile ağdaki cihazları otomatik bulur
-- mDNS/Bonjour desteği
-- Internet bağlantısı gerektirmez
-- Lokal ağda çalışır
+### 🔍 Automatic Device Discovery
+- Automatically finds devices on the network via UDP broadcast
+- mDNS/Bonjour support
+- No internet connection required
+- Works on local network
 
-### 🔐 Güvenli Bağlantı
-- İlk bağlantıda pairing sistemi
-- Masaüstünden onay gerektirir
-- Güvenilir cihaz listesi
-- Otomatik yeniden bağlanma
+### 🔐 Secure Connection
+- Pairing system on first connection
+- Requires approval from desktop
+- Trusted device list
+- Automatic reconnection
 
-### ⌨️ Gerçek Klavye Girdisi
-- Windows SendInput API kullanır
+### ⌨️ Real Keyboard Input
+- Uses Windows SendInput API
 - C++ Native addon
-- Tüm uygulamalarla uyumlu (OBS, Premiere, oyunlar, vs.)
-- Fiziksel klavye gibi algılanır
+- Compatible with all applications (OBS, Premiere, games, etc.)
+- Detected as physical keyboard
 
-### 🎨 Stream Deck Tarzı UI
-- Renkli buton grid'i
-- Özelleştirilebilir ikonlar
-- Sürükle-bırak düzenleme
-- Sayfa/kategori desteği
+### 🎨 Stream Deck Style UI
+- Colorful button grid
+- Customizable icons
+- Drag-and-drop editing
+- Page/category support
 
-### 🔄 Canlı Senkronizasyon
-- Masaüstünde yapılan değişiklikler anında mobilde görünür
-- Socket.IO ile gerçek zamanlı güncelleme
-- Çift yönlü iletişim
+### 🔄 Live Synchronization
+- Changes made on desktop appear instantly on mobile
+- Real-time updates via Socket.IO
+- Bidirectional communication
 
-## 🏗️ Mimari
+## 🏗️ Architecture
 
 ```
 ┌─────────────────┐                  ┌─────────────────┐
@@ -50,133 +50,133 @@ Local Desk, mobil cihazınızı (iOS/Android) masaüstü bilgisayarınız için 
 └─────────────────┘                  └─────────────────┘
 ```
 
-## 📦 Proje Yapısı
+## 📦 Project Structure
 
 ```
 LocalDesk/
-├── desktop/                # Electron masaüstü uygulaması
-│   ├── main.js            # Electron ana process
+├── desktop/                # Electron desktop application
+│   ├── main.js            # Electron main process
 │   ├── preload.js         # IPC bridge
 │   ├── server/            # Node.js backend
 │   │   ├── index.js       # Socket.IO server
 │   │   ├── discovery.js   # UDP + mDNS
-│   │   └── keyboard-addon/ # C++ SendInput modülü
-│   └── ui/                # HTML/CSS/JS arayüz
+│   │   └── keyboard-addon/ # C++ SendInput module
+│   └── ui/                # HTML/CSS/JS interface
 │
-└── LocalDesk/             # React Native mobil uygulama
-    ├── App.jsx            # Ana uygulama
+└── LocalDesk/             # React Native mobile app
+    ├── App.jsx            # Main application
     └── src/
         ├── hooks/         # Custom hooks
-        ├── components/    # UI bileşenleri
-        └── screens/       # Ekranlar
+        ├── components/    # UI components
+        └── screens/       # Screens
 ```
 
-## 🚀 Hızlı Başlangıç
+## 🚀 Quick Start
 
-### Ön Gereksinimler
+### Prerequisites
 
-**Masaüstü:**
+**Desktop:**
 - Node.js 20+
-- Windows (klavye addon için)
+- Windows (for keyboard addon)
 - Visual Studio Build Tools 2019+
 
-**Mobil:**
+**Mobile:**
 - Node.js 20+
 - React Native CLI
 - iOS: Xcode 14+ (macOS)
 - Android: Android Studio + JDK 17
 
-### Kurulum
+### Installation
 
-#### 1️⃣ Masaüstü Uygulaması
+#### 1️⃣ Desktop Application
 
 ```bash
 cd desktop
 
-# Bağımlılıkları yükle
+# Install dependencies
 npm install
 
-# C++ Addon'u derle
+# Build C++ Addon
 cd server/keyboard-addon
 npm install
 cd ../..
 
-# Veya direkt
+# Or directly
 npm run rebuild
 
-# Uygulamayı başlat
+# Start the application
 npm start
 ```
 
-#### 2️⃣ Mobil Uygulama
+#### 2️⃣ Mobile Application
 
 ```bash
 cd LocalDesk
 
-# Bağımlılıkları yükle
+# Install dependencies
 npm install
 
-# iOS için
+# For iOS
 cd ios && pod install && cd ..
 npm run ios
 
-# Android için
+# For Android
 npm run android
 ```
 
-## 📖 Kullanım
+## 📖 Usage
 
-### 1. Masaüstü Uygulamasını Başlatın
+### 1. Start Desktop Application
 
-- Windows'ta Local Desk Desktop'u açın
-- Otomatik olarak UDP ve mDNS servisleri başlar
-- Sol üst köşede cihaz adınız ve durumu görünür
+- Open Local Desk Desktop on Windows
+- UDP and mDNS services start automatically
+- Device name and status appear in the top left corner
 
-### 2. Mobil Uygulamayı Açın
+### 2. Open Mobile Application
 
-- Aynı WiFi ağına bağlı olduğunuzdan emin olun
-- Uygulama otomatik olarak masaüstü cihazınızı bulur
-- Listeden cihazınızı seçin
+- Make sure you're on the same WiFi network
+- The app automatically finds your desktop device
+- Select your device from the list
 
-### 3. Pairing Yapın
+### 3. Pair Devices
 
-- Mobilde cihazı seçtiğinizde pairing isteği gönderilir
-- Masaüstünde çıkan popup'tan "Onayla"ya tıklayın
-- Bağlantı kurulur ve kısayollar indirilir
+- When you select a device on mobile, a pairing request is sent
+- Click "Approve" on the popup that appears on desktop
+- Connection is established and shortcuts are downloaded
 
-### 4. Kısayolları Kullanın
+### 4. Use Shortcuts
 
-- Mobil ekranda Stream Deck tarzı buton grid'i görünür
-- Herhangi bir butona basarak klavye kısayolunu tetikleyin
-- Masaüstünde gerçek klavye tuşları basılmış gibi algılanır
+- Stream Deck-style button grid appears on mobile screen
+- Press any button to trigger the keyboard shortcut
+- Desktop detects it as if real keyboard keys were pressed
 
-### 5. Kısayol Ekleme
+### 5. Adding Shortcuts
 
-- Masaüstü uygulamasında "➕ Yeni Kısayol Ekle"ye tıklayın
-- Etiket, tuşlar ve renk seçin
-- Kaydedin - mobilde anında görünür
+- Click "➕ Add New Shortcut" in the desktop application
+- Select label, keys, and color
+- Save - appears instantly on mobile
 
-## 🎯 Kullanım Senaryoları
+## 🎯 Use Cases
 
 ### 🎥 OBS Studio
 ```javascript
 {
-  "label": "Kaydı Başlat/Durdur",
+  "label": "Start/Stop Recording",
   "keys": ["CONTROL", "ALT", "R"],
   "color": "#f44336"
 }
 ```
 
-### 🎬 Video Düzenleme
+### 🎬 Video Editing
 ```javascript
 {
-  "label": "Render Et",
+  "label": "Render",
   "keys": ["CONTROL", "M"],
   "color": "#9c27b0"
 }
 ```
 
-### 🎮 Oyun Streaming
+### 🎮 Game Streaming
 ```javascript
 {
   "label": "Discord Mute",
@@ -185,7 +185,7 @@ npm run android
 }
 ```
 
-### 💼 Genel Produktivite
+### 💼 General Productivity
 ```javascript
 {
   "label": "Screenshot",
@@ -194,57 +194,57 @@ npm run android
 }
 ```
 
-## 🔧 Yapılandırma
+## 🔧 Configuration
 
-### Masaüstü Portları
+### Desktop Ports
 
 - **HTTP/Socket.IO**: 3100
 - **UDP Discovery**: 45454
-- **mDNS**: Otomatik
+- **mDNS**: Automatic
 
-### Veri Dosyaları
+### Data Files
 
 ```
 desktop/server/data/
-├── config.json        # Cihaz ayarları
-├── shortcuts.json     # Kısayol listesi
-├── trusted.json       # Güvenilir cihazlar
-└── icons/            # Özel ikonlar
+├── config.json        # Device settings
+├── shortcuts.json     # Shortcut list
+├── trusted.json       # Trusted devices
+└── icons/            # Custom icons
 ```
 
-## 🛠️ Geliştirme
+## 🛠️ Development
 
-### Debug Modu
+### Debug Mode
 
-**Masaüstü:**
+**Desktop:**
 ```bash
 NODE_ENV=development npm start
-# DevTools otomatik açılır
+# DevTools opens automatically
 ```
 
-**Mobil:**
+**Mobile:**
 ```bash
 npm start -- --reset-cache
 # Shake device > Debug
 ```
 
-### C++ Addon Yeniden Derleme
+### C++ Addon Rebuild
 
 ```bash
 cd desktop/server/keyboard-addon
 npm run rebuild
 ```
 
-### Log Seviyeleri
+### Log Levels
 
-- ✅ Başarılı işlemler
-- 📡 Network olayları
-- ⌨️ Klavye girdileri
-- 🔐 Pairing işlemleri
-- ❌ Hatalar
-- ⚠️ Uyarılar
+- ✅ Successful operations
+- 📡 Network events
+- ⌨️ Keyboard inputs
+- 🔐 Pairing operations
+- ❌ Errors
+- ⚠️ Warnings
 
-## 📡 Protokol Detayları
+## 📡 Protocol Details
 
 ### UDP Discovery
 
@@ -279,11 +279,11 @@ emit('pair-request', {
 // Server → Client
 emit('pair-response', {
   success: true,
-  message: 'Pairing onaylandı'
+  message: 'Pairing approved'
 })
 ```
 
-**Kısayol Çalıştırma:**
+**Execute Shortcut:**
 ```javascript
 // Client → Server
 emit('execute-shortcut', {
@@ -298,7 +298,7 @@ emit('execute-result', {
 })
 ```
 
-**Senkronizasyon:**
+**Synchronization:**
 ```javascript
 // Server → Client
 emit('shortcuts-update', [
@@ -306,49 +306,49 @@ emit('shortcuts-update', [
 ])
 ```
 
-## 🔐 Güvenlik
+## 🔐 Security
 
-- ✅ Lokal ağda çalışır (internet gerekmez)
-- ✅ İlk bağlantıda manuel onay
-- ✅ Güvenilir cihaz sistemi
-- ✅ Her komut için yetki kontrolü
-- ⚠️ SSL/TLS kullanılmıyor (lokal ağ için gerekli değil)
+- ✅ Works on local network (no internet required)
+- ✅ Manual approval on first connection
+- ✅ Trusted device system
+- ✅ Permission check for each command
+- ⚠️ SSL/TLS not used (not necessary for local network)
 
-## 🐛 Sorun Giderme
+## 🐛 Troubleshooting
 
-### Cihaz Bulunamıyor
+### Device Not Found
 
-1. Aynı WiFi ağında olduğunuzdan emin olun
-2. Güvenlik duvarı 3100 ve 45454 portlarını açık tutmalı
-3. Masaüstü uygulamasının çalıştığını kontrol edin
-4. Mobil uygulamayı yeniden başlatın
+1. Make sure you're on the same WiFi network
+2. Firewall should allow ports 3100 and 45454
+3. Check that desktop application is running
+4. Restart mobile application
 
-### Bağlantı Hatası
+### Connection Error
 
-1. Masaüstünde pairing onayı verdiyseniz
-2. Güvenilir cihazlar listesinde olup olmadığınızı kontrol edin
-3. Mobilde güvenilir cihazları temizleyip tekrar deneyin
-4. Her iki uygulamayı da yeniden başlatın
+1. If you approved pairing on desktop
+2. Check if you're in the trusted devices list
+3. Clear trusted devices on mobile and try again
+4. Restart both applications
 
-### Kısayollar Çalışmıyor
+### Shortcuts Not Working
 
-1. C++ Addon'un derlendiğinden emin olun: `npm run rebuild`
-2. Windows Build Tools yüklü mü kontrol edin
-3. Masaüstü loglarını kontrol edin
-4. Hedef uygulamanın odakta olduğundan emin olun
+1. Make sure C++ Addon is built: `npm run rebuild`
+2. Check if Windows Build Tools is installed
+3. Check desktop logs
+4. Make sure target application is in focus
 
-### Performans Sorunları
+### Performance Issues
 
-1. Aynı ağda başka yoğun trafik var mı kontrol edin
-2. WiFi sinyal gücünü kontrol edin
-3. Mobil uygulamayı arka planda bırakmayın
-4. Masaüstünde başka ağır işlem çalışıyor mu kontrol edin
+1. Check if there's heavy traffic on the same network
+2. Check WiFi signal strength
+3. Don't leave mobile app in background
+4. Check if other heavy processes are running on desktop
 
-## 🎨 Özelleştirme
+## 🎨 Customization
 
-### Özel İkonlar
+### Custom Icons
 
-İkonları `desktop/server/data/icons/` klasörüne ekleyin:
+Add icons to `desktop/server/data/icons/` folder:
 
 ```json
 {
@@ -359,9 +359,9 @@ emit('shortcuts-update', [
 }
 ```
 
-### Tema Renkleri
+### Theme Colors
 
-Masaüstü UI için `desktop/ui/style.css`:
+For desktop UI `desktop/ui/style.css`:
 
 ```css
 :root {
@@ -371,7 +371,7 @@ Masaüstü UI için `desktop/ui/style.css`:
 }
 ```
 
-Mobil UI için `LocalDesk/src/components/ButtonGrid.jsx`:
+For mobile UI `LocalDesk/src/components/ButtonGrid.jsx`:
 
 ```javascript
 const styles = StyleSheet.create({
@@ -382,41 +382,50 @@ const styles = StyleSheet.create({
 });
 ```
 
-## 🚧 Gelecek Özellikler
+## 🚧 Upcoming Features
 
-- [ ] Makro kayıt sistemi
-- [ ] Çoklu sayfa/kategori desteği
-- [ ] Özel ikon yükleme arayüzü
+- [ ] Macro recording system
+- [ ] Multiple page/category support
+- [ ] Custom icon upload interface
 - [ ] Haptic feedback
-- [ ] Widget desteği (iOS/Android)
-- [ ] Tema desteği (açık/koyu)
-- [ ] macOS/Linux desteği
-- [ ] Web arayüzü
+- [ ] Widget support (iOS/Android)
+- [ ] Theme support (light/dark)
+- [ ] macOS/Linux support
+- [ ] Web interface
 
-## 🤝 Katkıda Bulunma
+## 🤝 Contributing
 
-1. Fork yapın
-2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
-3. Commit edin (`git commit -m 'feat: Add amazing feature'`)
-4. Push edin (`git push origin feature/amazing-feature`)
-5. Pull Request açın
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📄 Lisans
+## 📄 License
 
-MIT License - Detaylar için `LICENSE` dosyasına bakın
+MIT License - See `LICENSE` file for details
 
-## 👨‍💻 Geliştirici
+## 👨‍💻 Developer
 
-**Harun**
 
-## 🙏 Teşekkürler
+<table>
+  <tr>
+    <td align="center" width="180">
+      <img src="https://avatars.githubusercontent.com/u/56540582?v=4&size=64" width="120px" style="border-radius: 50%;" alt="Harun Selçuk Çetin Profile Photo"/>
+      <br/><b>Harun Selçuk Çetin</b><br/>
+      <a href="https://www.linkedin.com/in/harun-selcuk-cetin/" target="_blank">🔗 LinkedIn</a> •
+      <a href="https://www.youtube.com/@harunselcukcetin" target="_blank">▶️ YouTube</a>
+    </td>
+  </tr>
+</table>
+
+## 🙏 Acknowledgments
 
 - [Electron](https://www.electronjs.org/)
 - [React Native](https://reactnative.dev/)
 - [Socket.IO](https://socket.io/)
-- [LocalSend](https://localsend.org/) - Discovery mantığı için ilham
+- [LocalSend](https://localsend.org/) - Inspiration for discovery logic
 
 ---
 
-**⭐ Projeyi beğendiyseniz yıldız vermeyi unutmayın!**
-
+**⭐ If you liked the project, don't forget to give it a star!**
