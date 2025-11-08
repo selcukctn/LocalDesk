@@ -10,7 +10,7 @@ import {
   Dimensions,
   TouchableWithoutFeedback
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useI18n } from '../contexts/I18nContext';
 
@@ -31,6 +31,7 @@ export const ControlScreen = ({
   onDisconnect
 }) => {
   const { t, language, changeLanguage } = useI18n();
+  const insets = useSafeAreaInsets();
   const [headerExpanded, setHeaderExpanded] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewMode, setViewMode] = useState('both'); // 'both', 'iconOnly', 'textOnly'
@@ -99,7 +100,7 @@ export const ControlScreen = ({
 
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0E27" />
       
       {/* Menu dışına tıklandığında kapat */}
@@ -110,7 +111,10 @@ export const ControlScreen = ({
       )}
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { 
+        paddingLeft: Math.max(20, insets.left + 20),
+        paddingRight: Math.max(20, insets.right + 20)
+      }]}>
         {headerExpanded ? (
           <>
             <View style={styles.headerLeft}>
@@ -139,7 +143,9 @@ export const ControlScreen = ({
 
       {/* Menu Dropdown */}
       {menuOpen && (
-        <View style={styles.menuDropdown}>
+        <View style={[styles.menuDropdown, {
+          right: Math.max(16, insets.right + 16)
+        }]}>
           <ScrollView 
             style={styles.menuScrollView}
             showsVerticalScrollIndicator={true}
@@ -496,8 +502,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    width:width,
     height:width/18,
     backgroundColor: '#1e1e1e',
   },

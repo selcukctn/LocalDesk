@@ -6,6 +6,7 @@ import {
   View,
   Alert
 } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import OrientationLocker from 'react-native-orientation-locker';
 import { I18nProvider, useI18n } from './src/contexts/I18nContext';
 import { DiscoveryScreen } from './src/screens/DiscoveryScreen';
@@ -157,9 +158,11 @@ const styles = StyleSheet.create({
 
 function App() {
   return (
-    <I18nProvider>
-      <AppContent />
-    </I18nProvider>
+    <SafeAreaProvider>
+      <I18nProvider>
+        <AppContent />
+      </I18nProvider>
+    </SafeAreaProvider>
   );
 }
 
