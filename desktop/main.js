@@ -9,9 +9,23 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
-const server = require('./server');
+const LocalDeskServer = require('./server');
 
 let mainWindow;
+let server;
+
+// Veri dizinini belirle (build modunda kullanıcı veri dizinini kullan)
+function getDataDir() {
+  // Development modunda server/data kullan
+  // Production'da kullanıcı veri dizinini kullan (app.asar salt okunur)
+  if (app.isPackaged) {
+    // Build modunda: %APPDATA%/Local Desk/data (Windows) veya ~/.config/Local Desk/data (Linux/Mac)
+    return path.join(app.getPath('userData'), 'data');
+  } else {
+    // Development modunda: server/data
+    return path.join(__dirname, 'server', 'data');
+  }
+}
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -45,6 +59,17 @@ function createWindow() {
 app.whenReady().then(async () => {
   createWindow();
 
+  // Server instance'ını oluştur (veri dizini ile)
+  const dataDir = getDataDir();
+  server = new LocalDeskServer(dataDir);
+
+  // Pairing isteklerini UI'a ilet
+  server.on('pairing-request', (deviceInfo) => {
+    if (mainWindow) {
+      mainWindow.webContents.send('pairing-request', deviceInfo);
+    }
+  });
+
   // Server'ı başlat
   try {
     await server.start();
@@ -68,87 +93,102 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
-    server.stop();
+    if (server) {
+      server.stop();
+    }
     app.quit();
   }
 });
 
 app.on('before-quit', () => {
-  server.stop();
+  if (server) {
+    server.stop();
+  }
 });
 
 // IPC Event Handlers
 // Sayfa yönetimi
 ipcMain.handle('get-pages', async () => {
+  if (!server) return [];
   return server.getPages();
 });
 
 ipcMain.handle('add-page', async (event, name, icon, targetApp) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.addPage(name, icon, targetApp);
 });
 
 ipcMain.handle('update-page-target-app', async (event, pageId, targetApp) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.updatePageTargetApp(pageId, targetApp);
 });
 
 ipcMain.handle('update-page-name', async (event, pageId, newName) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.updatePageName(pageId, newName);
 });
 
 ipcMain.handle('delete-page', async (event, pageId) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.deletePage(pageId);
 });
 
 ipcMain.handle('add-shortcut-to-page', async (event, pageId, shortcut) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.addShortcutToPage(pageId, shortcut);
 });
 
 ipcMain.handle('update-shortcut-in-page', async (event, pageId, shortcutId, shortcut) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.updateShortcutInPage(pageId, shortcutId, shortcut);
 });
 
 ipcMain.handle('delete-shortcut-from-page', async (event, pageId, shortcutId) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.deleteShortcutFromPage(pageId, shortcutId);
 });
 
 ipcMain.handle('reorder-shortcuts-in-page', async (event, pageId, shortcutIds) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.reorderShortcutsInPage(pageId, shortcutIds);
 });
 
 // Geriye uyumluluk için shortcuts
 ipcMain.handle('get-shortcuts', async () => {
+  if (!server) return [];
   return server.getShortcuts();
 });
 
 ipcMain.handle('save-shortcuts', async (event, shortcuts) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.saveShortcuts(shortcuts);
 });
 
 ipcMain.handle('get-trusted-devices', async () => {
+  if (!server) return [];
   return server.getTrustedDevices();
 });
 
 ipcMain.handle('remove-trusted-device', async (event, deviceId) => {
+  if (!server) return { success: false, message: 'Server henüz başlatılmadı' };
   return server.removeTrustedDevice(deviceId);
 });
 
 ipcMain.handle('get-server-info', async () => {
+  if (!server) return { error: 'Server henüz başlatılmadı' };
   return server.getServerInfo();
 });
 
 ipcMain.handle('get-connected-clients', async () => {
+  if (!server) return [];
   return server.getConnectedClients();
 });
 
-// Pairing isteklerini UI'a ilet
-server.on('pairing-request', (deviceInfo) => {
-  if (mainWindow) {
-    mainWindow.webContents.send('pairing-request', deviceInfo);
-  }
-});
-
 ipcMain.handle('approve-pairing', async (event, deviceId, approved) => {
-  return server.handlePairingResponse(deviceId, approved);
+  if (server) {
+    return server.handlePairingResponse(deviceId, approved);
+  }
+  return { success: false, message: 'Server henüz başlatılmadı' };
 });
 
 // İkon seçimi
@@ -166,6 +206,9 @@ ipcMain.handle('select-icon', async () => {
   }
   
   // Seçilen dosyayı server'a gönder (kopyalama için)
+  if (!server) {
+    return { canceled: true, error: 'Server henüz başlatılmadı' };
+  }
   const iconPath = await server.copyIconFile(result.filePaths[0]);
   
   return {
@@ -198,11 +241,15 @@ ipcMain.handle('select-app', async () => {
 
 // Çalışan uygulamaların listesini al
 ipcMain.handle('get-windows', async () => {
+  if (!server) return [];
   return server.getWindowList();
 });
 
 // Sayfa için hedef uygulama seç
 ipcMain.handle('select-target-app', async () => {
+  if (!server) {
+    return { canceled: true, message: 'Server henüz başlatılmadı' };
+  }
   // Çalışan uygulamaları al
   const windows = server.getWindowList();
   
@@ -235,6 +282,19 @@ ipcMain.handle('open-external', async (event, url) => {
   } catch (error) {
     return { success: false, error: error.message };
   }
+});
+
+// Window'u öne getir
+ipcMain.handle('focus-window', async () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    mainWindow.focus();
+    mainWindow.show();
+    return { success: true };
+  }
+  return { success: false };
 });
 
 // Otomatik Güncelleme Sistemi

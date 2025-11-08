@@ -11,7 +11,7 @@ const { spawn } = require('child_process');
 const discovery = require('./discovery');
 
 class LocalDeskServer extends EventEmitter {
-  constructor() {
+  constructor(dataDir = null) {
     super();
     this.app = express();
     this.server = null;
@@ -25,11 +25,19 @@ class LocalDeskServer extends EventEmitter {
     this.pendingPairings = new Map();
     this.keyboardAddon = null;
     
-    // Veri dosyaları
-    this.dataDir = path.join(__dirname, 'data');
+    // Veri dosyaları - build modunda kullanıcı veri dizinini kullan
+    // Development modunda __dirname/data, production'da userData/data
+    if (dataDir) {
+      this.dataDir = dataDir;
+    } else {
+      // Fallback: development modu için eski yol
+      this.dataDir = path.join(__dirname, 'data');
+    }
     this.pagesFile = path.join(this.dataDir, 'pages.json'); // shortcuts.json -> pages.json
     this.trustedFile = path.join(this.dataDir, 'trusted.json');
     this.configFile = path.join(this.dataDir, 'config.json');
+    
+    console.log('📁 Veri dizini:', this.dataDir);
   }
 
   async start() {
@@ -796,7 +804,6 @@ class LocalDeskServer extends EventEmitter {
   }
 }
 
-// Singleton instance
-const server = new LocalDeskServer();
-module.exports = server;
+// Class'ı export et (singleton yerine instance oluşturulacak)
+module.exports = LocalDeskServer;
 

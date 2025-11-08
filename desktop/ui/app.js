@@ -645,11 +645,22 @@ function renderTrustedDevices() {
                 <p>${device.id}</p>
                 <small>${new Date(device.addedAt).toLocaleDateString(locale)}</small>
             </div>
-            <button class="btn btn-danger" onclick="removeTrustedDevice('${device.id}')">
+            <button class="btn btn-danger remove-device-btn" data-device-id="${device.id}">
                 ${window.i18n.t('devices.remove')}
             </button>
         </div>
     `).join('');
+    
+    // Event delegation için event listener ekle
+    trustedDevicesList.querySelectorAll('.remove-device-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const deviceId = btn.getAttribute('data-device-id');
+            if (deviceId) {
+                await removeTrustedDevice(deviceId);
+            }
+        });
+    });
 }
 
 // Load server info
@@ -913,8 +924,22 @@ async function removeTrustedDevice(deviceId) {
         return;
     }
     
-    await window.electronAPI.removeTrustedDevice(deviceId);
-    await loadTrustedDevices();
+    try {
+        console.log('🗑️ Cihaz kaldırılıyor:', deviceId);
+        const result = await window.electronAPI.removeTrustedDevice(deviceId);
+        console.log('✅ Cihaz kaldırma sonucu:', result);
+        
+        // UI'ı güncelle
+        await loadTrustedDevices();
+        console.log('✅ UI güncellendi');
+    } catch (error) {
+        console.error('❌ Cihaz kaldırma hatası:', error);
+        await showAlert(
+            window.i18n.t('alerts.error'), 
+            `Cihaz kaldırılırken hata oluştu: ${error.message}`, 
+            '❌'
+        );
+    }
 }
 
 
@@ -1014,21 +1039,56 @@ async function saveDeviceName() {
 
 // Pairing
 function showPairingRequest(deviceInfo) {
+    console.log('🔐 Pairing isteği gösteriliyor:', deviceInfo);
     currentPairingRequest = deviceInfo;
     document.getElementById('pairingDeviceName').textContent = deviceInfo.deviceName;
     document.getElementById('pairingDeviceId').textContent = deviceInfo.deviceId;
     pairingModal.classList.add('active');
+    
+    // Build modunda window'u öne getir
+    if (window.electronAPI && window.electronAPI.focusWindow) {
+        window.electronAPI.focusWindow();
+    }
+    
+    // Modal'ın görünür olduğundan emin ol
+    setTimeout(() => {
+        if (!pairingModal.classList.contains('active')) {
+            console.warn('⚠️ Modal açılamadı, tekrar deniyor...');
+            pairingModal.classList.add('active');
+        }
+    }, 100);
 }
 
 async function approvePairing(approved) {
-    if (currentPairingRequest) {
-        await window.electronAPI.approvePairing(currentPairingRequest.deviceId, approved);
+    if (!currentPairingRequest) {
+        console.warn('⚠️ Pairing isteği bulunamadı');
+        return;
+    }
+    
+    try {
+        console.log('🔐 Pairing onayı gönderiliyor:', approved ? 'Onaylandı' : 'Reddedildi', currentPairingRequest.deviceId);
+        const result = await window.electronAPI.approvePairing(currentPairingRequest.deviceId, approved);
+        console.log('✅ Pairing sonucu:', result);
+        
         pairingModal.classList.remove('active');
+        const deviceId = currentPairingRequest.deviceId;
         currentPairingRequest = null;
         
         if (approved) {
             await loadTrustedDevices();
+            console.log('✅ Cihaz güvenilir cihazlara eklendi:', deviceId);
+        } else {
+            console.log('❌ Pairing reddedildi:', deviceId);
         }
+    } catch (error) {
+        console.error('❌ Pairing onayı hatası:', error);
+        pairingModal.classList.remove('active');
+        currentPairingRequest = null;
+        await showAlert(
+            window.i18n.t('alerts.error'), 
+            `Pairing işlemi sırasında hata oluştu: ${error.message}`, 
+            '❌'
+        );
     }
 }
 

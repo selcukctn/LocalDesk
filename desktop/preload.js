@@ -46,6 +46,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Harici URL aç (default tarayıcıda)
   openExternal: (url) => ipcRenderer.invoke('open-external', url),
   
+  // Window'u öne getir
+  focusWindow: () => ipcRenderer.invoke('focus-window'),
+  
   // Otomatik güncelleme
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   downloadUpdate: () => ipcRenderer.invoke('download-update'),
