@@ -12,11 +12,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDiscovery } from '../hooks/useDiscovery';
+import { useI18n } from '../contexts/I18nContext';
 
 const { width } = Dimensions.get('window');
 
-export const DiscoveryScreen = ({ onDeviceSelect }) => {
+export const DiscoveryScreen = ({ onDeviceSelect, onSettingsPress }) => {
   const { devices, isScanning, error, startDiscovery, stopDiscovery } = useDiscovery();
+  const { t } = useI18n();
 
   useEffect(() => {
     startDiscovery();
@@ -56,9 +58,9 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
   const renderEmpty = () => (
     <View style={styles.emptyState}>
       <Text style={styles.emptyIcon}>🔍</Text>
-      <Text style={styles.emptyText}>Cihaz aranıyor...</Text>
+      <Text style={styles.emptyText}>{t('discovery.searching')}</Text>
       <Text style={styles.emptySubtext}>
-        Masaüstü uygulamanızın açık ve aynı ağda olduğundan emin olun
+        {t('discovery.searchingHint')}
       </Text>
       {error && (
         <Text style={styles.errorText}>{error}</Text>
@@ -84,27 +86,27 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
                 <Text style={styles.logoIcon}>🎮</Text>
                 <Text style={styles.logoIcon2}>💻</Text>
               </View>
-              <Text style={styles.appTitle}>Local Desk</Text>
-              <Text style={styles.appSubtitle}>Desktop Controller</Text>
+              <Text style={styles.appTitle}>{t('app.title')}</Text>
+              <Text style={styles.appSubtitle}>{t('app.subtitle')}</Text>
             </View>
 
             {/* Durum */}
             <View style={styles.statusSection}>
-              <Text style={styles.sectionLabel}>Durum</Text>
+              <Text style={styles.sectionLabel}>{t('discovery.status')}</Text>
               <View style={styles.statusBadge}>
                 {isScanning && <ActivityIndicator size="small" color="#4CAF50" />}
                 <Text style={styles.statusLabel}>
-                  {isScanning ? 'Aranıyor...' : 'Durduruldu'}
+                  {isScanning ? t('discovery.scanning') : t('discovery.stopped')}
                 </Text>
               </View>
             </View>
 
             {/* Bulunan Cihaz Sayısı */}
             <View style={styles.infoSection}>
-              <Text style={styles.sectionLabel}>Bulunan Cihazlar</Text>
+              <Text style={styles.sectionLabel}>{t('discovery.foundDevices')}</Text>
               <View style={styles.infoBox}>
                 <Text style={styles.infoNumber}>{devices.length}</Text>
-                <Text style={styles.infoLabel}>Cihaz</Text>
+                <Text style={styles.infoLabel}>{t('discovery.device')}</Text>
               </View>
             </View>
 
@@ -112,18 +114,29 @@ export const DiscoveryScreen = ({ onDeviceSelect }) => {
             <View style={styles.helpSection}>
               <Text style={styles.helpIcon}>💡</Text>
               <Text style={styles.helpText}>
-                Masaüstü uygulamanızı başlatın ve aynı Wi-Fi ağına bağlanın
+                {t('discovery.helpText')}
               </Text>
             </View>
           </ScrollView>
+
+          {/* Alt Butonlar - Scroll dışında sabit */}
+          <View style={styles.menuActions}>
+            <TouchableOpacity
+              style={styles.settingsBtn}
+              onPress={onSettingsPress}
+            >
+              <Text style={styles.settingsBtnIcon}>⚙️</Text>
+              <Text style={styles.settingsBtnText}>{t('settings.title')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Sağ Panel - Cihaz Listesi */}
         <View style={styles.rightPanel}>
           <View style={styles.rightHeader}>
-            <Text style={styles.rightTitle}>Cihazlar</Text>
+            <Text style={styles.rightTitle}>{t('discovery.devices')}</Text>
             <Text style={styles.rightSubtitle}>
-              Bağlanmak için bir cihaz seçin
+              {t('discovery.searchingHint')}
             </Text>
           </View>
 
@@ -251,6 +264,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#CCCCCC',
     lineHeight: 18
+  },
+  menuActions: {
+    padding: 24,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#3e3e42'
+  },
+  settingsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2d2d30',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#3e3e42'
+  },
+  settingsBtnIcon: {
+    fontSize: 20
+  },
+  settingsBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF'
   },
   // Sağ Panel Stilleri
   rightPanel: {

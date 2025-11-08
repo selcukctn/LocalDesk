@@ -1,0 +1,129 @@
+{
+  "app": {
+    "title": "Local Desk",
+    "subtitle": "Desktop Controller"
+  },
+  "tabs": {
+    "shortcuts": "Verknüpfungen",
+    "devices": "Verbundene Geräte",
+    "settings": "Einstellungen"
+  },
+  "shortcuts": {
+    "addNew": "➕ Neue Verknüpfung hinzufügen",
+    "empty": "Keine Verknüpfungen gefunden",
+    "edit": "Verknüpfung bearbeiten",
+    "delete": "Verknüpfung löschen",
+    "newPage": "+ Neue Seite",
+    "editPage": "Bearbeiten",
+    "deletePage": "Löschen"
+  },
+  "devices": {
+    "activeConnections": "🔗 Aktive Verbindungen",
+    "trustedDevices": "✅ Vertrauenswürdige Geräte",
+    "connectionInfo": "📡 Verbindungsinformationen",
+    "noActiveConnections": "Keine aktiven Verbindungen",
+    "connectFromMobile": "Vom Mobilgerät verbinden",
+    "noTrustedDevices": "Noch keine vertrauenswürdigen Geräte",
+    "addFromMobile": "Verbinden Sie sich über die mobile App, um Geräte hinzuzufügen",
+    "ipAddresses": "IP-Adressen:",
+    "port": "Port:",
+    "totalShortcuts": "Gesamte Verknüpfungen:",
+    "activeConnections": "Aktive Verbindungen:",
+    "remove": "Entfernen"
+  },
+  "settings": {
+    "general": "Allgemeine Einstellungen",
+    "deviceName": "Gerätename",
+    "save": "Speichern",
+    "language": "Sprache",
+    "about": "Über",
+    "version": "Version: 1.0.0",
+    "description": "Stream Deck-ähnlicher Tastaturkürzel-Controller",
+    "aboutDescription": "Verbinden Sie sich über die mobile App im lokalen Netzwerk<br>um Tastaturkürzel an Ihren Desktop-Computer zu senden."
+  },
+  "status": {
+    "waiting": "Warte auf Verbindung",
+    "active": "Aktiv"
+  },
+  "modal": {
+    "newShortcut": "Neue Verknüpfung hinzufügen",
+    "editShortcut": "Verknüpfung bearbeiten",
+    "newPage": "Neue Seite",
+    "label": "Bezeichnung",
+    "labelPlaceholder": "z.B. OBS starten",
+    "actionType": "Aktionstyp",
+    "keyboardShortcut": "⌨️ Tastaturkürzel",
+    "launchApp": "🚀 Anwendung starten",
+    "both": "🔗 Beides",
+    "keys": "Tasten",
+    "keysPlaceholder": "Tasten drücken...",
+    "recordKeys": "🎹 Tasten aufzeichnen",
+    "keysExample": "z.B. Strg + Alt + O",
+    "appExe": "Anwendung (.exe)",
+    "appPlaceholder": "C:\\Programme\\OBS\\obs64.exe",
+    "selectApp": "📂 Anwendung auswählen",
+    "appHint": "Wählen Sie die .exe-Datei der zu startenden Anwendung aus",
+    "color": "Farbe",
+    "icon": "Symbol (Optional)",
+    "iconPlaceholder": "icon.png oder Emoji 🎮",
+    "selectFile": "📁 Datei auswählen",
+    "useEmoji": "😊 Emoji verwenden",
+    "iconHint": "Wählen Sie eine Datei aus oder geben Sie direkt ein Emoji ein",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "create": "Erstellen",
+    "pageName": "Seitenname",
+    "pageNamePlaceholder": "z.B. Multimedia",
+    "pageIcon": "Seitensymbol (Optional)",
+    "pageIconPlaceholder": "icon.png oder Emoji 📄",
+    "targetApp": "🎯 Zielanwendung (Optional)",
+    "targetAppPlaceholder": "Nicht ausgewählt - Alle Tasten werden global gesendet",
+    "selectTargetApp": "🖥️ Anwendung auswählen",
+    "clear": "❌ Löschen",
+    "targetAppHint": "Alle Verknüpfungen auf dieser Seite werden an die ausgewählte Anwendung gesendet (ohne Fokus)"
+  },
+  "confirm": {
+    "title": "Bestätigung",
+    "deleteShortcut": "Verknüpfung löschen",
+    "deleteShortcutMessage": "Möchten Sie diese Verknüpfung wirklich löschen?",
+    "deletePage": "Seite löschen",
+    "deletePageMessage": "Möchten Sie diese Seite wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "removeDevice": "Gerät entfernen",
+    "removeDeviceMessage": "Möchten Sie dieses Gerät wirklich aus der Liste der vertrauenswürdigen Geräte entfernen?",
+    "yes": "Ja",
+    "yesDelete": "Ja, löschen",
+    "cancel": "Abbrechen",
+    "ok": "OK"
+  },
+  "pairing": {
+    "title": "🔐 Verbindungsanfrage",
+    "message": "Das folgende Gerät möchte sich verbinden:",
+    "question": "Möchten Sie dieses Gerät zur Liste der vertrauenswürdigen Geräte hinzufügen?",
+    "reject": "Ablehnen",
+    "approve": "Genehmigen"
+  },
+  "alerts": {
+    "warning": "Warnung",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "lastPageCannotDelete": "Die letzte Seite kann nicht gelöscht werden!",
+    "missingInfo": "Fehlende Informationen",
+    "pleaseSelectKeys": "Bitte wählen Sie mindestens eine Taste aus",
+    "pleaseSelectApp": "Bitte wählen Sie eine Anwendung aus",
+    "pleaseSelectBoth": "Bitte wählen Sie sowohl Tasten als auch Anwendung aus",
+    "deviceNameSaved": "Gerätename gespeichert: {name}",
+    "iconSelectionError": "Beim Auswählen des Symbols ist ein Fehler aufgetreten",
+    "appSelectionError": "Beim Auswählen der Anwendung ist ein Fehler aufgetreten",
+    "noRunningApps": "Keine laufenden Anwendungen gefunden. Versuchen Sie, den Dateiauswähler zu verwenden.",
+    "listError": "Liste konnte nicht abgerufen werden: {error}",
+    "fileSelectionError": "Dateiauswahl fehlgeschlagen: {error}",
+    "targetAppSelectionError": "Zielanwendungsauswahl fehlgeschlagen: {error}",
+    "appSelectionChoice": "Wie möchten Sie auswählen?\n\n\"Ja\" = Aus laufenden Anwendungen auswählen\n\"Abbrechen\" = .exe mit Dateiauswähler auswählen"
+  },
+  "appSelection": {
+    "title": "Zielanwendung auswählen",
+    "message": "Wählen Sie eine der laufenden Anwendungen aus:",
+    "cancel": "Abbrechen"
+  }
+}
+

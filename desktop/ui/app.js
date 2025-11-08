@@ -26,6 +26,16 @@ const shortcutForm = document.getElementById('shortcutForm');
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('🚀 Local Desk UI başlatılıyor...');
     
+    // Initialize i18n first
+    await window.i18n.initI18n();
+    window.i18n.updateUI();
+    
+    // Set language selector value
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.value = window.i18n.getCurrentLanguage();
+    }
+    
     // Load data
     await loadPages();
     await loadTrustedDevices();
@@ -169,6 +179,20 @@ function setupEventListeners() {
     
     if (confirmOkBtn) confirmOkBtn.addEventListener('click', () => handleConfirmResponse(true));
     if (confirmCancelBtn) confirmCancelBtn.addEventListener('click', () => handleConfirmResponse(false));
+    
+    // Language selector
+    const languageSelect = document.getElementById('languageSelect');
+    if (languageSelect) {
+        languageSelect.addEventListener('change', async (e) => {
+            const newLang = e.target.value;
+            await window.i18n.changeLanguage(newLang);
+            window.i18n.updateUI();
+            // Update dynamic content
+            await loadPages();
+            await loadTrustedDevices();
+            await loadServerInfo();
+        });
+    }
 }
 
 function switchTab(tabName) {
@@ -186,13 +210,25 @@ function switchTab(tabName) {
 // Load pages
 async function loadPages() {
     try {
+        // Mevcut sayfa ID'sini sakla
+        const previousPageId = currentPageId;
+        
         pages = await window.electronAPI.getPages();
         
-        // İlk sayfayı seç
+        // Mevcut sayfa hala mevcutsa onu seç, yoksa ilk sayfayı seç
         if (pages.length > 0) {
-            currentPageId = pages[0].id;
-            shortcuts = pages[0].shortcuts || [];
+            const currentPageExists = pages.find(p => p.id === previousPageId);
+            if (currentPageExists && previousPageId !== null) {
+                // Mevcut sayfa hala var, onu seç
+                currentPageId = previousPageId;
+                shortcuts = currentPageExists.shortcuts || [];
+            } else {
+                // Mevcut sayfa yok veya ilk yükleme, ilk sayfayı seç
+                currentPageId = pages[0].id;
+                shortcuts = pages[0].shortcuts || [];
+            }
         } else {
+            currentPageId = null;
             shortcuts = [];
         }
         
@@ -218,13 +254,13 @@ function renderPages() {
                 <span class="page-name" id="page-name-${page.id}">${page.name}</span>
             </button>
             <div class="page-actions">
-                <button class="page-action-btn" onclick="event.stopPropagation(); startEditPageName('${page.id}')" title="Düzenle">✏️</button>
-                ${canDelete ? `<button class="page-action-btn" onclick="event.stopPropagation(); deletePage('${page.id}')" title="Sil">🗑️</button>` : ''}
+                <button class="page-action-btn" onclick="event.stopPropagation(); startEditPageName('${page.id}')" title="${window.i18n.t('shortcuts.editPage')}">✏️</button>
+                ${canDelete ? `<button class="page-action-btn" onclick="event.stopPropagation(); deletePage('${page.id}')" title="${window.i18n.t('shortcuts.deletePage')}">🗑️</button>` : ''}
             </div>
         </div>
     `).join('') + `
         <button class="page-tab page-add" onclick="addNewPage()">
-            + Yeni Sayfa
+            ${window.i18n.t('shortcuts.newPage')}
         </button>
     `;
 }
@@ -302,7 +338,7 @@ async function selectPageIconFile() {
         console.log('✅ Sayfa ikonu seçildi:', result.iconPath);
     } catch (error) {
         console.error('Sayfa ikonu seçimi hatası:', error);
-        await showAlert('Hata', 'İkon seçilirken hata oluştu', '❌');
+        await showAlert(window.i18n.t('alerts.error'), window.i18n.t('alerts.iconSelectionError'), '❌');
     }
 }
 
@@ -393,13 +429,13 @@ async function savePageName(pageId, newName) {
 // Delete page
 async function deletePage(pageId) {
     if (pages.length <= 1) {
-        await showAlert('Uyarı', 'Son sayfa silinemez!', '⚠️');
+        await showAlert(window.i18n.t('alerts.warning'), window.i18n.t('alerts.lastPageCannotDelete'), '⚠️');
         return;
     }
     
     const confirmed = await showConfirm(
-        'Sayfayı Sil', 
-        'Bu sayfayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.', 
+        window.i18n.t('confirm.deletePage'), 
+        window.i18n.t('confirm.deletePageMessage'), 
         '🗑️'
     );
     
@@ -420,7 +456,7 @@ function renderShortcuts() {
     if (shortcuts.length === 0) {
         shortcutsGrid.innerHTML = `
             <div class="empty-state" style="grid-column: 1/-1;">
-                <p>Kısayol bulunamadı</p>
+                <p>${window.i18n.t('shortcuts.empty')}</p>
             </div>
         `;
         return;
@@ -592,22 +628,25 @@ function renderTrustedDevices() {
     if (trustedDevices.length === 0) {
         trustedDevicesList.innerHTML = `
             <div class="empty-state">
-                <p>Henüz güvenilir cihaz yok</p>
-                <small>Mobil uygulamadan bağlanarak cihaz ekleyebilirsiniz</small>
+                <p>${window.i18n.t('devices.noTrustedDevices')}</p>
+                <small>${window.i18n.t('devices.addFromMobile')}</small>
             </div>
         `;
         return;
     }
+    
+    const currentLang = window.i18n.getCurrentLanguage();
+    const locale = currentLang === 'tr' ? 'tr-TR' : currentLang === 'de' ? 'de-DE' : 'en-US';
     
     trustedDevicesList.innerHTML = trustedDevices.map(device => `
         <div class="device-card">
             <div class="device-info">
                 <h3>📱 ${device.name}</h3>
                 <p>${device.id}</p>
-                <small>Eklenme: ${new Date(device.addedAt).toLocaleDateString('tr-TR')}</small>
+                <small>${new Date(device.addedAt).toLocaleDateString(locale)}</small>
             </div>
             <button class="btn btn-danger" onclick="removeTrustedDevice('${device.id}')">
-                Kaldır
+                ${window.i18n.t('devices.remove')}
             </button>
         </div>
     `).join('');
@@ -619,7 +658,7 @@ async function loadServerInfo() {
         const info = await window.electronAPI.getServerInfo();
         document.getElementById('deviceName').textContent = info.deviceName;
         document.getElementById('deviceId').textContent = info.deviceId.substring(0, 8) + '...';
-        document.getElementById('statusText').textContent = 'Aktif';
+        document.getElementById('statusText').textContent = window.i18n.t('status.active');
         document.getElementById('serverPort').textContent = info.port;
         document.getElementById('activeConnections').textContent = info.connectedClients;
         document.getElementById('totalShortcuts').textContent = info.shortcuts;
@@ -652,8 +691,8 @@ function renderConnectedClients(clients) {
     if (!clients || clients.length === 0) {
         list.innerHTML = `
             <div class="empty-state">
-                <p>Aktif bağlantı yok</p>
-                <small>Mobil cihazdan bağlan</small>
+                <p>${window.i18n.t('devices.noActiveConnections')}</p>
+                <small>${window.i18n.t('devices.connectFromMobile')}</small>
             </div>
         `;
         return;
@@ -668,7 +707,7 @@ function renderConnectedClients(clients) {
             </div>
             <div class="connection-status">
                 <span class="status-badge ${client.connected ? 'online' : 'offline'}">
-                    ${client.connected ? '🟢 Bağlı' : '🔴 Bağlantı Kesildi'}
+                    ${client.connected ? '🟢 ' + window.i18n.t('status.active') : '🔴 ' + window.i18n.t('status.waiting')}
                 </span>
             </div>
         </div>
@@ -687,7 +726,7 @@ function openShortcutModal(shortcut = null) {
     selectedAppPath = null;
     
     if (shortcut) {
-        document.getElementById('modalTitle').textContent = 'Kısayolu Düzenle';
+        document.getElementById('modalTitle').textContent = window.i18n.t('modal.editShortcut');
         document.getElementById('labelInput').value = shortcut.label;
         document.getElementById('keysDisplay').value = (shortcut.keys || []).join(' + ');
         document.getElementById('colorInput').value = shortcut.color;
@@ -713,7 +752,7 @@ function openShortcutModal(shortcut = null) {
             showIconPreview(shortcut.icon);
         }
     } else {
-        document.getElementById('modalTitle').textContent = 'Yeni Kısayol Ekle';
+        document.getElementById('modalTitle').textContent = window.i18n.t('modal.newShortcut');
         shortcutForm.reset();
         recordedKeys = [];
         document.querySelector('input[name="actionType"][value="keys"]').checked = true;
@@ -759,17 +798,17 @@ async function handleShortcutSubmit(e) {
     
     // Validasyon
     if (actionType === 'keys' && keys.length === 0) {
-        await showAlert('Eksik Bilgi', 'Lütfen en az bir tuş seçin', '⚠️');
+        await showAlert(window.i18n.t('alerts.missingInfo'), window.i18n.t('alerts.pleaseSelectKeys'), '⚠️');
         return;
     }
     
     if (actionType === 'app' && !appPath) {
-        await showAlert('Eksik Bilgi', 'Lütfen bir uygulama seçin', '⚠️');
+        await showAlert(window.i18n.t('alerts.missingInfo'), window.i18n.t('alerts.pleaseSelectApp'), '⚠️');
         return;
     }
     
     if (actionType === 'both' && (keys.length === 0 || !appPath)) {
-        await showAlert('Eksik Bilgi', 'Lütfen hem tuşları hem de uygulamayı seçin', '⚠️');
+        await showAlert(window.i18n.t('alerts.missingInfo'), window.i18n.t('alerts.pleaseSelectBoth'), '⚠️');
         return;
     }
     
@@ -799,12 +838,12 @@ function toggleKeyRecording() {
     const btn = document.getElementById('recordKeysBtn');
     
     if (recordingKeys) {
-        btn.textContent = '⏸️ Durdur';
+        btn.textContent = '⏸️ ' + window.i18n.t('modal.recordKeys').replace('🎹 ', '').replace('🎹', '');
         btn.style.background = 'var(--accent-red)';
         recordedKeys = [];
-        document.getElementById('keysDisplay').value = 'Tuşlara basın...';
+        document.getElementById('keysDisplay').value = window.i18n.t('modal.keysPlaceholder');
     } else {
-        btn.textContent = '🎹 Tuşları Kaydet';
+        btn.textContent = window.i18n.t('modal.recordKeys');
         btn.style.background = '';
     }
 }
@@ -849,8 +888,8 @@ function editShortcut(id) {
 
 async function deleteShortcut(id) {
     const confirmed = await showConfirm(
-        'Kısayolu Sil', 
-        'Bu kısayolu silmek istediğinizden emin misiniz?', 
+        window.i18n.t('confirm.deleteShortcut'), 
+        window.i18n.t('confirm.deleteShortcutMessage'), 
         '🗑️'
     );
     
@@ -865,8 +904,8 @@ async function deleteShortcut(id) {
 // Device actions
 async function removeTrustedDevice(deviceId) {
     const confirmed = await showConfirm(
-        'Cihazı Kaldır', 
-        'Bu cihazı güvenilir listesinden kaldırmak istediğinizden emin misiniz?', 
+        window.i18n.t('confirm.removeDevice'), 
+        window.i18n.t('confirm.removeDeviceMessage'), 
         '📱'
     );
     
@@ -912,7 +951,7 @@ async function selectAppFile() {
         console.log('✅ Uygulama seçildi:', result.appPath);
     } catch (error) {
         console.error('Uygulama seçimi hatası:', error);
-        await showAlert('Hata', 'Uygulama seçilirken hata oluştu', '❌');
+        await showAlert(window.i18n.t('alerts.error'), window.i18n.t('alerts.appSelectionError'), '❌');
     }
 }
 
@@ -932,7 +971,7 @@ async function selectIconFile() {
         console.log('✅ İkon seçildi:', result.iconPath);
     } catch (error) {
         console.error('İkon seçimi hatası:', error);
-        await showAlert('Hata', 'İkon seçilirken hata oluştu', '❌');
+        await showAlert(window.i18n.t('alerts.error'), window.i18n.t('alerts.iconSelectionError'), '❌');
     }
 }
 
@@ -970,7 +1009,7 @@ function hideIconPreview() {
 async function saveDeviceName() {
     const name = document.getElementById('deviceNameInput').value;
     // Would need backend implementation
-    await showAlert('Başarılı', `Cihaz adı kaydedildi: ${name}`, '✅');
+    await showAlert(window.i18n.t('alerts.success'), window.i18n.t('alerts.deviceNameSaved', { name }), '✅');
 }
 
 // Pairing
@@ -1004,11 +1043,11 @@ function showConfirm(title, message, icon = '⚠️') {
         
         // Buton metnini dinamik yapma
         const okBtn = document.getElementById('confirmOkBtn');
-        if (title.includes('Sil')) {
-            okBtn.textContent = 'Evet, Sil';
+        if (title.includes(window.i18n.t('confirm.deleteShortcut')) || title.includes(window.i18n.t('confirm.deletePage'))) {
+            okBtn.textContent = window.i18n.t('confirm.yesDelete');
             okBtn.className = 'btn btn-danger';
         } else {
-            okBtn.textContent = 'Evet';
+            okBtn.textContent = window.i18n.t('confirm.yes');
             okBtn.className = 'btn btn-primary';
         }
         
@@ -1036,7 +1075,7 @@ function showAlert(title, message, icon = 'ℹ️') {
         
         // Alert için sadece Tamam butonu göster
         const okBtn = document.getElementById('confirmOkBtn');
-        okBtn.textContent = 'Tamam';
+        okBtn.textContent = window.i18n.t('confirm.ok');
         okBtn.className = 'btn btn-primary';
         
         // İptal butonunu gizle
@@ -1074,8 +1113,8 @@ async function selectTargetApp() {
     try {
         // Önce kullanıcıya seçenek sun
         const choice = await showConfirm(
-            'Uygulama Seçimi', 
-            'Nasıl seçmek istersiniz?\n\n"Evet" = Çalışan uygulamalardan seç\n"İptal" = Dosya seçici ile .exe seç',
+            window.i18n.t('appSelection.title'), 
+            window.i18n.t('alerts.appSelectionChoice'),
             '🖥️'
         );
         
@@ -1088,7 +1127,7 @@ async function selectTargetApp() {
         }
     } catch (error) {
         console.error('Hedef uygulama seçimi hatası:', error);
-        await showAlert('Hata', 'Uygulama seçimi başarısız: ' + error.message, '❌');
+        await showAlert(window.i18n.t('alerts.error'), window.i18n.t('alerts.targetAppSelectionError', { error: error.message }), '❌');
     }
 }
 
@@ -1098,14 +1137,14 @@ async function selectFromRunningApps() {
         const result = await window.electronAPI.selectTargetApp();
         if (result.canceled) {
             if (result.message) {
-                await showAlert('Uyarı', result.message, '⚠️');
+                await showAlert(window.i18n.t('alerts.warning'), result.message, '⚠️');
             }
             return;
         }
         
         const windows = result.windows;
         if (!windows || windows.length === 0) {
-            await showAlert('Uyarı', 'Çalışan uygulama bulunamadı. Dosya seçici ile deneyin.', '⚠️');
+            await showAlert(window.i18n.t('alerts.warning'), window.i18n.t('alerts.noRunningApps'), '⚠️');
             return;
         }
         
@@ -1113,7 +1152,7 @@ async function selectFromRunningApps() {
         showAppSelectionModal(windows);
     } catch (error) {
         console.error('Çalışan uygulama seçimi hatası:', error);
-        await showAlert('Hata', 'Liste alınamadı: ' + error.message, '❌');
+        await showAlert(window.i18n.t('alerts.error'), window.i18n.t('alerts.listError', { error: error.message }), '❌');
     }
 }
 
@@ -1137,7 +1176,7 @@ async function selectExeFile() {
         console.log('✅ Hedef uygulama seçildi (dosyadan):', exeName);
     } catch (error) {
         console.error('Exe dosyası seçimi hatası:', error);
-        await showAlert('Hata', 'Dosya seçimi başarısız: ' + error.message, '❌');
+        await showAlert(window.i18n.t('alerts.error'), window.i18n.t('alerts.fileSelectionError', { error: error.message }), '❌');
     }
 }
 
@@ -1153,14 +1192,14 @@ function showAppSelectionModal(windows) {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Hedef Uygulama Seç</h2>
+                    <h2>${window.i18n.t('appSelection.title')}</h2>
                     <button class="close-btn" id="closeAppSelectionBtn">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <p>Çalışan uygulamalardan birini seçin:</p>
+                    <p>${window.i18n.t('appSelection.message')}</p>
                     <div id="appListContainer" class="app-list"></div>
                     <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" id="cancelAppSelectionBtn">İptal</button>
+                        <button type="button" class="btn btn-secondary" id="cancelAppSelectionBtn">${window.i18n.t('appSelection.cancel')}</button>
                     </div>
                 </div>
             </div>

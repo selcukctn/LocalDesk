@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "Local Desk",
+    "subtitle": "Desktop Controller"
+  },
+  "discovery": {
+    "status": "Durum",
+    "scanning": "Aranıyor...",
+    "stopped": "Durduruldu",
+    "foundDevices": "Bulunan Cihazlar",
+    "device": "Cihaz",
+    "devices": "Cihaz",
+    "searching": "Cihaz aranıyor...",
+    "searchingHint": "Masaüstü uygulamanızın açık ve aynı ağda olduğundan emin olun",
+    "helpTitle": "İpucu",
+    "helpText": "Masaüstü uygulamanızı başlatın ve aynı Wi-Fi ağına bağlanın"
+  },
+  "pageList": {
+    "status": "Durum",
+    "pairing": "Eşleşiyor...",
+    "connected": "Bağlı",
+    "connecting": "Bağlanıyor...",
+    "connectedDevice": "Bağlı Cihaz",
+    "disconnect": "Bağlantıyı Kes",
+    "pages": "Sayfalar",
+    "selectPage": "Kısayolları görüntülemek için bir sayfa seçin",
+    "pairingWait": "Eşleşme onayı bekleniyor...",
+    "pairingHint": "Masaüstü uygulamasından bağlantı isteğini onaylayın",
+    "noPages": "Henüz sayfa yok",
+    "addPageHint": "Masaüstü uygulamasından sayfa ekleyin",
+    "shortcutCount": "kısayol",
+    "loading": "Yükleniyor..."
+  },
+  "control": {
+    "controlHub": "Kontrol Merkezi",
+    "hideHeader": "Header'ı Gizle",
+    "showHeader": "Header'ı Göster",
+    "cardView": "Kart Görünümü",
+    "iconAndText": "İkon + Yazı",
+    "iconOnly": "Sadece İkon",
+    "textOnly": "Sadece Yazı",
+    "gridSize": "Grid Boyutu",
+    "pairingWait": "Eşleşme onayı bekleniyor...",
+    "pairingHint": "Masaüstü uygulamasından bağlantı isteğini onaylayın",
+    "noShortcuts": "Henüz kısayol yok",
+    "addShortcutHint": "Masaüstü uygulamasından kısayol ekleyin",
+    "shortcut": "Kısayol",
+    "action": "Eylem"
+  },
+  "errors": {
+    "connectionError": "Bağlantı Hatası",
+    "tryAgain": "Tekrar Dene",
+    "goBack": "Geri Dön",
+    "shortcutError": "Hata",
+    "shortcutFailed": "Kısayol çalıştırılamadı"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "language": "Dil",
+    "english": "English",
+    "german": "Deutsch",
+    "turkish": "Türkçe"
+  }
+}
+

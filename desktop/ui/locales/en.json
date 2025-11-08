@@ -1,0 +1,129 @@
+{
+  "app": {
+    "title": "Local Desk",
+    "subtitle": "Desktop Controller"
+  },
+  "tabs": {
+    "shortcuts": "Shortcuts",
+    "devices": "Connected Devices",
+    "settings": "Settings"
+  },
+  "shortcuts": {
+    "addNew": "➕ Add New Shortcut",
+    "empty": "No shortcuts found",
+    "edit": "Edit Shortcut",
+    "delete": "Delete Shortcut",
+    "newPage": "+ New Page",
+    "editPage": "Edit",
+    "deletePage": "Delete"
+  },
+  "devices": {
+    "activeConnections": "🔗 Active Connections",
+    "trustedDevices": "✅ Trusted Devices",
+    "connectionInfo": "📡 Connection Information",
+    "noActiveConnections": "No active connections",
+    "connectFromMobile": "Connect from mobile device",
+    "noTrustedDevices": "No trusted devices yet",
+    "addFromMobile": "Connect from mobile app to add devices",
+    "ipAddresses": "IP Addresses:",
+    "port": "Port:",
+    "totalShortcuts": "Total Shortcuts:",
+    "activeConnections": "Active Connections:",
+    "remove": "Remove"
+  },
+  "settings": {
+    "general": "General Settings",
+    "deviceName": "Device Name",
+    "save": "Save",
+    "language": "Language",
+    "about": "About",
+    "version": "Version: 1.0.0",
+    "description": "Stream Deck-like keyboard shortcut controller",
+    "aboutDescription": "Connect via mobile app on local network<br>to send keyboard shortcuts to your desktop computer."
+  },
+  "status": {
+    "waiting": "Waiting for Connection",
+    "active": "Active"
+  },
+  "modal": {
+    "newShortcut": "Add New Shortcut",
+    "editShortcut": "Edit Shortcut",
+    "newPage": "New Page",
+    "label": "Label",
+    "labelPlaceholder": "e.g., Start OBS",
+    "actionType": "Action Type",
+    "keyboardShortcut": "⌨️ Keyboard Shortcut",
+    "launchApp": "🚀 Launch Application",
+    "both": "🔗 Both",
+    "keys": "Keys",
+    "keysPlaceholder": "Press keys...",
+    "recordKeys": "🎹 Record Keys",
+    "keysExample": "e.g., Ctrl + Alt + O",
+    "appExe": "Application (.exe)",
+    "appPlaceholder": "C:\\Program Files\\OBS\\obs64.exe",
+    "selectApp": "📂 Select Application",
+    "appHint": "Select the .exe file of the application to launch",
+    "color": "Color",
+    "icon": "Icon (Optional)",
+    "iconPlaceholder": "icon.png or emoji 🎮",
+    "selectFile": "📁 Select File",
+    "useEmoji": "😊 Use Emoji",
+    "iconHint": "Select a file or enter an emoji directly",
+    "cancel": "Cancel",
+    "save": "Save",
+    "create": "Create",
+    "pageName": "Page Name",
+    "pageNamePlaceholder": "e.g., Multimedia",
+    "pageIcon": "Page Icon (Optional)",
+    "pageIconPlaceholder": "icon.png or emoji 📄",
+    "targetApp": "🎯 Target Application (Optional)",
+    "targetAppPlaceholder": "Not selected - All keys will be sent globally",
+    "selectTargetApp": "🖥️ Select Application",
+    "clear": "❌ Clear",
+    "targetAppHint": "All shortcuts on this page will be sent to the selected application (without focus)"
+  },
+  "confirm": {
+    "title": "Confirmation",
+    "deleteShortcut": "Delete Shortcut",
+    "deleteShortcutMessage": "Are you sure you want to delete this shortcut?",
+    "deletePage": "Delete Page",
+    "deletePageMessage": "Are you sure you want to delete this page? This action cannot be undone.",
+    "removeDevice": "Remove Device",
+    "removeDeviceMessage": "Are you sure you want to remove this device from the trusted list?",
+    "yes": "Yes",
+    "yesDelete": "Yes, Delete",
+    "cancel": "Cancel",
+    "ok": "OK"
+  },
+  "pairing": {
+    "title": "🔐 Connection Request",
+    "message": "The following device wants to connect:",
+    "question": "Do you want to add this device to the trusted devices list?",
+    "reject": "Reject",
+    "approve": "Approve"
+  },
+  "alerts": {
+    "warning": "Warning",
+    "error": "Error",
+    "success": "Success",
+    "lastPageCannotDelete": "The last page cannot be deleted!",
+    "missingInfo": "Missing Information",
+    "pleaseSelectKeys": "Please select at least one key",
+    "pleaseSelectApp": "Please select an application",
+    "pleaseSelectBoth": "Please select both keys and application",
+    "deviceNameSaved": "Device name saved: {name}",
+    "iconSelectionError": "An error occurred while selecting icon",
+    "appSelectionError": "An error occurred while selecting application",
+    "noRunningApps": "No running applications found. Try using the file selector.",
+    "listError": "Could not retrieve list: {error}",
+    "fileSelectionError": "File selection failed: {error}",
+    "targetAppSelectionError": "Target application selection failed: {error}",
+    "appSelectionChoice": "How would you like to select?\n\n\"Yes\" = Select from running applications\n\"Cancel\" = Select .exe with file selector"
+  },
+  "appSelection": {
+    "title": "Select Target Application",
+    "message": "Select one of the running applications:",
+    "cancel": "Cancel"
+  }
+}
+

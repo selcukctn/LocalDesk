@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useI18n } from '../contexts/I18nContext';
 
 const STORAGE_KEYS = {
   HEADER_EXPANDED: '@localdesk_header_expanded',
@@ -29,6 +30,7 @@ export const ControlScreen = ({
   onBack,
   onDisconnect
 }) => {
+  const { t, language, changeLanguage } = useI18n();
   const [headerExpanded, setHeaderExpanded] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [viewMode, setViewMode] = useState('both'); // 'both', 'iconOnly', 'textOnly'
@@ -118,7 +120,7 @@ export const ControlScreen = ({
             </View>
 
             <View style={styles.headerCenter}>
-              <Text style={styles.title}>{page?.name || 'Control Hub'}</Text>
+              <Text style={styles.title}>{page?.name || t('control.controlHub')}</Text>
             </View>
           </>
         ) : (
@@ -151,14 +153,14 @@ export const ControlScreen = ({
               }}
             >
               <Text style={styles.menuItemText}>
-                {headerExpanded ? 'Header\'ı Gizle' : 'Header\'ı Göster'}
+                {headerExpanded ? t('control.hideHeader') : t('control.showHeader')}
               </Text>
             </TouchableOpacity>
 
             <View style={styles.menuDivider} />
 
             <View style={styles.menuSection}>
-              <Text style={styles.menuSectionTitle}>Kart Görünümü</Text>
+              <Text style={styles.menuSectionTitle}>{t('control.cardView')}</Text>
               
               <TouchableOpacity
                 style={[
@@ -170,7 +172,7 @@ export const ControlScreen = ({
                   setMenuOpen(false);
                 }}
               >
-                <Text style={styles.menuItemText}>İkon + Yazı</Text>
+                <Text style={styles.menuItemText}>{t('control.iconAndText')}</Text>
                 {viewMode === 'both' && (
                   <Text style={styles.menuItemCheck}>✓</Text>
                 )}
@@ -186,7 +188,7 @@ export const ControlScreen = ({
                   setMenuOpen(false);
                 }}
               >
-                <Text style={styles.menuItemText}>Sadece İkon</Text>
+                <Text style={styles.menuItemText}>{t('control.iconOnly')}</Text>
                 {viewMode === 'iconOnly' && (
                   <Text style={styles.menuItemCheck}>✓</Text>
                 )}
@@ -202,7 +204,7 @@ export const ControlScreen = ({
                   setMenuOpen(false);
                 }}
               >
-                <Text style={styles.menuItemText}>Sadece Yazı</Text>
+                <Text style={styles.menuItemText}>{t('control.textOnly')}</Text>
                 {viewMode === 'textOnly' && (
                   <Text style={styles.menuItemCheck}>✓</Text>
                 )}
@@ -212,7 +214,7 @@ export const ControlScreen = ({
             <View style={styles.menuDivider} />
 
             <View style={styles.menuSection}>
-              <Text style={styles.menuSectionTitle}>Grid Boyutu</Text>
+              <Text style={styles.menuSectionTitle}>{t('control.gridSize')}</Text>
               
               <TouchableOpacity
                 style={[
@@ -294,6 +296,60 @@ export const ControlScreen = ({
                 )}
               </TouchableOpacity>
             </View>
+
+            <View style={styles.menuDivider} />
+
+            <View style={styles.menuSection}>
+              <Text style={styles.menuSectionTitle}>{t('settings.language')}</Text>
+              
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  language === 'en' && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  changeLanguage('en');
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>{t('settings.english')}</Text>
+                {language === 'en' && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  language === 'de' && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  changeLanguage('de');
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>{t('settings.german')}</Text>
+                {language === 'de' && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.menuItem,
+                  language === 'tr' && styles.menuItemActive
+                ]}
+                onPress={() => {
+                  changeLanguage('tr');
+                  setMenuOpen(false);
+                }}
+              >
+                <Text style={styles.menuItemText}>{t('settings.turkish')}</Text>
+                {language === 'tr' && (
+                  <Text style={styles.menuItemCheck}>✓</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </View>
       )}
@@ -310,9 +366,9 @@ export const ControlScreen = ({
           {isPairing ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingIcon}>🔐</Text>
-              <Text style={styles.loadingText}>Eşleşme onayı bekleniyor...</Text>
+              <Text style={styles.loadingText}>{t('control.pairingWait')}</Text>
               <Text style={styles.loadingSubtext}>
-                Masaüstü uygulamasından bağlantı isteğini onaylayın
+                {t('control.pairingHint')}
               </Text>
             </View>
           ) : shortcuts && shortcuts.length > 0 ? (
@@ -332,9 +388,9 @@ export const ControlScreen = ({
           ) : (
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>⌨️</Text>
-              <Text style={styles.emptyText}>Henüz kısayol yok</Text>
+              <Text style={styles.emptyText}>{t('control.noShortcuts')}</Text>
               <Text style={styles.emptySubtext}>
-                Masaüstü uygulamasından kısayol ekleyin
+                {t('control.addShortcutHint')}
               </Text>
             </View>
           )}
@@ -346,6 +402,7 @@ export const ControlScreen = ({
 
 // Shortcut Card Component
 const ShortcutCard = ({ shortcut, onPress, disabled, device, viewMode = 'both', gridSize = 4 }) => {
+  const { t } = useI18n();
   const handlePress = () => {
     if (!disabled && onPress) {
       onPress(shortcut);
@@ -409,11 +466,11 @@ const ShortcutCard = ({ shortcut, onPress, disabled, device, viewMode = 'both', 
       {showText && (
         <>
           <Text style={styles.cardTitle} numberOfLines={1}>
-            {shortcut?.label || 'Kısayol'}
+            {shortcut?.label || t('control.shortcut')}
           </Text>
           {viewMode === 'both' && (
             <Text style={styles.cardSubtitle} numberOfLines={1}>
-              {shortcut?.keys?.join(' + ') || 'Action'}
+              {shortcut?.keys?.join(' + ') || t('control.action')}
             </Text>
           )}
         </>

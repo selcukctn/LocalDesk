@@ -7,14 +7,18 @@ import {
   Alert
 } from 'react-native';
 import OrientationLocker from 'react-native-orientation-locker';
+import { I18nProvider, useI18n } from './src/contexts/I18nContext';
 import { DiscoveryScreen } from './src/screens/DiscoveryScreen';
 import { PageListScreen } from './src/screens/PageListScreen';
 import { ControlScreen } from './src/screens/ControlScreen';
+import { SettingsScreen } from './src/screens/SettingsScreen';
 import { useConnection } from './src/hooks/useConnection';
 
-function App() {
+function AppContent() {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [selectedPage, setSelectedPage] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const { t } = useI18n();
   
   const {
     isConnected,
@@ -67,7 +71,7 @@ function App() {
       // Haptic feedback (optional)
       // Vibration.vibrate(50);
     } catch (err) {
-      Alert.alert('Hata', 'Kısayol çalıştırılamadı');
+      Alert.alert(t('errors.shortcutError'), t('errors.shortcutFailed'));
     }
   };
 
@@ -86,9 +90,9 @@ function App() {
   // Hata göster
   React.useEffect(() => {
     if (error) {
-      Alert.alert('Bağlantı Hatası', error, [
+      Alert.alert(t('errors.connectionError'), error, [
         {
-          text: 'Tekrar Dene',
+          text: t('errors.tryAgain'),
           onPress: () => {
             if (selectedDevice) {
               connect(selectedDevice);
@@ -96,21 +100,27 @@ function App() {
           }
         },
         {
-          text: 'Geri Dön',
+          text: t('errors.goBack'),
           style: 'cancel',
           onPress: handleDisconnect
         }
       ]);
     }
-  }, [error]);
+  }, [error, t]);
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#1e1e1e" />
       
-      {!selectedDevice ? (
+      {showSettings ? (
+        // Ayarlar ekranı
+        <SettingsScreen onBack={() => setShowSettings(false)} />
+      ) : !selectedDevice ? (
         // Discovery ekranı - Cihaz seçimi
-        <DiscoveryScreen onDeviceSelect={handleDeviceSelect} />
+        <DiscoveryScreen 
+          onDeviceSelect={handleDeviceSelect}
+          onSettingsPress={() => setShowSettings(true)}
+        />
       ) : !selectedPage ? (
         // Sayfa listesi ekranı - Bağlandıktan sonra
         <PageListScreen
@@ -144,6 +154,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#1e1e1e'
   }
 });
+
+function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
+  );
+}
 
 export default App;
 

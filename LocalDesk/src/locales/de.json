@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "Local Desk",
+    "subtitle": "Desktop Controller"
+  },
+  "discovery": {
+    "status": "Status",
+    "scanning": "Suche...",
+    "stopped": "Gestoppt",
+    "foundDevices": "Gefundene Geräte",
+    "device": "Gerät",
+    "devices": "Geräte",
+    "searching": "Geräte werden gesucht...",
+    "searchingHint": "Stellen Sie sicher, dass Ihre Desktop-App geöffnet und im selben Netzwerk ist",
+    "helpTitle": "Tipp",
+    "helpText": "Starten Sie Ihre Desktop-App und verbinden Sie sich mit demselben Wi-Fi-Netzwerk"
+  },
+  "pageList": {
+    "status": "Status",
+    "pairing": "Wird gekoppelt...",
+    "connected": "Verbunden",
+    "connecting": "Verbinde...",
+    "connectedDevice": "Verbundenes Gerät",
+    "disconnect": "Trennen",
+    "pages": "Seiten",
+    "selectPage": "Wählen Sie eine Seite aus, um Verknüpfungen anzuzeigen",
+    "pairingWait": "Warte auf Kopplungsbestätigung...",
+    "pairingHint": "Bestätigen Sie die Verbindungsanfrage von der Desktop-App",
+    "noPages": "Noch keine Seiten",
+    "addPageHint": "Fügen Sie Seiten aus der Desktop-App hinzu",
+    "shortcutCount": "Verknüpfungen",
+    "loading": "Lädt..."
+  },
+  "control": {
+    "controlHub": "Steuerzentrale",
+    "hideHeader": "Header ausblenden",
+    "showHeader": "Header anzeigen",
+    "cardView": "Kartenansicht",
+    "iconAndText": "Symbol + Text",
+    "iconOnly": "Nur Symbol",
+    "textOnly": "Nur Text",
+    "gridSize": "Rastergröße",
+    "pairingWait": "Warte auf Kopplungsbestätigung...",
+    "pairingHint": "Bestätigen Sie die Verbindungsanfrage von der Desktop-App",
+    "noShortcuts": "Noch keine Verknüpfungen",
+    "addShortcutHint": "Fügen Sie Verknüpfungen aus der Desktop-App hinzu",
+    "shortcut": "Verknüpfung",
+    "action": "Aktion"
+  },
+  "errors": {
+    "connectionError": "Verbindungsfehler",
+    "tryAgain": "Erneut versuchen",
+    "goBack": "Zurück",
+    "shortcutError": "Fehler",
+    "shortcutFailed": "Verknüpfung konnte nicht ausgeführt werden"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": "Sprache",
+    "english": "English",
+    "german": "Deutsch",
+    "turkish": "Türkçe"
+  }
+}
+

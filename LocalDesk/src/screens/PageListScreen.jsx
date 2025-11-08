@@ -10,6 +10,7 @@ import {
   Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useI18n } from '../contexts/I18nContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,6 +22,8 @@ export const PageListScreen = ({
   onPageSelect,
   onDisconnect
 }) => {
+  const { t } = useI18n();
+
   const handlePagePress = (page) => {
     if (isConnected && onPageSelect) {
       onPageSelect(page);
@@ -28,9 +31,9 @@ export const PageListScreen = ({
   };
 
   const getStatusText = () => {
-    if (isPairing) return 'Eşleşiyor...';
-    if (isConnected) return 'Bağlı';
-    return 'Bağlanıyor...';
+    if (isPairing) return t('pageList.pairing');
+    if (isConnected) return t('pageList.connected');
+    return t('pageList.connecting');
   };
 
   const getStatusColor = () => {
@@ -57,8 +60,8 @@ export const PageListScreen = ({
                 <Text style={styles.logoIcon}>🎮</Text>
                 <Text style={styles.logoIcon2}>💻</Text>
               </View>
-              <Text style={styles.appTitle}>Local Desk</Text>
-              <Text style={styles.appSubtitle}>Desktop Controller</Text>
+              <Text style={styles.appTitle}>{t('app.title')}</Text>
+              <Text style={styles.appSubtitle}>{t('app.subtitle')}</Text>
             </View>
 
             {/* Durum */}
@@ -72,7 +75,7 @@ export const PageListScreen = ({
             {/* Bağlı Cihaz Bilgisi */}
             {device && (
               <View style={styles.deviceSection}>
-                <Text style={styles.sectionLabel}>Bağlı Cihaz</Text>
+                <Text style={styles.sectionLabel}>{t('pageList.connectedDevice')}</Text>
                 <View style={styles.deviceInfoBox}>
                   <Text style={styles.deviceInfoName}>{device.name}</Text>
                   <Text style={styles.deviceInfoHost}>{device.host}</Text>
@@ -88,7 +91,7 @@ export const PageListScreen = ({
               onPress={onDisconnect}
             >
               <Text style={styles.disconnectBtnIcon}>🔌</Text>
-              <Text style={styles.disconnectBtnText}>Bağlantıyı Kes</Text>
+              <Text style={styles.disconnectBtnText}>{t('pageList.disconnect')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -98,17 +101,17 @@ export const PageListScreen = ({
           {isPairing ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingIcon}>🔐</Text>
-              <Text style={styles.loadingText}>Eşleşme onayı bekleniyor...</Text>
+              <Text style={styles.loadingText}>{t('pageList.pairingWait')}</Text>
               <Text style={styles.loadingSubtext}>
-                Masaüstü uygulamasından bağlantı isteğini onaylayın
+                {t('pageList.pairingHint')}
               </Text>
             </View>
           ) : isConnected ? (
             <>
               <View style={styles.rightHeader}>
-                <Text style={styles.rightTitle}>Sayfalar</Text>
+                <Text style={styles.rightTitle}>{t('pageList.pages')}</Text>
                 <Text style={styles.rightSubtitle}>
-                  Kısayolları görüntülemek için bir sayfa seçin
+                  {t('pageList.selectPage')}
                 </Text>
               </View>
               
@@ -148,7 +151,7 @@ export const PageListScreen = ({
                         <View style={styles.pageInfo}>
                           <Text style={styles.pageName}>{page.name}</Text>
                           <Text style={styles.pageShortcutCount}>
-                            {page.shortcuts?.length || 0} kısayol
+                            {page.shortcuts?.length || 0} {t('pageList.shortcutCount')}
                           </Text>
                         </View>
                       </View>
@@ -158,9 +161,9 @@ export const PageListScreen = ({
                 ) : (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyIcon}>📄</Text>
-                    <Text style={styles.emptyText}>Henüz sayfa yok</Text>
+                    <Text style={styles.emptyText}>{t('pageList.noPages')}</Text>
                     <Text style={styles.emptySubtext}>
-                      Masaüstü uygulamasından sayfa ekleyin
+                      {t('pageList.addPageHint')}
                     </Text>
                   </View>
                 )}
@@ -169,7 +172,7 @@ export const PageListScreen = ({
           ) : (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingIcon}>⏳</Text>
-              <Text style={styles.loadingText}>Bağlanıyor...</Text>
+              <Text style={styles.loadingText}>{t('pageList.loading')}</Text>
             </View>
           )}
         </View>

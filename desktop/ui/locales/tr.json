@@ -1,0 +1,129 @@
+{
+  "app": {
+    "title": "Local Desk",
+    "subtitle": "Desktop Controller"
+  },
+  "tabs": {
+    "shortcuts": "Kısayollar",
+    "devices": "Bağlı Cihazlar",
+    "settings": "Ayarlar"
+  },
+  "shortcuts": {
+    "addNew": "➕ Yeni Kısayol Ekle",
+    "empty": "Kısayol bulunamadı",
+    "edit": "Kısayolu Düzenle",
+    "delete": "Kısayolu Sil",
+    "newPage": "+ Yeni Sayfa",
+    "editPage": "Düzenle",
+    "deletePage": "Sil"
+  },
+  "devices": {
+    "activeConnections": "🔗 Aktif Bağlantılar",
+    "trustedDevices": "✅ Güvenilir Cihazlar",
+    "connectionInfo": "📡 Bağlantı Bilgileri",
+    "noActiveConnections": "Aktif bağlantı yok",
+    "connectFromMobile": "Mobil cihazdan bağlan",
+    "noTrustedDevices": "Henüz güvenilir cihaz yok",
+    "addFromMobile": "Mobil uygulamadan bağlanarak cihaz ekleyebilirsiniz",
+    "ipAddresses": "IP Adresleri:",
+    "port": "Port:",
+    "totalShortcuts": "Toplam Kısayol:",
+    "activeConnections": "Aktif Bağlantılar:",
+    "remove": "Kaldır"
+  },
+  "settings": {
+    "general": "Genel Ayarlar",
+    "deviceName": "Cihaz Adı",
+    "save": "Kaydet",
+    "language": "Dil",
+    "about": "Hakkında",
+    "version": "Versiyon: 1.0.0",
+    "description": "Stream Deck benzeri klavye kısayol kontrolcüsü",
+    "aboutDescription": "Mobil uygulama ile lokal ağda bağlanarak<br>masaüstü bilgisayarınıza klavye kısayolları gönderebilirsiniz."
+  },
+  "status": {
+    "waiting": "Bağlantı Bekleniyor",
+    "active": "Aktif"
+  },
+  "modal": {
+    "newShortcut": "Yeni Kısayol Ekle",
+    "editShortcut": "Kısayolu Düzenle",
+    "newPage": "Yeni Sayfa",
+    "label": "Etiket",
+    "labelPlaceholder": "Örn: OBS Başlat",
+    "actionType": "Eylem Tipi",
+    "keyboardShortcut": "⌨️ Klavye Kısayolu",
+    "launchApp": "🚀 Uygulama Başlat",
+    "both": "🔗 Her İkisi",
+    "keys": "Tuşlar",
+    "keysPlaceholder": "Tuşlara basın...",
+    "recordKeys": "🎹 Tuşları Kaydet",
+    "keysExample": "Örn: Ctrl + Alt + O",
+    "appExe": "Uygulama (.exe)",
+    "appPlaceholder": "C:\\Program Files\\OBS\\obs64.exe",
+    "selectApp": "📂 Uygulama Seç",
+    "appHint": "Başlatılacak uygulamanın .exe dosyasını seçin",
+    "color": "Renk",
+    "icon": "İkon (İsteğe bağlı)",
+    "iconPlaceholder": "icon.png veya emoji 🎮",
+    "selectFile": "📁 Dosya Seç",
+    "useEmoji": "😊 Emoji Kullan",
+    "iconHint": "Dosya seçin veya direkt emoji yazın",
+    "cancel": "İptal",
+    "save": "Kaydet",
+    "create": "Oluştur",
+    "pageName": "Sayfa Adı",
+    "pageNamePlaceholder": "Örn: Multimedya",
+    "pageIcon": "Sayfa İkonu (İsteğe bağlı)",
+    "pageIconPlaceholder": "icon.png veya emoji 📄",
+    "targetApp": "🎯 Hedef Uygulama (İsteğe bağlı)",
+    "targetAppPlaceholder": "Seçilmedi - Tüm tuşlar global gönderilecek",
+    "selectTargetApp": "🖥️ Uygulama Seç",
+    "clear": "❌ Temizle",
+    "targetAppHint": "Bu sayfadaki tüm kısayollar seçilen uygulamaya gönderilir (focus olmadan)"
+  },
+  "confirm": {
+    "title": "Onay",
+    "deleteShortcut": "Kısayolu Sil",
+    "deleteShortcutMessage": "Bu kısayolu silmek istediğinizden emin misiniz?",
+    "deletePage": "Sayfayı Sil",
+    "deletePageMessage": "Bu sayfayı silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "removeDevice": "Cihazı Kaldır",
+    "removeDeviceMessage": "Bu cihazı güvenilir listesinden kaldırmak istediğinizden emin misiniz?",
+    "yes": "Evet",
+    "yesDelete": "Evet, Sil",
+    "cancel": "İptal",
+    "ok": "Tamam"
+  },
+  "pairing": {
+    "title": "🔐 Bağlantı İsteği",
+    "message": "Aşağıdaki cihaz bağlanmak istiyor:",
+    "question": "Bu cihazı güvenilir cihazlar listesine eklemek istiyor musunuz?",
+    "reject": "Reddet",
+    "approve": "Onayla"
+  },
+  "alerts": {
+    "warning": "Uyarı",
+    "error": "Hata",
+    "success": "Başarılı",
+    "lastPageCannotDelete": "Son sayfa silinemez!",
+    "missingInfo": "Eksik Bilgi",
+    "pleaseSelectKeys": "Lütfen en az bir tuş seçin",
+    "pleaseSelectApp": "Lütfen bir uygulama seçin",
+    "pleaseSelectBoth": "Lütfen hem tuşları hem de uygulamayı seçin",
+    "deviceNameSaved": "Cihaz adı kaydedildi: {name}",
+    "iconSelectionError": "İkon seçilirken hata oluştu",
+    "appSelectionError": "Uygulama seçilirken hata oluştu",
+    "noRunningApps": "Çalışan uygulama bulunamadı. Dosya seçici ile deneyin.",
+    "listError": "Liste alınamadı: {error}",
+    "fileSelectionError": "Dosya seçimi başarısız: {error}",
+    "targetAppSelectionError": "Uygulama seçimi başarısız: {error}",
+    "appSelectionChoice": "Nasıl seçmek istersiniz?\n\n\"Evet\" = Çalışan uygulamalardan seç\n\"İptal\" = Dosya seçici ile .exe seç"
+  },
+  "appSelection": {
+    "title": "Hedef Uygulama Seç",
+    "message": "Çalışan uygulamalardan birini seçin:",
+    "cancel": "İptal"
+  }
+}
+

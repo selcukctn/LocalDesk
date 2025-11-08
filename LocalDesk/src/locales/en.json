@@ -1,0 +1,65 @@
+{
+  "app": {
+    "title": "Local Desk",
+    "subtitle": "Desktop Controller"
+  },
+  "discovery": {
+    "status": "Status",
+    "scanning": "Scanning...",
+    "stopped": "Stopped",
+    "foundDevices": "Found Devices",
+    "device": "Device",
+    "devices": "Devices",
+    "searching": "Searching for devices...",
+    "searchingHint": "Make sure your desktop app is open and on the same network",
+    "helpTitle": "Tip",
+    "helpText": "Start your desktop app and connect to the same Wi-Fi network"
+  },
+  "pageList": {
+    "status": "Status",
+    "pairing": "Pairing...",
+    "connected": "Connected",
+    "connecting": "Connecting...",
+    "connectedDevice": "Connected Device",
+    "disconnect": "Disconnect",
+    "pages": "Pages",
+    "selectPage": "Select a page to view shortcuts",
+    "pairingWait": "Waiting for pairing approval...",
+    "pairingHint": "Approve the connection request from the desktop app",
+    "noPages": "No pages yet",
+    "addPageHint": "Add pages from the desktop app",
+    "shortcutCount": "shortcuts",
+    "loading": "Loading..."
+  },
+  "control": {
+    "controlHub": "Control Hub",
+    "hideHeader": "Hide Header",
+    "showHeader": "Show Header",
+    "cardView": "Card View",
+    "iconAndText": "Icon + Text",
+    "iconOnly": "Icon Only",
+    "textOnly": "Text Only",
+    "gridSize": "Grid Size",
+    "pairingWait": "Waiting for pairing approval...",
+    "pairingHint": "Approve the connection request from the desktop app",
+    "noShortcuts": "No shortcuts yet",
+    "addShortcutHint": "Add shortcuts from the desktop app",
+    "shortcut": "Shortcut",
+    "action": "Action"
+  },
+  "errors": {
+    "connectionError": "Connection Error",
+    "tryAgain": "Try Again",
+    "goBack": "Go Back",
+    "shortcutError": "Error",
+    "shortcutFailed": "Shortcut could not be executed"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "english": "English",
+    "german": "German",
+    "turkish": "Turkish"
+  }
+}
+

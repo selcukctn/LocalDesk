@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,7 +19,7 @@
                 </div>
 
                 <div class="toolbar">
-                    <button class="btn btn-primary" id="addShortcutBtn">
+                    <button class="btn btn-primary" id="addShortcutBtn" data-i18n="shortcuts.addNew">
                         ➕ Yeni Kısayol Ekle
                     </button>
                 </div>
@@ -32,42 +32,42 @@
             <!-- Devices Tab -->
             <div class="tab-pane" id="devices-tab">
                 <div class="section">
-                    <h2>🔗 Aktif Bağlantılar</h2>
+                    <h2 data-i18n="devices.activeConnections">🔗 Aktif Bağlantılar</h2>
                     <div class="devices-list" id="activeConnectionsList">
                         <div class="empty-state">
-                            <p>Aktif bağlantı yok</p>
-                            <small>Mobil cihazdan bağlan</small>
+                            <p data-i18n="devices.noActiveConnections">Aktif bağlantı yok</p>
+                            <small data-i18n="devices.connectFromMobile">Mobil cihazdan bağlan</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <h2>✅ Güvenilir Cihazlar</h2>
+                    <h2 data-i18n="devices.trustedDevices">✅ Güvenilir Cihazlar</h2>
                     <div class="devices-list" id="trustedDevicesList">
                         <div class="empty-state">
-                            <p>Henüz güvenilir cihaz yok</p>
-                            <small>Mobil uygulamadan bağlanarak cihaz ekleyebilirsiniz</small>
+                            <p data-i18n="devices.noTrustedDevices">Henüz güvenilir cihaz yok</p>
+                            <small data-i18n="devices.addFromMobile">Mobil uygulamadan bağlanarak cihaz ekleyebilirsiniz</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="section">
-                    <h2>📡 Bağlantı Bilgileri</h2>
+                    <h2 data-i18n="devices.connectionInfo">📡 Bağlantı Bilgileri</h2>
                     <div class="connection-info">
                         <div class="info-row">
-                            <span class="label">IP Adresleri:</span>
+                            <span class="label" data-i18n="devices.ipAddresses">IP Adresleri:</span>
                             <span class="value" id="ipAddresses">-</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Port:</span>
+                            <span class="label" data-i18n="devices.port">Port:</span>
                             <span class="value" id="serverPort">-</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Toplam Kısayol:</span>
+                            <span class="label" data-i18n="devices.totalShortcuts">Toplam Kısayol:</span>
                             <span class="value" id="totalShortcuts">0</span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Aktif Bağlantılar:</span>
+                            <span class="label" data-i18n="devices.activeConnections">Aktif Bağlantılar:</span>
                             <span class="value" id="activeConnections">0</span>
                         </div>
                     </div>
@@ -77,25 +77,34 @@
             <!-- Settings Tab -->
             <div class="tab-pane" id="settings-tab">
                 <div class="section">
-                    <h2>Genel Ayarlar</h2>
+                    <h2 data-i18n="settings.general">Genel Ayarlar</h2>
                     <div class="settings-group">
                         <label>
-                            <input type="text" id="deviceNameInput" placeholder="Cihaz Adı">
-                            <span>Cihaz Adı</span>
+                            <input type="text" id="deviceNameInput" data-i18n-placeholder="settings.deviceName" placeholder="Cihaz Adı">
+                            <span data-i18n="settings.deviceName">Cihaz Adı</span>
                         </label>
-                        <button class="btn btn-secondary" id="saveDeviceNameBtn">Kaydet</button>
+                        <button class="btn btn-secondary" id="saveDeviceNameBtn" data-i18n="settings.save">Kaydet</button>
+                    </div>
+                    <div class="settings-group" style="margin-top: 16px;">
+                        <label>
+                            <select id="languageSelect" style="padding: 10px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary); font-size: 14px; width: 100%;">
+                                <option value="en">English</option>
+                                <option value="de">Deutsch</option>
+                                <option value="tr">Türkçe</option>
+                            </select>
+                            <span data-i18n="settings.language">Dil</span>
+                        </label>
                     </div>
                 </div>
 
                 <div class="section">
-                    <h2>Hakkında</h2>
+                    <h2 data-i18n="settings.about">Hakkında</h2>
                     <div class="about-info">
                         <p><strong>Local Desk Desktop</strong></p>
-                        <p>Versiyon: 1.0.0</p>
-                        <p>Stream Deck benzeri klavye kısayol kontrolcüsü</p>
+                        <p data-i18n="settings.version">Versiyon: 1.0.0</p>
+                        <p data-i18n="settings.description">Stream Deck benzeri klavye kısayol kontrolcüsü</p>
                         <p style="margin-top: 20px;">
-                            <small>Mobil uygulama ile lokal ağda bağlanarak<br>
-                            masaüstü bilgisayarınıza klavye kısayolları gönderebilirsiniz.</small>
+                            <small data-i18n-html="settings.aboutDescription">Mobil uygulama ile lokal ağda bağlanarak<br>masaüstü bilgisayarınıza klavye kısayolları gönderebilirsiniz.</small>
                         </p>
                     </div>
                 </div>
@@ -108,8 +117,8 @@
             <div class="sidebar-header">
                 <img src="../src/icon.png" alt="Local Desk" class="app-logo">
                 <div class="app-title-group">
-                    <h1>Local Desk</h1>
-                    <span class="subtitle">Desktop Controller</span>
+                    <h1 data-i18n="app.title">Local Desk</h1>
+                    <span class="subtitle" data-i18n="app.subtitle">Desktop Controller</span>
                 </div>
             </div>
 
@@ -117,7 +126,7 @@
             <div class="sidebar-status">
                 <div class="status-badge">
                     <span class="status-dot"></span>
-                    <span id="statusText">Bağlantı Bekleniyor</span>
+                    <span id="statusText" data-i18n="status.waiting">Bağlantı Bekleniyor</span>
                 </div>
                 <div class="server-info">
                     <span id="deviceName">-</span>
@@ -131,15 +140,15 @@
             <nav class="sidebar-nav">
                 <button class="tab-btn active" data-tab="shortcuts">
                     <span class="tab-icon"><img src="../src/keycaps.png" alt="Local Desk" class="menu-icons"></span>
-                    <span class="tab-label">Kısayollar</span>
+                    <span class="tab-label" data-i18n="tabs.shortcuts">Kısayollar</span>
                 </button>
                 <button class="tab-btn" data-tab="devices">
                     <span class="tab-icon">📱</span>
-                    <span class="tab-label">Bağlı Cihazlar</span>
+                    <span class="tab-label" data-i18n="tabs.devices">Bağlı Cihazlar</span>
                 </button>
                 <button class="tab-btn" data-tab="settings">
                     <span class="tab-icon">⚙️</span>
-                    <span class="tab-label">Ayarlar</span>
+                    <span class="tab-label" data-i18n="tabs.settings">Ayarlar</span>
                 </button>
             </nav>
 
@@ -156,71 +165,71 @@
     <div class="modal" id="shortcutModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 id="modalTitle">Yeni Kısayol Ekle</h2>
+                <h2 id="modalTitle" data-i18n="modal.newShortcut">Yeni Kısayol Ekle</h2>
                 <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="shortcutForm">
                     <div class="form-group">
-                        <label>Etiket</label>
-                        <input type="text" id="labelInput" placeholder="Örn: OBS Başlat" required>
+                        <label data-i18n="modal.label">Etiket</label>
+                        <input type="text" id="labelInput" data-i18n-placeholder="modal.labelPlaceholder" placeholder="Örn: OBS Başlat" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Eylem Tipi</label>
+                        <label data-i18n="modal.actionType">Eylem Tipi</label>
                         <div class="action-type-wrapper">
                             <label class="radio-label">
                                 <input type="radio" name="actionType" value="keys" checked>
-                                <span>⌨️ Klavye Kısayolu</span>
+                                <span data-i18n="modal.keyboardShortcut">⌨️ Klavye Kısayolu</span>
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="actionType" value="app">
-                                <span>🚀 Uygulama Başlat</span>
+                                <span data-i18n="modal.launchApp">🚀 Uygulama Başlat</span>
                             </label>
                             <label class="radio-label">
                                 <input type="radio" name="actionType" value="both">
-                                <span>🔗 Her İkisi</span>
+                                <span data-i18n="modal.both">🔗 Her İkisi</span>
                             </label>
                         </div>
                     </div>
 
                     <div class="form-group" id="keysGroup">
-                        <label>Tuşlar</label>
+                        <label data-i18n="modal.keys">Tuşlar</label>
                         <div class="keys-input-wrapper">
-                            <input type="text" id="keysDisplay" placeholder="Tuşlara basın..." readonly>
-                            <button type="button" class="btn btn-secondary" id="recordKeysBtn">🎹 Tuşları Kaydet</button>
+                            <input type="text" id="keysDisplay" data-i18n-placeholder="modal.keysPlaceholder" placeholder="Tuşlara basın..." readonly>
+                            <button type="button" class="btn btn-secondary" id="recordKeysBtn" data-i18n="modal.recordKeys">🎹 Tuşları Kaydet</button>
                         </div>
-                        <small>Örn: Ctrl + Alt + O</small>
+                        <small data-i18n="modal.keysExample">Örn: Ctrl + Alt + O</small>
                     </div>
 
                     <div class="form-group" id="appGroup" style="display: none;">
-                        <label>Uygulama (.exe)</label>
+                        <label data-i18n="modal.appExe">Uygulama (.exe)</label>
                         <div class="icon-input-wrapper">
-                            <input type="text" id="appPathInput" placeholder="C:\Program Files\OBS\obs64.exe" readonly>
-                            <button type="button" class="btn btn-secondary" id="selectAppBtn">📂 Uygulama Seç</button>
+                            <input type="text" id="appPathInput" data-i18n-placeholder="modal.appPlaceholder" placeholder="C:\Program Files\OBS\obs64.exe" readonly>
+                            <button type="button" class="btn btn-secondary" id="selectAppBtn" data-i18n="modal.selectApp">📂 Uygulama Seç</button>
                         </div>
-                        <small>Başlatılacak uygulamanın .exe dosyasını seçin</small>
+                        <small data-i18n="modal.appHint">Başlatılacak uygulamanın .exe dosyasını seçin</small>
                     </div>
 
                     <div class="form-group">
-                        <label>Renk</label>
+                        <label data-i18n="modal.color">Renk</label>
                         <input type="color" id="colorInput" value="#1F6FEB">
                     </div>
 
                     <div class="form-group">
-                        <label>İkon (İsteğe bağlı)</label>
+                        <label data-i18n="modal.icon">İkon (İsteğe bağlı)</label>
                         <div class="icon-input-wrapper">
-                            <input type="text" id="iconInput" placeholder="icon.png veya emoji 🎮">
-                            <button type="button" class="btn btn-secondary" id="selectIconBtn">📁 Dosya Seç</button>
-                            <button type="button" class="btn btn-secondary" id="useEmojiBtn">😊 Emoji Kullan</button>
+                            <input type="text" id="iconInput" data-i18n-placeholder="modal.iconPlaceholder" placeholder="icon.png veya emoji 🎮">
+                            <button type="button" class="btn btn-secondary" id="selectIconBtn" data-i18n="modal.selectFile">📁 Dosya Seç</button>
+                            <button type="button" class="btn btn-secondary" id="useEmojiBtn" data-i18n="modal.useEmoji">😊 Emoji Kullan</button>
                         </div>
-                        <small>Dosya seçin veya direkt emoji yazın</small>
+                        <small data-i18n="modal.iconHint">Dosya seçin veya direkt emoji yazın</small>
                         <div id="iconPreview" class="icon-preview"></div>
                     </div>
 
                     <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" id="cancelBtn">İptal</button>
-                        <button type="submit" class="btn btn-primary">Kaydet</button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" data-i18n="modal.cancel">İptal</button>
+                        <button type="submit" class="btn btn-primary" data-i18n="modal.save">Kaydet</button>
                     </div>
                 </form>
             </div>
@@ -231,10 +240,10 @@
     <div class="modal" id="pairingModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🔐 Bağlantı İsteği</h2>
+                <h2 data-i18n="pairing.title">🔐 Bağlantı İsteği</h2>
             </div>
             <div class="modal-body">
-                <p>Aşağıdaki cihaz bağlanmak istiyor:</p>
+                <p data-i18n="pairing.message">Aşağıdaki cihaz bağlanmak istiyor:</p>
                 <div class="pairing-device-info">
                     <div class="device-icon">📱</div>
                     <div class="device-details">
@@ -242,10 +251,10 @@
                         <p id="pairingDeviceId">-</p>
                     </div>
                 </div>
-                <p style="margin-top: 20px;">Bu cihazı güvenilir cihazlar listesine eklemek istiyor musunuz?</p>
+                <p style="margin-top: 20px;" data-i18n="pairing.question">Bu cihazı güvenilir cihazlar listesine eklemek istiyor musunuz?</p>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-danger" id="rejectPairingBtn">Reddet</button>
-                    <button type="button" class="btn btn-success" id="approvePairingBtn">Onayla</button>
+                    <button type="button" class="btn btn-danger" id="rejectPairingBtn" data-i18n="pairing.reject">Reddet</button>
+                    <button type="button" class="btn btn-success" id="approvePairingBtn" data-i18n="pairing.approve">Onayla</button>
                 </div>
             </div>
         </div>
@@ -255,41 +264,41 @@
     <div class="modal" id="pageModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Yeni Sayfa</h2>
+                <h2 data-i18n="modal.newPage">Yeni Sayfa</h2>
                 <button class="close-btn" id="closePageModalBtn">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="pageForm">
                     <div class="form-group">
-                        <label>Sayfa Adı</label>
-                        <input type="text" id="pageNameInput" placeholder="Örn: Multimedya" required>
+                        <label data-i18n="modal.pageName">Sayfa Adı</label>
+                        <input type="text" id="pageNameInput" data-i18n-placeholder="modal.pageNamePlaceholder" placeholder="Örn: Multimedya" required>
                     </div>
 
                     <div class="form-group">
-                        <label>Sayfa İkonu (İsteğe bağlı)</label>
+                        <label data-i18n="modal.pageIcon">Sayfa İkonu (İsteğe bağlı)</label>
                         <div class="icon-input-wrapper">
-                            <input type="text" id="pageIconInput" placeholder="icon.png veya emoji 📄">
-                            <button type="button" class="btn btn-secondary" id="selectPageIconBtn">📁 Dosya Seç</button>
-                            <button type="button" class="btn btn-secondary" id="usePageEmojiBtn">😊 Emoji Kullan</button>
+                            <input type="text" id="pageIconInput" data-i18n-placeholder="modal.pageIconPlaceholder" placeholder="icon.png veya emoji 📄">
+                            <button type="button" class="btn btn-secondary" id="selectPageIconBtn" data-i18n="modal.selectFile">📁 Dosya Seç</button>
+                            <button type="button" class="btn btn-secondary" id="usePageEmojiBtn" data-i18n="modal.useEmoji">😊 Emoji Kullan</button>
                         </div>
-                        <small>Dosya seçin veya direkt emoji yazın</small>
+                        <small data-i18n="modal.iconHint">Dosya seçin veya direkt emoji yazın</small>
                         <div id="pageIconPreview" class="icon-preview"></div>
                     </div>
 
                     <div class="form-group">
-                        <label>🎯 Hedef Uygulama (İsteğe bağlı)</label>
+                        <label data-i18n="modal.targetApp">🎯 Hedef Uygulama (İsteğe bağlı)</label>
                         <div class="icon-input-wrapper">
-                            <input type="text" id="pageTargetAppInput" placeholder="Seçilmedi - Tüm tuşlar global gönderilecek" readonly>
-                            <button type="button" class="btn btn-secondary" id="selectTargetAppBtn">🖥️ Uygulama Seç</button>
-                            <button type="button" class="btn btn-danger" id="clearTargetAppBtn" style="display: none;">❌ Temizle</button>
+                            <input type="text" id="pageTargetAppInput" data-i18n-placeholder="modal.targetAppPlaceholder" placeholder="Seçilmedi - Tüm tuşlar global gönderilecek" readonly>
+                            <button type="button" class="btn btn-secondary" id="selectTargetAppBtn" data-i18n="modal.selectTargetApp">🖥️ Uygulama Seç</button>
+                            <button type="button" class="btn btn-danger" id="clearTargetAppBtn" style="display: none;" data-i18n="modal.clear">❌ Temizle</button>
                         </div>
-                        <small>Bu sayfadaki tüm kısayollar seçilen uygulamaya gönderilir (focus olmadan)</small>
+                        <small data-i18n="modal.targetAppHint">Bu sayfadaki tüm kısayollar seçilen uygulamaya gönderilir (focus olmadan)</small>
                         <div id="selectedTargetApp" style="margin-top: 8px; font-size: 12px; color: #888;"></div>
                     </div>
 
                     <div class="modal-actions">
-                        <button type="button" class="btn btn-secondary" id="cancelPageBtn">İptal</button>
-                        <button type="submit" class="btn btn-primary">Oluştur</button>
+                        <button type="button" class="btn btn-secondary" id="cancelPageBtn" data-i18n="modal.cancel">İptal</button>
+                        <button type="submit" class="btn btn-primary" data-i18n="modal.create">Oluştur</button>
                     </div>
                 </form>
             </div>
@@ -300,7 +309,7 @@
     <div class="modal" id="confirmModal">
         <div class="modal-content modal-small">
             <div class="modal-header">
-                <h2 id="confirmTitle">Onay</h2>
+                <h2 id="confirmTitle" data-i18n="confirm.title">Onay</h2>
             </div>
             <div class="modal-body">
                 <div class="confirm-message">
@@ -308,13 +317,14 @@
                     <p id="confirmMessage">Bu işlemi yapmak istediğinizden emin misiniz?</p>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" id="confirmCancelBtn">İptal</button>
-                    <button type="button" class="btn btn-danger" id="confirmOkBtn">Evet, Sil</button>
+                    <button type="button" class="btn btn-secondary" id="confirmCancelBtn" data-i18n="confirm.cancel">İptal</button>
+                    <button type="button" class="btn btn-danger" id="confirmOkBtn" data-i18n="confirm.yesDelete">Evet, Sil</button>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
