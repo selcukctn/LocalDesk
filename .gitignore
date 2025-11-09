@@ -54,3 +54,4 @@ LocalDesk/ios/build/
 .env.local
 
 package-lock.json
+LocalDesk/android/gradle.properties
