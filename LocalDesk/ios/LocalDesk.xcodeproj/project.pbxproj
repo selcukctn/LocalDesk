@@ -265,7 +265,7 @@
 				CODE_SIGN_ENTITLEMENTS = LocalDesk/LocalDesk.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 48V3RZAWX8;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = LocalDesk/Info.plist;
@@ -298,7 +298,7 @@
 				CODE_SIGN_ENTITLEMENTS = LocalDesk/LocalDesk.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 48V3RZAWX8;
 				INFOPLIST_FILE = LocalDesk/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
