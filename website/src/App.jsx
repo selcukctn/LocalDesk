@@ -4,6 +4,8 @@ import Hero from './components/Hero';
 import Features from './components/Features';
 import HowItWorks from './components/HowItWorks';
 import Screenshots from './components/Screenshots';
+import Download from './components/Download';
+import FAQ from './components/FAQ';
 import Footer from './components/Footer';
 import Privacy from './components/Privacy';
 import './i18n';
@@ -37,6 +39,8 @@ function App() {
           <Features />
           <HowItWorks />
           <Screenshots />
+          <Download />
+          <FAQ />
         </>
       )}
       <Footer />

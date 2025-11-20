@@ -59,6 +59,46 @@
     "title": "See It In Action",
     "subtitle": "Take a look at Local Desk in action"
   },
+  "download": {
+    "title": "Download & Get Started",
+    "subtitle": "Use Local Desk on all your devices",
+    "windows": {
+      "label": "Download for Windows",
+      "subtitle": "Desktop App"
+    },
+    "appstore": {
+      "label": "Download on App Store",
+      "subtitle": "iOS App"
+    },
+    "playstore": {
+      "label": "Get it on Google Play",
+      "subtitle": "Android App"
+    }
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you want to know about Local Desk",
+    "q1": {
+      "question": "How does Local Desk work?",
+      "answer": "Local Desk establishes a connection between your desktop computer and smartphone over your local network. The desktop application acts as a server, and the mobile app connects to this server to send keyboard commands and shortcuts. All communication happens within your local network, no internet connection required."
+    },
+    "q2": {
+      "question": "How do I use Local Desk?",
+      "answer": ""
+    },
+    "q3": {
+      "question": "Which operating systems are supported?",
+      "answer": "Local Desk desktop app supports Windows, macOS, and Linux operating systems. The mobile app works on iOS and Android devices. Compatibility is ensured across all platforms."
+    },
+    "q4": {
+      "question": "How is security ensured?",
+      "answer": ""
+    },
+    "q5": {
+      "question": "Is it free or paid?",
+      "answer": "Local Desk is completely free. It's an open-source project and doesn't require any hidden costs or subscriptions. All features are available for free."
+    }
+  },
   "footer": {
     "copyright": "© 2026 Local Desk. All rights reserved.",
     "madeWith": "Made with ❤️ for productivity enthusiasts",
@@ -108,4 +148,3 @@
     }
   }
 }
-

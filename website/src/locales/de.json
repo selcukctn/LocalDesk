@@ -59,6 +59,46 @@
     "title": "In Aktion sehen",
     "subtitle": "Schauen Sie sich Local Desk in Aktion an"
   },
+  "download": {
+    "title": "Herunterladen & Loslegen",
+    "subtitle": "Verwenden Sie Local Desk auf all Ihren Geräten",
+    "windows": {
+      "label": "Für Windows herunterladen",
+      "subtitle": "Desktop-App"
+    },
+    "appstore": {
+      "label": "Im App Store herunterladen",
+      "subtitle": "iOS-App"
+    },
+    "playstore": {
+      "label": "Bei Google Play herunterladen",
+      "subtitle": "Android-App"
+    }
+  },
+  "faq": {
+    "title": "Häufig gestellte Fragen",
+    "subtitle": "Alles, was Sie über Local Desk wissen möchten",
+    "q1": {
+      "question": "Wie funktioniert Local Desk?",
+      "answer": "Local Desk stellt eine Verbindung zwischen Ihrem Desktop-Computer und Smartphone über Ihr lokales Netzwerk her. Die Desktop-Anwendung fungiert als Server, und die mobile App verbindet sich mit diesem Server, um Tastenbefehle und Kurzbefehle zu senden. Die gesamte Kommunikation erfolgt innerhalb Ihres lokalen Netzwerks, keine Internetverbindung erforderlich."
+    },
+    "q2": {
+      "question": "Wie verwende ich Local Desk?",
+      "answer": ""
+    },
+    "q3": {
+      "question": "Welche Betriebssysteme werden unterstützt?",
+      "answer": "Die Local Desk Desktop-App unterstützt Windows, macOS und Linux. Die mobile App funktioniert auf iOS- und Android-Geräten. Die Kompatibilität ist auf allen Plattformen gewährleistet."
+    },
+    "q4": {
+      "question": "Wie wird die Sicherheit gewährleistet?",
+      "answer": ""
+    },
+    "q5": {
+      "question": "Ist es kostenlos oder kostenpflichtig?",
+      "answer": "Local Desk ist völlig kostenlos. Es ist ein Open-Source-Projekt und erfordert keine versteckten Kosten oder Abonnements. Alle Funktionen sind kostenlos verfügbar."
+    }
+  },
   "footer": {
     "copyright": "© 2026 Local Desk. Alle Rechte vorbehalten.",
     "madeWith": "Mit ❤️ für Produktivitäts-Enthusiasten gemacht",
@@ -108,4 +148,3 @@
     }
   }
 }
-

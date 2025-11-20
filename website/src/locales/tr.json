@@ -59,6 +59,46 @@
     "title": "Aksiyonda Görün",
     "subtitle": "Local Desk'in aksiyon halindeki görüntülerine bir göz atın"
   },
+  "download": {
+    "title": "İndir ve Başla",
+    "subtitle": "Local Desk'i tüm cihazlarınızda kullanın",
+    "windows": {
+      "label": "Windows için İndir",
+      "subtitle": "Masaüstü Uygulaması"
+    },
+    "appstore": {
+      "label": "App Store'dan İndir",
+      "subtitle": "iOS Uygulaması"
+    },
+    "playstore": {
+      "label": "Google Play'den İndir",
+      "subtitle": "Android Uygulaması"
+    }
+  },
+  "faq": {
+    "title": "Sık Sorulan Sorular",
+    "subtitle": "Local Desk hakkında merak ettikleriniz",
+    "q1": {
+      "question": "Local Desk nasıl çalışır?",
+      "answer": "Local Desk, masaüstü bilgisayarınız ve akıllı telefonunuz arasında yerel ağ üzerinden bağlantı kurar. Masaüstü uygulaması bir sunucu olarak çalışır ve mobil uygulama bu sunucuya bağlanarak klavye komutlarını ve kısayolları gönderir. Tüm iletişim yerel ağınız içinde gerçekleşir, internet bağlantısı gerekmez."
+    },
+    "q2": {
+      "question": "Local Desk'i nasıl kullanırım?",
+      "answer": ""
+    },
+    "q3": {
+      "question": "Hangi işletim sistemlerini destekliyor?",
+      "answer": "Local Desk masaüstü uygulaması Windows, macOS ve Linux işletim sistemlerini destekler. Mobil uygulama ise iOS ve Android cihazlarda çalışır. Tüm platformlar arasında uyumluluk sağlanmıştır."
+    },
+    "q4": {
+      "question": "Güvenlik nasıl sağlanıyor?",
+      "answer": ""
+    },
+    "q5": {
+      "question": "Ücretsiz mi yoksa ücretli mi?",
+      "answer": "Local Desk tamamen ücretsizdir. Açık kaynak kodlu bir projedir ve herhangi bir gizli maliyet veya abonelik gerektirmez. Tüm özellikler ücretsiz olarak kullanılabilir."
+    }
+  },
   "footer": {
     "copyright": "© 2026 Local Desk. Tüm hakları saklıdır.",
     "madeWith": "Üretkenlik tutkunları için ❤️ ile yapıldı",
@@ -108,4 +148,3 @@
     }
   }
 }
-
