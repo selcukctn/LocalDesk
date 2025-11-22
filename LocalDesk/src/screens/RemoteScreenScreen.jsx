@@ -990,10 +990,14 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalConfirmButton, !selectedSourceId && styles.modalConfirmButtonDisabled]}
-                onPress={() => {
+                onPress={async () => {
                   if (selectedSourceId) {
+                    const sourceIdToUse = selectedSourceId;
                     setShowSourceSelector(false);
-                    startSession();
+                    // Kısa bir delay ile modal kapanmasını bekle
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    // Seçilen sourceId'yi parametre olarak geç
+                    startSession(sourceIdToUse);
                   }
                 }}
                 disabled={!selectedSourceId}

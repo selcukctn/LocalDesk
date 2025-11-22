@@ -54,30 +54,37 @@ export const useRemoteScreen = (socket, deviceInfo) => {
   }, []);
 
   // WebRTC bağlantısını başlat
-  const startSession = useCallback(async () => {
+  const startSession = useCallback(async (sourceId = null) => {
     if (!socketRef.current || !socketRef.current.connected) {
       setError('Cihaza bağlı değilsiniz');
       return;
     }
 
-    // Eğer source seçilmemişse, ekran kaynaklarını al ve ilk ekranı seç
-    let currentSourceId = selectedSourceId;
+    // sourceId parametresi varsa onu kullan, yoksa selectedSourceId'yi kullan
+    let currentSourceId = sourceId || selectedSourceId;
+    
+    // Eğer hala source seçilmemişse, önce ekran kaynaklarını al
     if (!currentSourceId) {
+      // Önce ekran kaynaklarını al
       await fetchScreenSources();
-      // fetchScreenSources içinde zaten ilk ekran seçiliyor, state'i bekleyelim
-      // State güncellemesi asenkron olduğu için, fetchScreenSources sonrası
-      // screenSources'u kontrol edelim
-      await new Promise(resolve => setTimeout(resolve, 100)); // Kısa bir delay
+      
+      // State güncellemesi için kısa bir delay
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       // State'i tekrar kontrol et
       currentSourceId = selectedSourceId;
+      
+      // Hala seçilmemişse, hata ver
       if (!currentSourceId) {
-        // Hala seçilmemişse, screenSources'dan ilk ekranı al
-        const sources = screenSources;
-        if (sources.screens && sources.screens.length > 0) {
-          currentSourceId = sources.screens[0].id;
-          setSelectedSourceId(currentSourceId);
-        }
+        setError('Lütfen önce bir ekran veya pencere seçin');
+        setIsConnecting(false);
+        return;
       }
+    }
+    
+    // Seçilen sourceId'yi state'e kaydet
+    if (currentSourceId && currentSourceId !== selectedSourceId) {
+      setSelectedSourceId(currentSourceId);
     }
 
     try {
@@ -164,13 +171,11 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       console.log('📹 Socket connected?', socketRef.current.connected);
       console.log('📹 Socket id:', socketRef.current.id);
       
-      // selectedSourceId'yi closure'dan al (state güncellemesi asenkron olduğu için)
-      const sourceIdToUse = selectedSourceId || (screenSources.screens && screenSources.screens.length > 0 ? screenSources.screens[0].id : null);
-      console.log('📹 Selected source ID:', sourceIdToUse);
+      console.log('📹 Selected source ID:', currentSourceId);
       
       socketRef.current.emit('webrtc-offer', {
         offer: pc.localDescription,
-        sourceId: sourceIdToUse // Seçilen ekran/pencere ID'si
+        sourceId: currentSourceId // Seçilen ekran/pencere ID'si
       });
       console.log('✅ Offer emitted successfully');
 
