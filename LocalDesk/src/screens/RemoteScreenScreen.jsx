@@ -44,6 +44,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [videoRenderSize, setVideoRenderSize] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
   const textInputRef = useRef(null);
+  const progressBarWidthRef = useRef(0);
   const lastTouchRef = useRef({ 
     x: 0, 
     y: 0, 
@@ -584,6 +585,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             </TouchableOpacity>
             
             <TouchableOpacity
+              style={styles.mediaButton}
+              onPress={() => sendMediaControl('seekbackward')}
+            >
+              <Text style={styles.mediaSeekText}>-10s</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
               style={[styles.mediaButton, styles.mediaButtonPrimary]}
               onPress={() => sendMediaControl('playpause')}
             >
@@ -592,6 +600,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 style={styles.mediaButtonPrimaryIcon}
                 resizeMode="contain"
               />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.mediaButton}
+              onPress={() => sendMediaControl('seekforward')}
+            >
+              <Text style={styles.mediaSeekText}>+10s</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -608,14 +623,36 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           
           {mediaStatus.duration > 0 && (
             <View style={styles.mediaProgress}>
-              <View style={styles.mediaProgressBar}>
-                <View 
-                  style={[
-                    styles.mediaProgressFill, 
-                    { width: `${(mediaStatus.position / mediaStatus.duration) * 100}%` }
-                  ]} 
-                />
-              </View>
+              <TouchableOpacity
+                style={styles.mediaProgressBar}
+                activeOpacity={1}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  if (width > 0) {
+                    progressBarWidthRef.current = width;
+                  }
+                }}
+                onPress={(event) => {
+                  const { locationX } = event.nativeEvent;
+                  const progressBarWidth = progressBarWidthRef.current || 300;
+                  const percentage = Math.max(0, Math.min(1, locationX / progressBarWidth));
+                  const newPosition = Math.max(0, Math.min(mediaStatus.duration, percentage * mediaStatus.duration));
+                  
+                  // Medya pozisyonunu güncelle
+                  setMediaStatus(prev => ({ ...prev, position: newPosition }));
+                  
+                  console.log('🎵 Seek to:', newPosition, 'seconds (', percentage * 100, '%)');
+                }}
+              >
+                <View style={styles.mediaProgressBarInner}>
+                  <View 
+                    style={[
+                      styles.mediaProgressFill, 
+                      { width: `${(mediaStatus.position / mediaStatus.duration) * 100}%` }
+                    ]} 
+                  />
+                </View>
+              </TouchableOpacity>
               <Text style={styles.mediaTimeText}>
                 {formatTime(mediaStatus.position)} / {formatTime(mediaStatus.duration)}
               </Text>
@@ -891,14 +928,23 @@ const styles = StyleSheet.create({
     height: 32,
     tintColor: '#fff'
   },
+  mediaSeekText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#fff'
+  },
   mediaProgress: {
     marginTop: 8
   },
   mediaProgressBar: {
+    height: 40,
+    marginBottom: 8,
+    justifyContent: 'center'
+  },
+  mediaProgressBarInner: {
     height: 4,
     backgroundColor: '#333',
-    borderRadius: 2,
-    marginBottom: 8
+    borderRadius: 2
   },
   mediaProgressFill: {
     height: '100%',

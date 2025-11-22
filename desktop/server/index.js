@@ -170,10 +170,43 @@ class LocalDeskServer extends EventEmitter {
       res.json(this.getServerInfo());
     });
     
-    // Medya durumu (şimdilik basit - sonra Windows Media Control API ile genişletilebilir)
-    this.app.get('/media-status', (req, res) => {
-      // Şimdilik varsayılan değerler döndür
-      // Sonra Windows Media Control API ile gerçek durumu alabiliriz
+    // Medya durumu (Windows Media Control API ile)
+    this.app.get('/media-status', async (req, res) => {
+      if (process.platform !== 'win32') {
+        return res.json({
+          isPlaying: false,
+          title: 'Sadece Windows destekleniyor',
+          artist: '',
+          duration: 0,
+          position: 0
+        });
+      }
+
+      try {
+        // PowerShell script ile medya durumunu al
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execAsync = promisify(exec);
+        
+        const scriptPath = path.join(__dirname, 'get-media-status.ps1');
+        const { stdout, stderr } = await execAsync(
+          `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`,
+          { timeout: 5000 }
+        );
+        
+        if (stdout) {
+          try {
+            const status = JSON.parse(stdout.trim());
+            return res.json(status);
+          } catch (parseError) {
+            console.error('❌ Medya durumu parse hatası:', parseError);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Medya durumu alınamadı:', error.message);
+      }
+      
+      // Varsayılan değerler
       res.json({
         isPlaying: false,
         title: 'Medya oynatıcı bulunamadı',
@@ -602,6 +635,14 @@ class LocalDeskServer extends EventEmitter {
                 } else {
                   keys = ['audio_prev'];
                 }
+                break;
+              case 'seekforward':
+                // Right Arrow = +10 saniye (çoğu medya oynatıcı)
+                keys = ['right'];
+                break;
+              case 'seekbackward':
+                // Left Arrow = -10 saniye
+                keys = ['left'];
                 break;
               case 'stop':
                 // Stop için genelde 's' tuşu
