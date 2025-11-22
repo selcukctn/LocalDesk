@@ -121,6 +121,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     if (width > 0 && height > 0) {
       setVideoSize({ width, height });
       
+      // Desktop screen size kontrolü
+      if (!desktopScreenSize || !desktopScreenSize.width || !desktopScreenSize.height) {
+        console.warn('⚠️ Desktop screen size not available yet, using default');
+        setVideoRenderSize({ width, height, offsetX: 0, offsetY: 0 });
+        return;
+      }
+      
       // Video'nun gerçek render boyutunu hesapla (objectFit="contain" için)
       // Desktop ekran aspect ratio'su ile container aspect ratio'sunu karşılaştır
       const containerAspect = width / height;
@@ -147,10 +154,37 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       console.log('✅ Video size set:', width, 'x', height);
       console.log('✅ Video render size:', { renderWidth, renderHeight, offsetX, offsetY });
       console.log('✅ Aspect ratios:', { container: containerAspect, desktop: desktopAspect });
+      console.log('✅ Desktop screen size:', desktopScreenSize);
     } else {
       console.warn('⚠️ Invalid video size:', { width, height });
     }
   };
+
+  // Desktop screen size değiştiğinde video render boyutunu yeniden hesapla
+  React.useEffect(() => {
+    if (videoSize.width > 0 && videoSize.height > 0 && desktopScreenSize.width > 0 && desktopScreenSize.height > 0) {
+      // Video layout'u yeniden hesapla
+      const containerAspect = videoSize.width / videoSize.height;
+      const desktopAspect = desktopScreenSize.width / desktopScreenSize.height;
+      
+      let renderWidth, renderHeight, offsetX, offsetY;
+      
+      if (containerAspect > desktopAspect) {
+        renderHeight = videoSize.height;
+        renderWidth = videoSize.height * desktopAspect;
+        offsetX = (videoSize.width - renderWidth) / 2;
+        offsetY = 0;
+      } else {
+        renderWidth = videoSize.width;
+        renderHeight = videoSize.width / desktopAspect;
+        offsetX = 0;
+        offsetY = (videoSize.height - renderHeight) / 2;
+      }
+      
+      setVideoRenderSize({ width: renderWidth, height: renderHeight, offsetX, offsetY });
+      console.log('✅ Video render size updated from desktop screen size:', { renderWidth, renderHeight, offsetX, offsetY });
+    }
+  }, [desktopScreenSize, videoSize]);
 
   // PanResponder oluştur - useMemo ile dependency'lere göre yeniden oluştur
   const panResponder = useMemo(() => {
