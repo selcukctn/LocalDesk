@@ -698,172 +698,6 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         )}
       </View>
 
-      {/* Zoom Kontrolleri Paneli - Video üstünde floating */}
-      {showZoomControls && isSessionActive && (
-        <View style={styles.zoomPanelOverlay}>
-          <View style={styles.zoomPanel}>
-            {/* Zoom Seviyesi - Kompakt */}
-            <View style={styles.zoomCompactHeader}>
-              <Text style={styles.zoomCompactLabel}>Zoom: {Math.round(zoomLevel * 100)}%</Text>
-              <TouchableOpacity
-                style={styles.zoomCloseButton}
-                onPress={() => setShowZoomControls(false)}
-              >
-                <Image 
-                  source={pauseIcon} 
-                  style={[styles.zoomCloseIcon, { tintColor: '#fff' }]}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.zoomCompactControls}>
-              <TouchableOpacity
-                style={styles.zoomCompactButton}
-                onPress={() => {
-                  const newZoom = Math.max(0.5, zoomLevel - 0.25);
-                  setZoomLevel(newZoom);
-                  setPanOffset({ x: 0, y: 0 });
-                }}
-              >
-                <Image 
-                  source={minusSmallIcon} 
-                  style={styles.zoomCompactButtonIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.zoomCompactSliderContainer}
-                activeOpacity={1}
-                onLayout={(event) => {
-                  const { width } = event.nativeEvent.layout;
-                  if (width > 0) {
-                    volumeSliderWidthRef.current = width;
-                  }
-                }}
-                onPress={(event) => {
-                  const { locationX } = event.nativeEvent;
-                  const sliderWidth = volumeSliderWidthRef.current || 150;
-                  const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
-                  const newZoom = 0.5 + (percentage * 2.5);
-                  setZoomLevel(newZoom);
-                  setPanOffset({ x: 0, y: 0 });
-                }}
-              >
-                <View style={styles.zoomCompactSliderTrack}>
-                  <View 
-                    style={[
-                      styles.zoomCompactSliderFill, 
-                      { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
-                    ]} 
-                  />
-                </View>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.zoomCompactButton}
-                onPress={() => {
-                  const newZoom = Math.min(3.0, zoomLevel + 0.25);
-                  setZoomLevel(newZoom);
-                  setPanOffset({ x: 0, y: 0 });
-                }}
-              >
-                <Image 
-                  source={plusIcon} 
-                  style={styles.zoomCompactButtonIcon}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={styles.zoomCompactButton}
-                onPress={() => {
-                  setZoomLevel(1.0);
-                  setPanOffset({ x: 0, y: 0 });
-                }}
-              >
-                <Text style={styles.zoomCompactResetText}>1x</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Pan Kontrolleri - Kompakt */}
-            <View style={styles.panCompactContainer}>
-              <View style={styles.panCompactGrid}>
-                <View style={styles.panCompactSpacer} />
-                <TouchableOpacity
-                  style={styles.panCompactButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panCompactButtonIcon, { transform: [{ rotate: '90deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                <View style={styles.panCompactSpacer} />
-              </View>
-              
-              <View style={styles.panCompactGrid}>
-                <TouchableOpacity
-                  style={styles.panCompactButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panCompactButtonIcon, { transform: [{ rotate: '180deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.panCompactCenterButton}
-                  onPress={() => {
-                    setPanOffset({ x: 0, y: 0 });
-                  }}
-                >
-                  <Text style={styles.panCompactCenterText}>O</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity
-                  style={styles.panCompactButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={styles.panCompactButtonIcon}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.panCompactGrid}>
-                <View style={styles.panCompactSpacer} />
-                <TouchableOpacity
-                  style={styles.panCompactButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panCompactButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                <View style={styles.panCompactSpacer} />
-              </View>
-            </View>
-          </View>
-        </View>
-      )}
-
       {/* Medya Kontrol Paneli */}
       {showMediaControls && isSessionActive && (
         <View style={styles.mediaContainer}>
@@ -1296,14 +1130,14 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           <View style={styles.zoomPanel}>
             {/* Zoom Seviyesi - Kompakt */}
             <View style={styles.zoomCompactHeader}>
-              <Text style={styles.zoomCompactLabel}>Zoom: {Math.round(zoomLevel * 100)}%</Text>
+              <Text style={styles.zoomCompactLabel}>{Math.round(zoomLevel * 100)}%</Text>
               <TouchableOpacity
                 style={styles.zoomCloseButton}
                 onPress={() => setShowZoomControls(false)}
               >
                 <Image 
                   source={pauseIcon} 
-                  style={[styles.zoomCloseIcon, { tintColor: '#fff' }]}
+                  style={[styles.zoomCloseIcon, { tintColor: '#999' }]}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
@@ -1668,14 +1502,12 @@ const styles = StyleSheet.create({
   videoWrapper: {
     flex: 1,
     position: 'relative',
-    overflow: 'hidden',
-    zIndex: 1
+    overflow: 'hidden'
   },
   touchOverlay: {
     flex: 1,
     width: '100%',
-    height: '100%',
-    zIndex: 1
+    height: '100%'
   },
   videoContainerInner: {
     width: '100%',
@@ -2127,71 +1959,69 @@ const styles = StyleSheet.create({
   },
   zoomPanelOverlay: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 80,
+    right: 12,
     zIndex: 100,
-    elevation: 100,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: 20,
-    pointerEvents: 'box-none' // Overlay'in kendisi touch event'leri geçirir
+    elevation: 100
   },
   zoomPanel: {
-    backgroundColor: 'rgba(30, 30, 30, 0.95)',
-    borderRadius: 12,
-    padding: 12,
+    backgroundColor: 'rgba(30, 30, 30, 0.92)',
+    borderRadius: 10,
+    padding: 8,
     borderWidth: 1,
-    borderColor: '#333',
-    maxWidth: 400,
-    width: '90%',
-    marginBottom: 10,
-    pointerEvents: 'auto' // Sadece panel içeriği touch event'leri alır
+    borderColor: '#444',
+    minWidth: 140,
+    maxWidth: 160
   },
   zoomCompactHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 10
+    marginBottom: 6
   },
   zoomCompactLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#fff',
     fontWeight: '600'
   },
   zoomCloseButton: {
-    padding: 4
+    padding: 2,
+    width: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
   },
   zoomCloseIcon: {
-    width: 16,
-    height: 16
+    width: 12,
+    height: 12
   },
   zoomCompactControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12
+    gap: 4,
+    marginBottom: 8
   },
   zoomCompactButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#333',
     alignItems: 'center',
     justifyContent: 'center'
   },
   zoomCompactButtonIcon: {
-    width: 18,
-    height: 18,
+    width: 14,
+    height: 14,
     tintColor: '#fff'
   },
   zoomCompactSliderContainer: {
     flex: 1,
-    height: 36,
-    justifyContent: 'center'
+    height: 28,
+    justifyContent: 'center',
+    paddingHorizontal: 4
   },
   zoomCompactSliderTrack: {
-    height: 4,
+    height: 3,
     backgroundColor: '#333',
     borderRadius: 2
   },
@@ -2201,49 +2031,49 @@ const styles = StyleSheet.create({
     borderRadius: 2
   },
   zoomCompactResetText: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '600',
     color: '#fff'
   },
   panCompactContainer: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: 6,
+    paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: '#333'
+    borderTopColor: '#444'
   },
   panCompactGrid: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6
+    gap: 4
   },
   panCompactSpacer: {
-    width: 36,
-    height: 36
+    width: 28,
+    height: 28
   },
   panCompactButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#333',
     alignItems: 'center',
     justifyContent: 'center'
   },
   panCompactButtonIcon: {
-    width: 20,
-    height: 20,
+    width: 16,
+    height: 16,
     tintColor: '#fff'
   },
   panCompactCenterButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: '#444',
     alignItems: 'center',
     justifyContent: 'center'
   },
   panCompactCenterText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#fff'
   }
