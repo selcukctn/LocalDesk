@@ -403,9 +403,33 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           <Text style={styles.headerSubtitle}>{device.name}</Text>
         </View>
         
-        <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
-          <Icon name="close" size={24} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          {isSessionActive && (
+            <>
+              <TouchableOpacity 
+                style={styles.headerIconButton} 
+                onPress={toggleKeyboard}
+              >
+                <Icon
+                  name={showKeyboard ? 'keyboard-off' : 'keyboard'}
+                  size={20}
+                  color="#fff"
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.headerIconButton} 
+                onPress={handleSessionToggle}
+              >
+                <Icon name="stop-circle" size={20} color="#d32f2f" />
+              </TouchableOpacity>
+            </>
+          )}
+          
+          <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
+            <Icon name="close" size={24} color="#fff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Video Stream */}
@@ -460,34 +484,6 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         )}
       </View>
 
-      {/* Controls */}
-      {isSessionActive && (
-        <View style={styles.controls}>
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={toggleKeyboard}
-          >
-            <Icon
-              name={showKeyboard ? 'keyboard-off' : 'keyboard'}
-              size={24}
-              color="#fff"
-            />
-            <Text style={styles.controlButtonText}>
-              {showKeyboard ? t('remoteScreen.hideKeyboard') : t('remoteScreen.showKeyboard')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.controlButton, styles.controlButtonDanger]}
-            onPress={handleSessionToggle}
-          >
-            <Icon name="stop-circle" size={24} color="#fff" />
-            <Text style={styles.controlButtonText}>
-              {t('remoteScreen.endSession')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
 
       {/* Klavye Input */}
       {showKeyboard && (
@@ -557,29 +553,40 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     backgroundColor: '#1e1e1e',
     borderBottomWidth: 1,
-    borderBottomColor: '#333'
+    borderBottomColor: '#333',
+    minHeight: 50
   },
   headerButton: {
     padding: 8,
     width: 40
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  headerIconButton: {
+    padding: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)'
   },
   headerCenter: {
     flex: 1,
     alignItems: 'center'
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#fff'
   },
   headerSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
-    marginTop: 2
+    marginTop: 1
   },
   videoContainer: {
     flex: 1,
