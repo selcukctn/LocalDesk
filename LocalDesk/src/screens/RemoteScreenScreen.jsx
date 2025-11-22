@@ -12,8 +12,7 @@ import {
   StatusBar,
   PanResponder,
   Image,
-  ScrollView,
-  Modal
+  ScrollView
 } from 'react-native';
 import { RTCView } from 'react-native-webrtc';
 import { useI18n } from '../contexts/I18nContext';
@@ -879,12 +878,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       )}
 
       {/* Ekran/Pencere Seçim Modal */}
-      <Modal
-        visible={showSourceSelector}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowSourceSelector(false)}
-      >
+      {showSourceSelector && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -1007,7 +1001,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             </View>
           </View>
         </View>
-      </Modal>
+      )}
     </View>
   );
 };
@@ -1383,7 +1377,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
-    zIndex: 1000
+    zIndex: 1000,
+    elevation: 1000 // Android için
   },
   modalContent: {
     backgroundColor: '#1e1e1e',
