@@ -8,6 +8,13 @@ try {
   
   // Fallback: Mock fonksiyonlar
   displayAddon = {
+    enableMiracastReceiver: () => {
+      console.warn('⚠️ Display addon yüklü değil, mock fonksiyon kullanılıyor');
+      return { success: false, message: 'Display addon yüklü değil' };
+    },
+    isMiracastReceiverEnabled: () => {
+      return { enabled: false, message: 'Display addon yüklü değil' };
+    },
     createVirtualDisplay: (width, height) => {
       console.warn('⚠️ Display addon yüklü değil, mock fonksiyon kullanılıyor');
       return { success: false, message: 'Display addon yüklü değil' };

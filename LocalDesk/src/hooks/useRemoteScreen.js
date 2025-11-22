@@ -172,10 +172,12 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       console.log('📹 Socket id:', socketRef.current.id);
       
       console.log('📹 Selected source ID:', currentSourceId);
+      console.log('📹 View Only Mode (Ek Monitör):', viewOnly);
       
       socketRef.current.emit('webrtc-offer', {
         offer: pc.localDescription,
-        sourceId: currentSourceId // Seçilen ekran/pencere ID'si
+        sourceId: currentSourceId, // Seçilen ekran/pencere ID'si
+        viewOnly: viewOnly // Ek monitör modu (Miracast için)
       });
       console.log('✅ Offer emitted successfully');
 

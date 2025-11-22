@@ -11,7 +11,8 @@
       ],
       "libraries": [
         "-luser32",
-        "-lgdi32"
+        "-lgdi32",
+        "-ladvapi32"
       ],
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],

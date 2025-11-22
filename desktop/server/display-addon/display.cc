@@ -4,11 +4,141 @@
 #include <windows.h>
 #include <winuser.h>
 
-// Windows Display API kullanarak sanal display oluşturma
-// Not: Windows'ta gerçek bir sanal display oluşturmak için kernel driver gerekiyor
-// Bu implementasyon sadece display ayarlarını yapılandırır
+// Windows Miracast/WiDi receiver'ı etkinleştirme
+// Registry kullanarak Miracast receiver özelliğini etkinleştiriyoruz
 
-// Sanal display oluştur (Windows Display API ile)
+// Miracast receiver'ı etkinleştir
+Napi::Value EnableMiracastReceiver(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    Napi::Object result = Napi::Object::New(env);
+    
+    // Miracast receiver'ı etkinleştirmek için Registry kullanıyoruz
+        // Windows 10/11'de Miracast receiver özelliği varsayılan olarak kapalıdır
+        HKEY hKey;
+        LONG regResult;
+        
+        // Registry path: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WirelessDisplay
+        regResult = RegOpenKeyExA(
+            HKEY_LOCAL_MACHINE,
+            "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WirelessDisplay",
+            0,
+            KEY_WRITE,
+            &hKey
+        );
+        
+        if (regResult == ERROR_SUCCESS) {
+            // Miracast receiver'ı etkinleştir
+            DWORD enableValue = 1;
+            regResult = RegSetValueExA(
+                hKey,
+                "EnableMiracastReceiver",
+                0,
+                REG_DWORD,
+                (BYTE*)&enableValue,
+                sizeof(DWORD)
+            );
+            
+            RegCloseKey(hKey);
+            
+            if (regResult == ERROR_SUCCESS) {
+                result.Set("success", Napi::Boolean::New(env, true));
+                result.Set("message", Napi::String::New(env, "Miracast receiver etkinleştirildi (yeniden başlatma gerekebilir)"));
+            } else {
+                result.Set("success", Napi::Boolean::New(env, false));
+                result.Set("message", Napi::String::New(env, "Miracast receiver etkinleştirilemedi (yönetici hakları gerekebilir)"));
+                result.Set("errorCode", Napi::Number::New(env, regResult));
+            }
+        } else {
+            // Registry key yoksa oluştur
+            regResult = RegCreateKeyExA(
+                HKEY_LOCAL_MACHINE,
+                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WirelessDisplay",
+                0,
+                NULL,
+                REG_OPTION_NON_VOLATILE,
+                KEY_WRITE,
+                NULL,
+                &hKey,
+                NULL
+            );
+            
+            if (regResult == ERROR_SUCCESS) {
+                DWORD enableValue = 1;
+                regResult = RegSetValueExA(
+                    hKey,
+                    "EnableMiracastReceiver",
+                    0,
+                    REG_DWORD,
+                    (BYTE*)&enableValue,
+                    sizeof(DWORD)
+                );
+                
+                RegCloseKey(hKey);
+                
+                if (regResult == ERROR_SUCCESS) {
+                    result.Set("success", Napi::Boolean::New(env, true));
+                    result.Set("message", Napi::String::New(env, "Miracast receiver etkinleştirildi (yeniden başlatma gerekebilir)"));
+                } else {
+                    result.Set("success", Napi::Boolean::New(env, false));
+                    result.Set("message", Napi::String::New(env, "Miracast receiver etkinleştirilemedi"));
+                    result.Set("errorCode", Napi::Number::New(env, regResult));
+                }
+            } else {
+                result.Set("success", Napi::Boolean::New(env, false));
+                result.Set("message", Napi::String::New(env, "Registry key oluşturulamadı (yönetici hakları gerekebilir)"));
+                result.Set("errorCode", Napi::Number::New(env, regResult));
+            }
+        }
+    
+    return result;
+}
+
+// Miracast receiver durumunu kontrol et
+Napi::Value IsMiracastReceiverEnabled(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+    Napi::Object result = Napi::Object::New(env);
+    
+    HKEY hKey;
+    LONG regResult = RegOpenKeyExA(
+        HKEY_LOCAL_MACHINE,
+        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\WirelessDisplay",
+        0,
+        KEY_READ,
+        &hKey
+    );
+    
+    if (regResult == ERROR_SUCCESS) {
+        DWORD value = 0;
+        DWORD dataSize = sizeof(DWORD);
+        DWORD type = REG_DWORD;
+        
+        regResult = RegQueryValueExA(
+            hKey,
+            "EnableMiracastReceiver",
+            NULL,
+            &type,
+            (LPBYTE)&value,
+            &dataSize
+        );
+        
+        RegCloseKey(hKey);
+        
+        if (regResult == ERROR_SUCCESS && value == 1) {
+            result.Set("enabled", Napi::Boolean::New(env, true));
+            result.Set("message", Napi::String::New(env, "Miracast receiver etkin"));
+        } else {
+            result.Set("enabled", Napi::Boolean::New(env, false));
+            result.Set("message", Napi::String::New(env, "Miracast receiver kapalı"));
+        }
+    } else {
+        result.Set("enabled", Napi::Boolean::New(env, false));
+        result.Set("message", Napi::String::New(env, "Miracast receiver durumu kontrol edilemedi"));
+    }
+    
+    return result;
+}
+
+// Sanal display oluştur (Windows Display API ile - fallback)
 Napi::Value CreateVirtualDisplay(const Napi::CallbackInfo& info) {
     Napi::Env env = info.Env();
     
@@ -22,13 +152,6 @@ Napi::Value CreateVirtualDisplay(const Napi::CallbackInfo& info) {
     int height = info[1].As<Napi::Number>().Int32Value();
     
     Napi::Object result = Napi::Object::New(env);
-    
-    // Windows'ta gerçek bir sanal display oluşturmak için kernel driver gerekiyor
-    // Bu basit implementasyon sadece display ayarlarını yapılandırır
-    // Gerçek bir sanal display için Virtual Display Driver (iddkmd.sys benzeri) gerekiyor
-    
-    // Windows Display API'leri ile mevcut display'leri yapılandırabiliriz
-    // Ancak yeni bir display oluşturmak için driver gerekiyor
     
     DEVMODE dm = {0};
     dm.dmSize = sizeof(DEVMODE);
@@ -102,6 +225,14 @@ Napi::Value GetDisplayCount(const Napi::CallbackInfo& info) {
 
 // Modül başlatma
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+    exports.Set(
+        Napi::String::New(env, "enableMiracastReceiver"),
+        Napi::Function::New(env, EnableMiracastReceiver)
+    );
+    exports.Set(
+        Napi::String::New(env, "isMiracastReceiverEnabled"),
+        Napi::Function::New(env, IsMiracastReceiverEnabled)
+    );
     exports.Set(
         Napi::String::New(env, "createVirtualDisplay"),
         Napi::Function::New(env, CreateVirtualDisplay)

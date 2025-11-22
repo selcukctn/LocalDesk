@@ -501,23 +501,30 @@ class LocalDeskServer extends EventEmitter {
           this.viewOnlySessions.set(socket.id, true);
           console.log('📺 Ek monitör modu aktif - Remote control devre dışı');
           
-          // Windows'ta sanal display oluştur (mobil cihazın çözünürlüğüne göre)
-          // Not: Bu gerçek bir sanal display oluşturmaz, sadece display ayarlarını yapılandırır
-          // Gerçek bir sanal display için kernel driver gerekiyor
-          if (this.displayAddon && this.displayAddon.createVirtualDisplay) {
+          // Miracast receiver'ı etkinleştir
+          if (this.displayAddon && this.displayAddon.enableMiracastReceiver) {
             try {
-              // Mobil cihazın çözünürlüğünü al (varsayılan: 1920x1080)
-              const width = 1920;
-              const height = 1080;
-              const result = this.displayAddon.createVirtualDisplay(width, height);
-              if (result.success) {
-                console.log('✅ Sanal display oluşturuldu:', result.message);
+              // Önce Miracast receiver durumunu kontrol et
+              const status = this.displayAddon.isMiracastReceiverEnabled();
+              console.log('📡 Miracast receiver durumu:', status);
+              
+              if (!status.enabled) {
+                // Miracast receiver'ı etkinleştir
+                console.log('📡 Miracast receiver etkinleştiriliyor...');
+                const result = this.displayAddon.enableMiracastReceiver();
+                if (result.success) {
+                  console.log('✅ Miracast receiver etkinleştirildi:', result.message);
+                  console.log('💡 Not: Windows\'u yeniden başlatmanız gerekebilir');
+                  console.log('💡 Mobil cihazınızdan "Project" menüsünden bu PC\'yi seçebilirsiniz');
+                } else {
+                  console.warn('⚠️ Miracast receiver etkinleştirilemedi:', result.message);
+                  console.warn('💡 Yönetici hakları gerekebilir');
+                }
               } else {
-                console.warn('⚠️ Sanal display oluşturulamadı:', result.message);
-                console.warn('💡 Not: Windows\'ta gerçek bir sanal display oluşturmak için kernel driver gerekiyor');
+                console.log('✅ Miracast receiver zaten etkin');
               }
             } catch (error) {
-              console.error('❌ Sanal display oluşturma hatası:', error.message);
+              console.error('❌ Miracast receiver hatası:', error.message);
             }
           }
         } else {
