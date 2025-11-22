@@ -54,7 +54,7 @@ export const useRemoteScreen = (socket, deviceInfo) => {
   }, []);
 
   // WebRTC bağlantısını başlat
-  const startSession = useCallback(async (sourceId = null) => {
+  const startSession = useCallback(async (sourceId = null, viewOnly = false) => {
     if (!socketRef.current || !socketRef.current.connected) {
       setError('Cihaza bağlı değilsiniz');
       return;

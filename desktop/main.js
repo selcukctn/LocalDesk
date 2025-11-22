@@ -494,12 +494,13 @@ function setupWebRTCHandlers(server) {
   if (!server) return;
 
   // WebRTC offer event
-  server.on('webrtc-offer', async ({ socketId, offer, deviceId, sourceId }) => {
+  server.on('webrtc-offer', async ({ socketId, offer, deviceId, sourceId, viewOnly }) => {
     console.log('📹 WebRTC offer alındı main.js\'de');
     console.log('📹 Socket ID:', socketId);
     console.log('📹 Device ID:', deviceId);
     console.log('📹 Offer type:', offer?.type);
     console.log('📹 Source ID:', sourceId);
+    console.log('📹 View Only Mode (Ek Monitör):', viewOnly);
     
     try {
       console.log('📹 Getting desktop sources...');
