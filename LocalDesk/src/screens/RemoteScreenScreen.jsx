@@ -694,6 +694,172 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 />
               </View>
             </View>
+            
+            {/* Zoom Kontrolleri Paneli - Video üstünde floating */}
+            {showZoomControls && (
+              <View style={styles.zoomPanelOverlay}>
+                <View style={styles.zoomPanel}>
+                  {/* Zoom Seviyesi - Kompakt */}
+                  <View style={styles.zoomCompactHeader}>
+                    <Text style={styles.zoomCompactLabel}>{Math.round(zoomLevel * 100)}%</Text>
+                    <TouchableOpacity
+                      style={styles.zoomCloseButton}
+                      onPress={() => setShowZoomControls(false)}
+                    >
+                      <Image 
+                        source={pauseIcon} 
+                        style={[styles.zoomCloseIcon, { tintColor: '#999' }]}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <View style={styles.zoomCompactControls}>
+                    <TouchableOpacity
+                      style={styles.zoomCompactButton}
+                      onPress={() => {
+                        const newZoom = Math.max(0.5, zoomLevel - 0.25);
+                        setZoomLevel(newZoom);
+                        setPanOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      <Image 
+                        source={minusSmallIcon} 
+                        style={styles.zoomCompactButtonIcon}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.zoomCompactSliderContainer}
+                      activeOpacity={1}
+                      onLayout={(event) => {
+                        const { width } = event.nativeEvent.layout;
+                        if (width > 0) {
+                          volumeSliderWidthRef.current = width;
+                        }
+                      }}
+                      onPress={(event) => {
+                        const { locationX } = event.nativeEvent;
+                        const sliderWidth = volumeSliderWidthRef.current || 100;
+                        const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
+                        const newZoom = 0.5 + (percentage * 2.5);
+                        setZoomLevel(newZoom);
+                        setPanOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      <View style={styles.zoomCompactSliderTrack}>
+                        <View 
+                          style={[
+                            styles.zoomCompactSliderFill, 
+                            { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
+                          ]} 
+                        />
+                      </View>
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.zoomCompactButton}
+                      onPress={() => {
+                        const newZoom = Math.min(3.0, zoomLevel + 0.25);
+                        setZoomLevel(newZoom);
+                        setPanOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      <Image 
+                        source={plusIcon} 
+                        style={styles.zoomCompactButtonIcon}
+                        resizeMode="contain"
+                      />
+                    </TouchableOpacity>
+                    
+                    <TouchableOpacity
+                      style={styles.zoomCompactButton}
+                      onPress={() => {
+                        setZoomLevel(1.0);
+                        setPanOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      <Text style={styles.zoomCompactResetText}>1x</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  {/* Pan Kontrolleri - Kompakt D-pad */}
+                  <View style={styles.panCompactContainer}>
+                    <View style={styles.panCompactGrid}>
+                      <View style={styles.panCompactSpacer} />
+                      <TouchableOpacity
+                        style={styles.panCompactButton}
+                        onPress={() => {
+                          setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
+                        }}
+                      >
+                        <Image 
+                          source={leftIcon} 
+                          style={[styles.panCompactButtonIcon, { transform: [{ rotate: '90deg' }] }]}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                      <View style={styles.panCompactSpacer} />
+                    </View>
+                    
+                    <View style={styles.panCompactGrid}>
+                      <TouchableOpacity
+                        style={styles.panCompactButton}
+                        onPress={() => {
+                          setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
+                        }}
+                      >
+                        <Image 
+                          source={leftIcon} 
+                          style={[styles.panCompactButtonIcon, { transform: [{ rotate: '180deg' }] }]}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.panCompactCenterButton}
+                        onPress={() => {
+                          setPanOffset({ x: 0, y: 0 });
+                        }}
+                      >
+                        <Text style={styles.panCompactCenterText}>O</Text>
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        style={styles.panCompactButton}
+                        onPress={() => {
+                          setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
+                        }}
+                      >
+                        <Image 
+                          source={leftIcon} 
+                          style={styles.panCompactButtonIcon}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    
+                    <View style={styles.panCompactGrid}>
+                      <View style={styles.panCompactSpacer} />
+                      <TouchableOpacity
+                        style={styles.panCompactButton}
+                        onPress={() => {
+                          setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
+                        }}
+                      >
+                        <Image 
+                          source={leftIcon} 
+                          style={[styles.panCompactButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
+                      <View style={styles.panCompactSpacer} />
+                    </View>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -1511,8 +1677,15 @@ const styles = StyleSheet.create({
   },
   videoContainerInner: {
     width: '100%',
-    height: '100%',
-    transformOrigin: 'center center'
+    height: '100%'
+  },
+  zoomPanelOverlay: {
+    position: 'absolute',
+    bottom: 80,
+    right: 12,
+    zIndex: 100,
+    elevation: 100,
+    pointerEvents: 'box-none'
   },
   video: {
     flex: 1,
@@ -1956,13 +2129,6 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: '#999'
-  },
-  zoomPanelOverlay: {
-    position: 'absolute',
-    bottom: 80,
-    right: 12,
-    zIndex: 100,
-    elevation: 100
   },
   zoomPanel: {
     backgroundColor: 'rgba(30, 30, 30, 0.92)',
