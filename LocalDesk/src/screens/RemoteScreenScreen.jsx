@@ -513,8 +513,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 onPress={() => setShowMediaControls(!showMediaControls)}
               >
                 <Image 
-                  source={screenPlayIcon} 
-                  style={[styles.header,styles.headerIconImageActive]}
+                  source={showMediaControls ? pauseIcon : playIcon} 
+                  style={[styles.headerIconImage, showMediaControls && styles.headerIconImageActive]}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
