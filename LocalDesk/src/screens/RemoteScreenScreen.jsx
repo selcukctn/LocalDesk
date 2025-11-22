@@ -24,9 +24,37 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const [showKeyboard, setShowKeyboard] = useState(false);
   const [keyboardText, setKeyboardText] = useState('');
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
+  const [videoRenderSize, setVideoRenderSize] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
   const textInputRef = useRef(null);
   const lastTouchRef = useRef({ x: 0, y: 0, time: 0 });
   const videoContainerRef = useRef(null);
+  
+  // Desktop ekran boyutunu al (ilk bağlantıda)
+  const [desktopScreenSize, setDesktopScreenSize] = useState({ width: 1920, height: 1080 });
+  
+  // Desktop ekran boyutunu server'dan al
+  React.useEffect(() => {
+    const fetchScreenSize = async () => {
+      try {
+        const response = await fetch(`http://${device.host}:${device.port}/device-info`);
+        if (response.ok) {
+          const info = await response.json();
+          if (info.screenSize) {
+            console.log('📹 Desktop screen size from device-info:', info.screenSize);
+            setDesktopScreenSize(info.screenSize);
+          } else {
+            console.warn('⚠️ No screenSize in device-info, using default');
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not fetch screen size, using default:', error.message);
+      }
+    };
+    
+    if (device) {
+      fetchScreenSize();
+    }
+  }, [device]);
   
   const {
     isSessionActive,
@@ -41,15 +69,40 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     sendKeyboardInput
   } = useRemoteScreen(socket);
 
-  // Video layout değişikliğinde boyutları al
+  // Video layout değişikliğinde boyutları al ve gerçek render boyutunu hesapla
   const handleVideoLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
     console.log('📹 onLayout called:', { width, height });
-    console.log('📹 Layout event:', event.nativeEvent);
     
     if (width > 0 && height > 0) {
       setVideoSize({ width, height });
+      
+      // Video'nun gerçek render boyutunu hesapla (objectFit="contain" için)
+      // Desktop ekran aspect ratio'su ile container aspect ratio'sunu karşılaştır
+      const containerAspect = width / height;
+      const desktopAspect = desktopScreenSize.width / desktopScreenSize.height;
+      
+      let renderWidth, renderHeight, offsetX, offsetY;
+      
+      if (containerAspect > desktopAspect) {
+        // Container daha geniş - letterbox (üst/alt boşluk)
+        renderHeight = height;
+        renderWidth = height * desktopAspect;
+        offsetX = (width - renderWidth) / 2;
+        offsetY = 0;
+      } else {
+        // Container daha yüksek - pillarbox (sağ/sol boşluk)
+        renderWidth = width;
+        renderHeight = width / desktopAspect;
+        offsetX = 0;
+        offsetY = (height - renderHeight) / 2;
+      }
+      
+      setVideoRenderSize({ width: renderWidth, height: renderHeight, offsetX, offsetY });
+      
       console.log('✅ Video size set:', width, 'x', height);
+      console.log('✅ Video render size:', { renderWidth, renderHeight, offsetX, offsetY });
+      console.log('✅ Aspect ratios:', { container: containerAspect, desktop: desktopAspect });
     } else {
       console.warn('⚠️ Invalid video size:', { width, height });
     }
@@ -75,6 +128,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         console.log('🖱️ State check:', { 
           isSessionActive, 
           videoSize,
+          videoRenderSize,
           hasSize: videoSize.width > 0 && videoSize.height > 0
         });
 
@@ -83,36 +137,50 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           return;
         }
 
-        if (!videoSize.width || !videoSize.height) {
-          console.warn('⚠️ Video size not set:', videoSize);
+        if (!videoSize.width || !videoSize.height || !videoRenderSize.width || !videoRenderSize.height) {
+          console.warn('⚠️ Video size not set:', { videoSize, videoRenderSize });
           return;
         }
 
         const { locationX, locationY } = evt.nativeEvent;
-        const x = locationX / videoSize.width;
-        const y = locationY / videoSize.height;
+        
+        // Touch koordinatlarını video'nun gerçek render alanına göre normalize et
+        // Önce offset'i çıkar
+        const relativeX = locationX - videoRenderSize.offsetX;
+        const relativeY = locationY - videoRenderSize.offsetY;
+        
+        // Sonra render boyutuna göre normalize et
+        const x = relativeX / videoRenderSize.width;
+        const y = relativeY / videoRenderSize.height;
 
         const normalizedX = Math.max(0, Math.min(1, x));
         const normalizedY = Math.max(0, Math.min(1, y));
 
         console.log('🖱️ Touch Start (PanResponder):', {
           raw: { locationX, locationY },
+          relative: { relativeX, relativeY },
           normalized: { x: normalizedX, y: normalizedY },
-          videoSize
+          videoSize,
+          videoRenderSize
         });
 
         lastTouchRef.current = { x: normalizedX, y: normalizedY, time: Date.now() };
         sendMouseMove(normalizedX, normalizedY);
       },
       onPanResponderMove: (evt) => {
-        if (!isSessionActive || !videoSize.width || !videoSize.height) {
-          console.warn('⚠️ Cannot move - session:', isSessionActive, 'size:', videoSize);
+        if (!isSessionActive || !videoSize.width || !videoSize.height || !videoRenderSize.width || !videoRenderSize.height) {
+          console.warn('⚠️ Cannot move - session:', isSessionActive, 'size:', videoSize, 'renderSize:', videoRenderSize);
           return;
         }
 
         const { locationX, locationY } = evt.nativeEvent;
-        const x = locationX / videoSize.width;
-        const y = locationY / videoSize.height;
+        
+        // Touch koordinatlarını video'nun gerçek render alanına göre normalize et
+        const relativeX = locationX - videoRenderSize.offsetX;
+        const relativeY = locationY - videoRenderSize.offsetY;
+        
+        const x = relativeX / videoRenderSize.width;
+        const y = relativeY / videoRenderSize.height;
 
         const normalizedX = Math.max(0, Math.min(1, x));
         const normalizedY = Math.max(0, Math.min(1, y));
@@ -137,7 +205,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         }
       }
     });
-  }, [isSessionActive, videoSize, sendMouseMove, sendMouseClick]);
+  }, [isSessionActive, videoSize, videoRenderSize, sendMouseMove, sendMouseClick]);
 
 
   // Klavye toggle

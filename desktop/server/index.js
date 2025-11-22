@@ -15,8 +15,24 @@ let robot = null;
 try {
   robot = require('robotjs');
   console.log('✅ RobotJS yüklendi (remote control aktif)');
+  console.log('✅ RobotJS functions:', {
+    moveMouse: typeof robot.moveMouse,
+    mouseClick: typeof robot.mouseClick,
+    getScreenSize: typeof robot.getScreenSize
+  });
+  
+  // Test: Screen size al
+  try {
+    const screenSize = robot.getScreenSize();
+    console.log('✅ RobotJS screen size:', screenSize);
+  } catch (testError) {
+    console.error('❌ RobotJS test failed:', testError.message);
+  }
 } catch (error) {
-  console.warn('⚠️  RobotJS yüklenemedi, remote control devre dışı:', error.message);
+  console.error('❌ RobotJS yüklenemedi, remote control devre dışı');
+  console.error('❌ Error:', error.message);
+  console.error('❌ Stack:', error.stack);
+  console.error('💡 Çözüm: npm rebuild robotjs komutunu çalıştırın');
 }
 
 class LocalDeskServer extends EventEmitter {
@@ -129,13 +145,29 @@ class LocalDeskServer extends EventEmitter {
   setupRoutes() {
     // Cihaz bilgisi
     this.app.get('/device-info', (req, res) => {
+      // Ekran boyutunu al
+      let screenSize = { width: 1920, height: 1080 };
+      if (this.robot) {
+        try {
+          screenSize = this.robot.getScreenSize();
+        } catch (error) {
+          // Varsayılan kullan
+        }
+      }
+      
       res.json({
         id: this.deviceId,
         name: this.deviceName,
         type: 'desktop',
         version: '1.0.0',
-        platform: process.platform
+        platform: process.platform,
+        screenSize
       });
+    });
+    
+    // Server info (ekran boyutu dahil)
+    this.app.get('/server-info', (req, res) => {
+      res.json(this.getServerInfo());
     });
     
     // Sayfa listesi (yeni API)
@@ -325,9 +357,18 @@ class LocalDeskServer extends EventEmitter {
       // Remote Screen kontrolü - Mouse
       socket.on('remote-mouse-move', (data) => {
         const client = this.connectedClients.get(socket.id);
-        if (!client) return;
+        if (!client) {
+          console.warn('⚠️ remote-mouse-move: Client not found');
+          return;
+        }
         const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
-        if (!trusted) return;
+        if (!trusted) {
+          console.warn('⚠️ remote-mouse-move: Device not trusted');
+          return;
+        }
+        
+        console.log('🖱️ remote-mouse-move received:', { x: data.x, y: data.y });
+        console.log('🖱️ RobotJS available?', !!this.robot);
         
         // RobotJS ile mouse move
         if (this.robot && typeof data.x === 'number' && typeof data.y === 'number') {
@@ -336,18 +377,34 @@ class LocalDeskServer extends EventEmitter {
             // Normalize coordinates (0-1) to actual screen size
             const screenX = Math.round(data.x * screenSize.width);
             const screenY = Math.round(data.y * screenSize.height);
+            console.log('🖱️ Moving mouse to:', { screenX, screenY, screenSize });
             this.robot.moveMouse(screenX, screenY);
+            console.log('✅ Mouse moved successfully');
           } catch (error) {
             console.error('❌ Mouse move hatası:', error.message);
+            console.error('❌ Error stack:', error.stack);
           }
+        } else {
+          console.warn('⚠️ RobotJS not available or invalid coordinates');
+          console.warn('⚠️ RobotJS:', this.robot);
+          console.warn('⚠️ Data:', data);
         }
       });
 
       socket.on('remote-mouse-click', (data) => {
+        console.log('🖱️ remote-mouse-click received:', data);
         const client = this.connectedClients.get(socket.id);
-        if (!client) return;
+        if (!client) {
+          console.warn('⚠️ remote-mouse-click: Client not found');
+          return;
+        }
         const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
-        if (!trusted) return;
+        if (!trusted) {
+          console.warn('⚠️ remote-mouse-click: Device not trusted');
+          return;
+        }
+        
+        console.log('🖱️ RobotJS available?', !!this.robot);
         
         // RobotJS ile mouse click
         if (this.robot) {
@@ -355,6 +412,8 @@ class LocalDeskServer extends EventEmitter {
             const screenSize = this.robot.getScreenSize();
             const screenX = Math.round(data.x * screenSize.width);
             const screenY = Math.round(data.y * screenSize.height);
+            
+            console.log('🖱️ Clicking at:', { screenX, screenY, screenSize, button: data.button });
             
             // Önce mouse'u hareket ettir
             this.robot.moveMouse(screenX, screenY);
@@ -364,10 +423,13 @@ class LocalDeskServer extends EventEmitter {
             const robotButton = buttonMap[data.button] || 'left';
             
             this.robot.mouseClick(robotButton);
-            console.log(`🖱️ Mouse click: ${robotButton} at (${screenX}, ${screenY})`);
+            console.log(`✅ Mouse click: ${robotButton} at (${screenX}, ${screenY})`);
           } catch (error) {
             console.error('❌ Mouse click hatası:', error.message);
+            console.error('❌ Error stack:', error.stack);
           }
+        } else {
+          console.warn('⚠️ RobotJS not available for mouse click');
         }
       });
 
@@ -841,6 +903,17 @@ class LocalDeskServer extends EventEmitter {
 
   getServerInfo() {
     const totalShortcuts = this.pages.reduce((sum, page) => sum + (page.shortcuts?.length || 0), 0);
+    
+    // Ekran boyutunu al (RobotJS varsa)
+    let screenSize = { width: 1920, height: 1080 }; // Varsayılan
+    if (this.robot) {
+      try {
+        screenSize = this.robot.getScreenSize();
+      } catch (error) {
+        console.warn('⚠️ Could not get screen size:', error.message);
+      }
+    }
+    
     return {
       deviceId: this.deviceId,
       deviceName: this.deviceName,
@@ -848,7 +921,8 @@ class LocalDeskServer extends EventEmitter {
       connectedClients: this.connectedClients.size,
       shortcuts: totalShortcuts,
       pages: this.pages.length,
-      trustedDevices: this.trustedDevices.length
+      trustedDevices: this.trustedDevices.length,
+      screenSize
     };
   }
 
