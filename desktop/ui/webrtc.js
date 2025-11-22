@@ -22,12 +22,23 @@ async function startScreenCapture({ socketId, offer, constraints }) {
   try {
     console.log('📹 Starting screen capture for socket:', socketId);
     console.log('📹 Offer received:', offer);
-    console.log('📹 Constraints:', constraints);
+    console.log('📹 Offer type:', offer?.type);
+    console.log('📹 Offer SDP (first 200 chars):', offer?.sdp?.substring(0, 200));
+    console.log('📹 Constraints:', JSON.stringify(constraints, null, 2));
 
     // Get media stream with electron constraints
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    console.log('✅ Media stream obtained:', stream.id);
-    console.log('✅ Tracks:', stream.getTracks().map(t => ({ kind: t.kind, id: t.id })));
+    console.log('📹 Requesting media stream...');
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('✅ Media stream obtained:', stream.id);
+      console.log('✅ Tracks:', stream.getTracks().map(t => ({ kind: t.kind, id: t.id, enabled: t.enabled, readyState: t.readyState })));
+    } catch (getUserMediaError) {
+      console.error('❌ getUserMedia failed:', getUserMediaError);
+      console.error('❌ Error name:', getUserMediaError.name);
+      console.error('❌ Error message:', getUserMediaError.message);
+      throw getUserMediaError;
+    }
 
     streams.set(socketId, stream);
 
@@ -85,21 +96,41 @@ async function startScreenCapture({ socketId, offer, constraints }) {
     // Set remote description (offer from mobile)
     if (offer) {
       console.log('📹 Setting remote description (offer)');
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      console.log('✅ Remote description set');
+      console.log('📹 Offer object:', { type: offer.type, sdpLength: offer.sdp?.length });
+      try {
+        await pc.setRemoteDescription(new RTCSessionDescription(offer));
+        console.log('✅ Remote description set successfully');
+      } catch (setRemoteError) {
+        console.error('❌ setRemoteDescription failed:', setRemoteError);
+        console.error('❌ Error name:', setRemoteError.name);
+        console.error('❌ Error message:', setRemoteError.message);
+        throw setRemoteError;
+      }
 
       // Create answer
-      console.log('📹 Creating answer');
-      const answer = await pc.createAnswer();
-      await pc.setLocalDescription(answer);
-      console.log('✅ Local description set (answer)');
-      console.log('📹 Answer SDP:', answer.sdp?.substring(0, 100) + '...');
+      console.log('📹 Creating answer...');
+      let answer;
+      try {
+        answer = await pc.createAnswer();
+        console.log('✅ Answer created:', { type: answer.type, sdpLength: answer.sdp?.length });
+      } catch (createAnswerError) {
+        console.error('❌ createAnswer failed:', createAnswerError);
+        throw createAnswerError;
+      }
+      
+      try {
+        await pc.setLocalDescription(answer);
+        console.log('✅ Local description set (answer)');
+        console.log('📹 Answer SDP (first 200 chars):', answer.sdp?.substring(0, 200) + '...');
+      } catch (setLocalError) {
+        console.error('❌ setLocalDescription failed:', setLocalError);
+        throw setLocalError;
+      }
 
       // Send answer back to mobile
-      console.log('📹 Sending answer to mobile via webrtc API');
-      console.log('📹 Local description:', pc.localDescription);
+      console.log('📹 Preparing to send answer to mobile...');
       console.log('📹 Local description type:', pc.localDescription?.type);
-      console.log('📹 Local description SDP:', pc.localDescription?.sdp?.substring(0, 100));
+      console.log('📹 Local description SDP length:', pc.localDescription?.sdp?.length);
       
       if (window.webrtc && window.webrtc.sendAnswer) {
         // Convert to plain object for IPC
@@ -107,15 +138,19 @@ async function startScreenCapture({ socketId, offer, constraints }) {
           type: pc.localDescription.type,
           sdp: pc.localDescription.sdp
         };
-        console.log('📹 Answer object:', answerObj);
+        console.log('📹 Answer object prepared:', { type: answerObj.type, sdpLength: answerObj.sdp?.length });
+        console.log('📹 Sending answer via window.webrtc.sendAnswer...');
         window.webrtc.sendAnswer(socketId, answerObj);
-        console.log('✅ Answer sent successfully');
+        console.log('✅ Answer sent successfully via IPC');
       } else {
-        console.error('❌ window.webrtc.sendAnswer not available');
+        console.error('❌ window.webrtc.sendAnswer not available!');
         console.error('❌ window.webrtc:', window.webrtc);
+        console.error('❌ window.webrtc.sendAnswer:', window.webrtc?.sendAnswer);
+        throw new Error('window.webrtc.sendAnswer not available');
       }
     } else {
       console.error('❌ No offer provided!');
+      throw new Error('No offer provided to startScreenCapture');
     }
 
     console.log('✅ WebRTC screen capture setup completed for socket:', socketId);
@@ -219,10 +254,14 @@ function initWebRTC() {
   // Check if window.webrtc is available
   if (!window.webrtc) {
     console.error('❌ window.webrtc not available! WebRTC features will not work.');
+    console.error('❌ This usually means preload.js is not loaded correctly.');
     return;
   }
 
   console.log('✅ window.webrtc API available');
+  console.log('✅ window.webrtc methods:', Object.keys(window.webrtc));
+  console.log('✅ window.webrtc.onStartScreenCapture:', typeof window.webrtc.onStartScreenCapture);
+  console.log('✅ window.webrtc.sendAnswer:', typeof window.webrtc.sendAnswer);
 
   // Listen for screen capture start requests from main process
   window.webrtc.onStartScreenCapture((data) => {
