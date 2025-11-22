@@ -20,14 +20,12 @@
         ["OS=='win'", {
           "msvs_settings": {
             "VCCLCompilerTool": {
-              "ExceptionHandling": 1,
-              "RuntimeLibrary": 2,
-              "AdditionalOptions": ["/ZW", "/EHsc", "/std:c++17"]
+              "ExceptionHandling": 1
             },
             "VCLinkerTool": {
               "AdditionalDependencies": [
-                "windowsapp.lib",
-                "runtimeobject.lib"
+                "ole32.lib",
+                "oleaut32.lib"
               ]
             }
           }

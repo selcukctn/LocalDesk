@@ -687,6 +687,75 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               </Text>
             </View>
           )}
+
+          {/* Ses Seviyesi Kontrolü */}
+          <View style={styles.volumeContainer}>
+            <View style={styles.volumeHeader}>
+              <Icon name="volume-high" size={16} color="#999" />
+              <Text style={styles.volumeLabel}>Ses Seviyesi</Text>
+              <Text style={styles.volumeValue}>{Math.round(volume)}%</Text>
+            </View>
+            
+            <View style={styles.volumeControls}>
+              <TouchableOpacity
+                style={styles.volumeButton}
+                onPress={() => {
+                  const newVolume = Math.max(0, volume - 10);
+                  setVolumeLevel(newVolume);
+                }}
+              >
+                <Icon name="volume-minus" size={20} color="#fff" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.volumeSliderContainer}
+                activeOpacity={1}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  if (width > 0) {
+                    volumeSliderWidthRef.current = width;
+                  }
+                }}
+                onPress={(event) => {
+                  const { locationX } = event.nativeEvent;
+                  const sliderWidth = volumeSliderWidthRef.current || 200;
+                  const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
+                  const newVolume = Math.round(percentage * 100);
+                  setVolumeLevel(newVolume);
+                }}
+              >
+                <View style={styles.volumeSliderTrack}>
+                  <View 
+                    style={[
+                      styles.volumeSliderFill, 
+                      { width: `${volume}%` }
+                    ]} 
+                  />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.volumeButton}
+                onPress={() => {
+                  const newVolume = Math.min(100, volume + 10);
+                  setVolumeLevel(newVolume);
+                }}
+              >
+                <Icon name="volume-plus" size={20} color="#fff" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.volumeButton}
+                onPress={() => {
+                  sendVolumeControl('mute');
+                  // Mute durumunu toggle etmek için kısa bir delay sonra volume'u yeniden al
+                  setTimeout(() => fetchVolume(), 200);
+                }}
+              >
+                <Icon name="volume-mute" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
       )}
 

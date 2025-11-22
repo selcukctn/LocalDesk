@@ -269,7 +269,7 @@ class LocalDeskServer extends EventEmitter {
         const execAsync = promisify(exec);
         
         const scriptPath = path.join(__dirname, 'get-media-status.ps1');
-        const { stdout } = await execAsync(
+        const { stdout, stderr } = await execAsync(
           `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`,
           { timeout: 5000 }
         );
@@ -277,10 +277,18 @@ class LocalDeskServer extends EventEmitter {
         if (stdout) {
           try {
             const status = JSON.parse(stdout.trim());
-            return res.json(status);
+            return res.json({
+              ...status,
+              success: status.title !== 'Medya oynatıcı bulunamadı'
+            });
           } catch (parseError) {
             console.error('❌ Medya durumu parse hatası:', parseError);
+            console.error('❌ Raw output:', stdout);
           }
+        }
+        
+        if (stderr) {
+          console.error('❌ PowerShell stderr:', stderr);
         }
       } catch (error) {
         console.error('❌ Medya durumu alınamadı:', error.message);
