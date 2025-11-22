@@ -1054,205 +1054,211 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       {/* Zoom Kontrolleri Paneli */}
       {showZoomControls && isSessionActive && (
         <View style={styles.zoomContainer}>
-          {/* Ekran Önizlemesi */}
-          {remoteStream && (
-            <View style={styles.zoomPreviewContainer}>
-              <View
-                style={[
-                  styles.zoomPreviewInner,
-                  {
-                    transform: [
-                      { scale: zoomLevel },
-                      { translateX: panOffset.x },
-                      { translateY: panOffset.y }
-                    ]
-                  }
-                ]}
-              >
-                <RTCView
-                  streamURL={remoteStream.toURL()}
-                  style={styles.zoomPreview}
-                  objectFit="contain"
-                />
-              </View>
-            </View>
-          )}
-          
-          {/* Zoom Seviyesi */}
-          <View style={styles.zoomHeader}>
-            <Image 
-              source={plusIcon} 
-              style={[styles.zoomHeaderIcon, { tintColor: '#999' }]}
-              resizeMode="contain"
-            />
-            <Text style={styles.zoomLabel}>Yakınlaştırma</Text>
-            <Text style={styles.zoomValue}>{Math.round(zoomLevel * 100)}%</Text>
-          </View>
-          
-          <View style={styles.zoomControls}>
-            <TouchableOpacity
-              style={styles.zoomButton}
-              onPress={() => {
-                const newZoom = Math.max(0.5, zoomLevel - 0.25);
-                setZoomLevel(newZoom);
-                // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <Image 
-                source={minusSmallIcon} 
-                style={styles.zoomButtonIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.zoomSliderContainer}
-              activeOpacity={1}
-              onLayout={(event) => {
-                const { width } = event.nativeEvent.layout;
-                if (width > 0) {
-                  volumeSliderWidthRef.current = width; // Mevcut ref'i kullan
-                }
-              }}
-              onPress={(event) => {
-                const { locationX } = event.nativeEvent;
-                const sliderWidth = volumeSliderWidthRef.current || 200;
-                const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
-                // 0.5x ile 3.0x arasında zoom
-                const newZoom = 0.5 + (percentage * 2.5);
-                setZoomLevel(newZoom);
-                // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <View style={styles.zoomSliderTrack}>
-                <View 
+          <ScrollView 
+            style={styles.zoomScrollView}
+            contentContainerStyle={styles.zoomScrollContent}
+            showsVerticalScrollIndicator={true}
+          >
+            {/* Ekran Önizlemesi */}
+            {remoteStream && (
+              <View style={styles.zoomPreviewContainer}>
+                <View
                   style={[
-                    styles.zoomSliderFill, 
-                    { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
-                  ]} 
-                />
+                    styles.zoomPreviewInner,
+                    {
+                      transform: [
+                        { scale: zoomLevel },
+                        { translateX: panOffset.x },
+                        { translateY: panOffset.y }
+                      ]
+                    }
+                  ]}
+                >
+                  <RTCView
+                    streamURL={remoteStream.toURL()}
+                    style={styles.zoomPreview}
+                    objectFit="contain"
+                  />
+                </View>
               </View>
-            </TouchableOpacity>
+            )}
             
-            <TouchableOpacity
-              style={styles.zoomButton}
-              onPress={() => {
-                const newZoom = Math.min(3.0, zoomLevel + 0.25);
-                setZoomLevel(newZoom);
-                // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
+            {/* Zoom Seviyesi */}
+            <View style={styles.zoomHeader}>
               <Image 
                 source={plusIcon} 
-                style={styles.zoomButtonIcon}
+                style={[styles.zoomHeaderIcon, { tintColor: '#999' }]}
                 resizeMode="contain"
               />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.zoomButton}
-              onPress={() => {
-                // Zoom'u sıfırla (1.0x)
-                setZoomLevel(1.0);
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <Text style={styles.zoomResetText}>1x</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Pan Kontrolleri (Hareket) */}
-          <View style={styles.panContainer}>
-            <View style={styles.panHeader}>
-              <Image 
-                source={leftIcon} 
-                style={[styles.panHeaderIcon, { tintColor: '#999' }]}
-                resizeMode="contain"
-              />
-              <Text style={styles.panLabel}>Ekran Hareketi</Text>
+              <Text style={styles.zoomLabel}>Yakınlaştırma</Text>
+              <Text style={styles.zoomValue}>{Math.round(zoomLevel * 100)}%</Text>
             </View>
             
-            <View style={styles.panControls}>
-              {/* Yukarı */}
-              <View style={styles.panRow}>
-                <View style={styles.panSpacer} />
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panButtonIcon, { transform: [{ rotate: '90deg' }] }]}
-                    resizeMode="contain"
+            <View style={styles.zoomControls}>
+              <TouchableOpacity
+                style={styles.zoomButton}
+                onPress={() => {
+                  const newZoom = Math.max(0.5, zoomLevel - 0.25);
+                  setZoomLevel(newZoom);
+                  // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Image 
+                  source={minusSmallIcon} 
+                  style={styles.zoomButtonIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.zoomSliderContainer}
+                activeOpacity={1}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  if (width > 0) {
+                    volumeSliderWidthRef.current = width; // Mevcut ref'i kullan
+                  }
+                }}
+                onPress={(event) => {
+                  const { locationX } = event.nativeEvent;
+                  const sliderWidth = volumeSliderWidthRef.current || 200;
+                  const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
+                  // 0.5x ile 3.0x arasında zoom
+                  const newZoom = 0.5 + (percentage * 2.5);
+                  setZoomLevel(newZoom);
+                  // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <View style={styles.zoomSliderTrack}>
+                  <View 
+                    style={[
+                      styles.zoomSliderFill, 
+                      { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
+                    ]} 
                   />
-                </TouchableOpacity>
-                <View style={styles.panSpacer} />
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.zoomButton}
+                onPress={() => {
+                  const newZoom = Math.min(3.0, zoomLevel + 0.25);
+                  setZoomLevel(newZoom);
+                  // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Image 
+                  source={plusIcon} 
+                  style={styles.zoomButtonIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.zoomButton}
+                onPress={() => {
+                  // Zoom'u sıfırla (1.0x)
+                  setZoomLevel(1.0);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Text style={styles.zoomResetText}>1x</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {/* Pan Kontrolleri (Hareket) */}
+            <View style={styles.panContainer}>
+              <View style={styles.panHeader}>
+                <Image 
+                  source={leftIcon} 
+                  style={[styles.panHeaderIcon, { tintColor: '#999' }]}
+                  resizeMode="contain"
+                />
+                <Text style={styles.panLabel}>Ekran Hareketi</Text>
               </View>
               
-              {/* Sola - Sağa */}
-              <View style={styles.panRow}>
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panButtonIcon, { transform: [{ rotate: '180deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                
-                <View style={styles.panCenter}>
+              <View style={styles.panControls}>
+                {/* Yukarı */}
+                <View style={styles.panRow}>
+                  <View style={styles.panSpacer} />
                   <TouchableOpacity
-                    style={styles.panResetButton}
+                    style={styles.panButton}
                     onPress={() => {
-                      setPanOffset({ x: 0, y: 0 });
+                      setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
                     }}
                   >
-                    <Text style={styles.panResetText}>Merkez</Text>
+                    <Image 
+                      source={leftIcon} 
+                      style={[styles.panButtonIcon, { transform: [{ rotate: '90deg' }] }]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.panSpacer} />
+                </View>
+                
+                {/* Sola - Sağa */}
+                <View style={styles.panRow}>
+                  <TouchableOpacity
+                    style={styles.panButton}
+                    onPress={() => {
+                      setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
+                    }}
+                  >
+                    <Image 
+                      source={leftIcon} 
+                      style={[styles.panButtonIcon, { transform: [{ rotate: '180deg' }] }]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                  
+                  <View style={styles.panCenter}>
+                    <TouchableOpacity
+                      style={styles.panResetButton}
+                      onPress={() => {
+                        setPanOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      <Text style={styles.panResetText}>Merkez</Text>
+                    </TouchableOpacity>
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={styles.panButton}
+                    onPress={() => {
+                      setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
+                    }}
+                  >
+                    <Image 
+                      source={leftIcon} 
+                      style={styles.panButtonIcon}
+                      resizeMode="contain"
+                    />
                   </TouchableOpacity>
                 </View>
                 
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={styles.panButtonIcon}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              {/* Aşağı */}
-              <View style={styles.panRow}>
-                <View style={styles.panSpacer} />
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                <View style={styles.panSpacer} />
+                {/* Aşağı */}
+                <View style={styles.panRow}>
+                  <View style={styles.panSpacer} />
+                  <TouchableOpacity
+                    style={styles.panButton}
+                    onPress={() => {
+                      setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
+                    }}
+                  >
+                    <Image 
+                      source={leftIcon} 
+                      style={[styles.panButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.panSpacer} />
+                </View>
               </View>
             </View>
-          </View>
+          </ScrollView>
         </View>
       )}
 
@@ -1715,10 +1721,16 @@ const styles = StyleSheet.create({
   },
   zoomContainer: {
     backgroundColor: '#1e1e1e',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
     borderTopWidth: 1,
-    borderTopColor: '#333'
+    borderTopColor: '#333',
+    maxHeight: '50%'
+  },
+  zoomScrollView: {
+    flex: 1
+  },
+  zoomScrollContent: {
+    paddingHorizontal: 16,
+    paddingVertical: 12
   },
   zoomPreviewContainer: {
     height: 150,
