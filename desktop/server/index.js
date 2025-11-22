@@ -453,6 +453,64 @@ class LocalDeskServer extends EventEmitter {
         }
       });
 
+      // Mouse button down (sürükleme için)
+      socket.on('remote-mouse-button-down', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        if (this.robot) {
+          try {
+            const screenSize = this.robot.getScreenSize();
+            const screenX = Math.round(data.x * screenSize.width);
+            const screenY = Math.round(data.y * screenSize.height);
+            
+            // Mouse'u hareket ettir
+            this.robot.moveMouse(screenX, screenY);
+            
+            // Button down (button: 'left', 'right', 'middle')
+            const buttonMap = { left: 'left', right: 'right', middle: 'middle', 0: 'left', 1: 'middle', 2: 'right' };
+            const robotButton = buttonMap[data.button] || 'left';
+            
+            // RobotJS'de mouseToggle kullan (down = true)
+            this.robot.mouseToggle('down', robotButton);
+            console.log(`🖱️ Mouse button down: ${robotButton} at (${screenX}, ${screenY})`);
+          } catch (error) {
+            console.error('❌ Mouse button down hatası:', error.message);
+          }
+        }
+      });
+
+      // Mouse button up (sürükleme bitişi için)
+      socket.on('remote-mouse-button-up', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        if (this.robot) {
+          try {
+            const screenSize = this.robot.getScreenSize();
+            const screenX = Math.round(data.x * screenSize.width);
+            const screenY = Math.round(data.y * screenSize.height);
+            
+            // Mouse'u hareket ettir
+            this.robot.moveMouse(screenX, screenY);
+            
+            // Button up (button: 'left', 'right', 'middle')
+            const buttonMap = { left: 'left', right: 'right', middle: 'middle', 0: 'left', 1: 'middle', 2: 'right' };
+            const robotButton = buttonMap[data.button] || 'left';
+            
+            // RobotJS'de mouseToggle kullan (up = false)
+            this.robot.mouseToggle('up', robotButton);
+            console.log(`🖱️ Mouse button up: ${robotButton} at (${screenX}, ${screenY})`);
+          } catch (error) {
+            console.error('❌ Mouse button up hatası:', error.message);
+          }
+        }
+      });
+
       // Remote Screen kontrolü - Keyboard
       socket.on('remote-keyboard-input', (data) => {
         const client = this.connectedClients.get(socket.id);

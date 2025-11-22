@@ -26,7 +26,17 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [videoRenderSize, setVideoRenderSize] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
   const textInputRef = useRef(null);
-  const lastTouchRef = useRef({ x: 0, y: 0, time: 0 });
+  const lastTouchRef = useRef({ 
+    x: 0, 
+    y: 0, 
+    time: 0,
+    startX: 0,  // Touch başlangıç pozisyonu
+    startY: 0,
+    startTime: 0,
+    hasMoved: false  // Mouse hareket ettirildi mi?
+  });
+  const lastClickRef = useRef({ time: 0, x: 0, y: 0 }); // Son tık zamanı ve pozisyonu (çift tık için)
+  const isDoubleClickDragRef = useRef(false); // Çift tık sonrası sürükleme modunda mı?
   const videoContainerRef = useRef(null);
   
   // Desktop ekran boyutunu al (ilk bağlantıda)
@@ -65,6 +75,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     stopSession,
     sendMouseMove,
     sendMouseClick,
+    sendMouseButtonDown,
+    sendMouseButtonUp,
     sendMouseScroll,
     sendKeyboardInput
   } = useRemoteScreen(socket);
@@ -164,7 +176,44 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           videoRenderSize
         });
 
-        lastTouchRef.current = { x: normalizedX, y: normalizedY, time: Date.now() };
+        // Başlangıç pozisyonunu ve zamanını kaydet
+        const now = Date.now();
+        
+        // Çift tık kontrolü
+        const DOUBLE_CLICK_TIME = 500; // 500ms içinde
+        const DOUBLE_CLICK_DISTANCE = 0.02; // %2 mesafe içinde
+        const timeSinceLastClick = now - lastClickRef.current.time;
+        const distanceFromLastClick = Math.sqrt(
+          Math.pow(normalizedX - lastClickRef.current.x, 2) + 
+          Math.pow(normalizedY - lastClickRef.current.y, 2)
+        );
+        
+        const isDoubleClick = timeSinceLastClick < DOUBLE_CLICK_TIME && 
+                             distanceFromLastClick < DOUBLE_CLICK_DISTANCE;
+        
+        if (isDoubleClick) {
+          console.log('🖱️ Double click detected!');
+          isDoubleClickDragRef.current = true; // Çift tık sonrası sürükleme modu
+          // Çift tık sonrası sürükleme için left button down yap
+          sendMouseButtonDown('left', normalizedX, normalizedY);
+        } else {
+          // Normal tık - çift tık değil
+          isDoubleClickDragRef.current = false;
+        }
+        
+        lastTouchRef.current = { 
+          x: normalizedX, 
+          y: normalizedY, 
+          time: now,
+          startX: normalizedX,
+          startY: normalizedY,
+          startTime: now,
+          hasMoved: false
+        };
+        
+        // Son tık zamanını güncelle
+        lastClickRef.current = { time: now, x: normalizedX, y: normalizedY };
+        
         sendMouseMove(normalizedX, normalizedY);
       },
       onPanResponderMove: (evt) => {
@@ -185,8 +234,29 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         const normalizedX = Math.max(0, Math.min(1, x));
         const normalizedY = Math.max(0, Math.min(1, y));
 
-        lastTouchRef.current = { x: normalizedX, y: normalizedY, time: Date.now() };
-        sendMouseMove(normalizedX, normalizedY);
+        // Hareket mesafesini hesapla (başlangıç pozisyonundan)
+        const deltaX = Math.abs(normalizedX - lastTouchRef.current.startX);
+        const deltaY = Math.abs(normalizedY - lastTouchRef.current.startY);
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        // Eğer mesafe belirli bir threshold'dan büyükse, hareket var demektir
+        const MOVEMENT_THRESHOLD = 0.01; // %1 hareket (normalize edilmiş koordinatlarda)
+        if (distance > MOVEMENT_THRESHOLD) {
+          lastTouchRef.current.hasMoved = true;
+        }
+
+        lastTouchRef.current.x = normalizedX;
+        lastTouchRef.current.y = normalizedY;
+        lastTouchRef.current.time = Date.now();
+        
+        // Çift tık sürükleme modundaysa, mouse button down'u sürdür
+        if (isDoubleClickDragRef.current) {
+          // Button zaten down, sadece hareket ettir
+          sendMouseMove(normalizedX, normalizedY);
+        } else {
+          // Normal hareket
+          sendMouseMove(normalizedX, normalizedY);
+        }
       },
       onPanResponderRelease: () => {
         if (!isSessionActive) {
@@ -195,13 +265,58 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         }
 
         const now = Date.now();
-        const timeDiff = now - lastTouchRef.current.time;
+        const timeDiff = now - lastTouchRef.current.startTime;
+        
+        // Son pozisyondan başlangıç pozisyonuna mesafe
+        const deltaX = Math.abs(lastTouchRef.current.x - lastTouchRef.current.startX);
+        const deltaY = Math.abs(lastTouchRef.current.y - lastTouchRef.current.startY);
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        
+        const MOVEMENT_THRESHOLD = 0.01; // %1 hareket (normalize edilmiş koordinatlarda)
+        const MAX_CLICK_TIME = 300; // 300ms'den kısa süre
+        
+        // Çift tık sürükleme modundaysa
+        if (isDoubleClickDragRef.current) {
+          const { x, y } = lastTouchRef.current;
+          
+          // Eğer hareket varsa, seçim yapıldı (drag selection)
+          if (lastTouchRef.current.hasMoved || distance > MOVEMENT_THRESHOLD) {
+            console.log('🖱️ Double click drag selection completed');
+            sendMouseButtonUp('left', x, y);
+          } else {
+            // Hareket yoksa, sadece çift tık (sağ tık)
+            console.log('🖱️ Double click (right click)');
+            sendMouseButtonUp('left', x, y); // Önce button up
+            sendMouseClick('right', x, y); // Sonra sağ tık
+          }
+          
+          isDoubleClickDragRef.current = false;
+          return;
+        }
+        
+        // Normal tık/drag kontrolü
+        // Click olarak algıla SADECE:
+        // 1. Hareket edilmemişse (hasMoved = false) VEYA mesafe çok küçükse
+        // 2. VE süre kısa ise
+        const isClick = !lastTouchRef.current.hasMoved && 
+                       distance < MOVEMENT_THRESHOLD && 
+                       timeDiff < MAX_CLICK_TIME;
+        
+        console.log('🖱️ Touch Release:', {
+          timeDiff,
+          distance,
+          hasMoved: lastTouchRef.current.hasMoved,
+          isClick,
+          startPos: { x: lastTouchRef.current.startX, y: lastTouchRef.current.startY },
+          endPos: { x: lastTouchRef.current.x, y: lastTouchRef.current.y }
+        });
 
-        // Eğer touch süresi 200ms'den kısa ise click olarak algıla
-        if (timeDiff < 200) {
+        if (isClick) {
           const { x, y } = lastTouchRef.current;
           console.log('🖱️ Click detected:', { x, y });
           sendMouseClick('left', x, y);
+        } else {
+          console.log('🖱️ Drag detected (no click)');
         }
       }
     });

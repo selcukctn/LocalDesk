@@ -158,6 +158,22 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     socketRef.current.emit('remote-mouse-click', { button, x, y });
   }, [isSessionActive]);
 
+  // Mouse button down (sürükleme başlangıcı)
+  const sendMouseButtonDown = useCallback((button, x, y) => {
+    if (!socketRef.current || !isSessionActive) return;
+    
+    console.log(`🖱️ Mouse button down: ${button} at (${x}, ${y})`);
+    socketRef.current.emit('remote-mouse-button-down', { button, x, y });
+  }, [isSessionActive]);
+
+  // Mouse button up (sürükleme bitişi)
+  const sendMouseButtonUp = useCallback((button, x, y) => {
+    if (!socketRef.current || !isSessionActive) return;
+    
+    console.log(`🖱️ Mouse button up: ${button} at (${x}, ${y})`);
+    socketRef.current.emit('remote-mouse-button-up', { button, x, y });
+  }, [isSessionActive]);
+
   // Scroll olayını gönder
   const sendMouseScroll = useCallback((deltaX, deltaY) => {
     if (!socketRef.current || !isSessionActive) return;
@@ -258,6 +274,8 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     stopSession,
     sendMouseMove,
     sendMouseClick,
+    sendMouseButtonDown,
+    sendMouseButtonUp,
     sendMouseScroll,
     sendKeyboardInput
   };
