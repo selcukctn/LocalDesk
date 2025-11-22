@@ -49,6 +49,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window'u öne getir
   focusWindow: () => ipcRenderer.invoke('focus-window'),
   
+  // Ekran ve pencere kaynaklarını al (WebRTC için)
+  getScreenSources: () => ipcRenderer.invoke('get-screen-sources'),
+  
   // Otomatik güncelleme
   checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
   downloadUpdate: () => ipcRenderer.invoke('download-update'),

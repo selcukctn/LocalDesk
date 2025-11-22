@@ -35,10 +35,16 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       return;
     }
 
+    // Eğer source seçilmemişse, ilk ekranı seç
+    if (!selectedSourceId && screenSources.screens && screenSources.screens.length > 0) {
+      setSelectedSourceId(screenSources.screens[0].id);
+    }
+
     try {
       setIsConnecting(true);
       setError(null);
       console.log('📹 Remote Screen oturumu başlatılıyor...');
+      console.log('📹 Selected source ID:', selectedSourceId);
 
       // Peer connection oluştur
       const pc = new RTCPeerConnection(ICE_SERVERS);
@@ -117,9 +123,11 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       console.log('📹 Sending offer to desktop via socket.io');
       console.log('📹 Socket connected?', socketRef.current.connected);
       console.log('📹 Socket id:', socketRef.current.id);
+      console.log('📹 Selected source ID:', selectedSourceId);
       
       socketRef.current.emit('webrtc-offer', {
-        offer: pc.localDescription
+        offer: pc.localDescription,
+        sourceId: selectedSourceId // Seçilen ekran/pencere ID'si
       });
       console.log('✅ Offer emitted successfully');
 
@@ -129,7 +137,7 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       setIsConnecting(false);
       setIsSessionActive(false);
     }
-  }, []);
+  }, [selectedSourceId, screenSources]);
 
   // WebRTC bağlantısını durdur
   const stopSession = useCallback(() => {
@@ -351,7 +359,11 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     sendVolumeControl,
     volume,
     setVolumeLevel,
-    fetchVolume
+    fetchVolume,
+    screenSources,
+    selectedSourceId,
+    setSelectedSourceId,
+    fetchScreenSources
   };
 };
 

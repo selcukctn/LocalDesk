@@ -69,12 +69,46 @@ app.whenReady().then(async () => {
     }
   });
 
+  // Server'a screen sources callback'i ekle
+  server.getScreenSourcesCallback = async () => {
+    try {
+      const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 150, height: 150 }
+      });
+      
+      // Kaynakları kategorize et
+      const screens = sources
+        .filter(s => s.id.startsWith('screen:'))
+        .map(s => ({
+          id: s.id,
+          name: s.name,
+          type: 'screen',
+          thumbnail: s.thumbnail ? s.thumbnail.toDataURL() : null
+        }));
+      
+      const windows = sources
+        .filter(s => s.id.startsWith('window:'))
+        .map(s => ({
+          id: s.id,
+          name: s.name,
+          type: 'window',
+          thumbnail: s.thumbnail ? s.thumbnail.toDataURL() : null
+        }));
+      
+      return { screens, windows };
+    } catch (error) {
+      console.error('❌ Screen sources hatası:', error);
+      return { screens: [], windows: [] };
+    }
+  };
+
   // WebRTC event handlers
   setupWebRTCHandlers(server);
   
   // Remote control event handlers
   setupRemoteControlHandlers(server);
-
+  
   // Server'ı başlat
   try {
     await server.start();
@@ -248,6 +282,40 @@ ipcMain.handle('select-app', async () => {
 ipcMain.handle('get-windows', async () => {
   if (!server) return [];
   return server.getWindowList();
+});
+
+// Ekran ve pencere kaynaklarını al (WebRTC için)
+ipcMain.handle('get-screen-sources', async () => {
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen', 'window'],
+      thumbnailSize: { width: 150, height: 150 }
+    });
+    
+    // Kaynakları kategorize et
+    const screens = sources
+      .filter(s => s.id.startsWith('screen:'))
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        type: 'screen',
+        thumbnail: s.thumbnail ? s.thumbnail.toDataURL() : null
+      }));
+    
+    const windows = sources
+      .filter(s => s.id.startsWith('window:'))
+      .map(s => ({
+        id: s.id,
+        name: s.name,
+        type: 'window',
+        thumbnail: s.thumbnail ? s.thumbnail.toDataURL() : null
+      }));
+    
+    return { screens, windows };
+  } catch (error) {
+    console.error('❌ Screen sources hatası:', error);
+    return { screens: [], windows: [] };
+  }
 });
 
 // Sayfa için hedef uygulama seç
@@ -426,11 +494,12 @@ function setupWebRTCHandlers(server) {
   if (!server) return;
 
   // WebRTC offer event
-  server.on('webrtc-offer', async ({ socketId, offer, deviceId }) => {
+  server.on('webrtc-offer', async ({ socketId, offer, deviceId, sourceId }) => {
     console.log('📹 WebRTC offer alındı main.js\'de');
     console.log('📹 Socket ID:', socketId);
     console.log('📹 Device ID:', deviceId);
     console.log('📹 Offer type:', offer?.type);
+    console.log('📹 Source ID:', sourceId);
     
     try {
       console.log('📹 Getting desktop sources...');
@@ -443,15 +512,27 @@ function setupWebRTCHandlers(server) {
       console.log('📹 Found', sources.length, 'sources');
       console.log('📹 Sources:', sources.map(s => ({ id: s.id, name: s.name })));
 
-      // İlk ekranı kullan (çoklu ekran desteği için genişletilebilir)
-      const primaryScreen = sources.find(source => source.id.startsWith('screen:'));
+      // Mobile'dan gelen sourceId'yi kullan (eğer varsa)
+      let selectedSource = null;
+
+      if (sourceId) {
+        // Mobile'dan seçilen source'u kullan
+        selectedSource = sources.find(s => s.id === sourceId);
+        console.log('📹 Mobile\'dan seçilen source:', sourceId);
+      }
+
+      // Eğer source seçilmemişse, ilk ekranı kullan (fallback)
+      if (!selectedSource) {
+        selectedSource = sources.find(source => source.id.startsWith('screen:'));
+        console.log('📹 Source seçilmedi, ilk ekran kullanılıyor');
+      }
       
-      if (!primaryScreen) {
-        console.error('❌ Ekran bulunamadı');
+      if (!selectedSource) {
+        console.error('❌ Ekran/pencere bulunamadı');
         return;
       }
 
-      console.log('✅ Ekran bulundu:', primaryScreen.name, 'ID:', primaryScreen.id);
+      console.log('✅ Seçilen source:', selectedSource.name, 'ID:', selectedSource.id);
       
       // Electron constraint'leri
       const constraints = {
@@ -459,7 +540,7 @@ function setupWebRTCHandlers(server) {
         video: {
           mandatory: {
             chromeMediaSource: 'desktop',
-            chromeMediaSourceId: primaryScreen.id,
+            chromeMediaSourceId: selectedSource.id,
             minWidth: 1280,
             maxWidth: 1920,
             minHeight: 720,

@@ -11,10 +11,11 @@ import {
   Alert,
   StatusBar,
   PanResponder,
-  Image
+  Image,
+  ScrollView,
+  Modal
 } from 'react-native';
 import { RTCView } from 'react-native-webrtc';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useI18n } from '../contexts/I18nContext';
 import { useRemoteScreen } from '../hooks/useRemoteScreen';
 
@@ -26,6 +27,10 @@ const leftIcon = require('../icons/left.png');
 const angleDoubleSmallLeftIcon = require('../icons/angle-double-small-left.png');
 const playIcon = require('../icons/play.png');
 const pauseIcon = require('../icons/pause.png');
+const volumeIcon = require('../icons/volume.png');
+const volumeMuteIcon = require('../icons/volume-mute.png');
+const minusSmallIcon = require('../icons/minus-small.png');
+const plusIcon = require('../icons/plus.png');
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -103,8 +108,14 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     sendVolumeControl,
     volume,
     setVolumeLevel,
-    fetchVolume
+    fetchVolume,
+    screenSources,
+    selectedSourceId,
+    setSelectedSourceId,
+    fetchScreenSources
   } = useRemoteScreen(socket, device);
+  
+  const [showSourceSelector, setShowSourceSelector] = useState(false);
 
   // Zaman formatı (saniye -> mm:ss)
   const formatTime = (seconds) => {
@@ -534,13 +545,21 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 style={styles.headerIconButton} 
                 onPress={handleSessionToggle}
               >
-                <Icon name="stop-circle" size={20} color="#d32f2f" />
+                <Image 
+                  source={pauseIcon} 
+                  style={[styles.headerIconImage, { tintColor: '#d32f2f' }]}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             </>
           )}
           
           <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
-            <Icon name="close" size={24} color="#fff" />
+            <Image 
+              source={pauseIcon} 
+              style={[styles.headerBackIcon, { tintColor: '#fff' }]}
+              resizeMode="contain"
+            />
           </TouchableOpacity>
         </View>
       </View>
@@ -565,7 +584,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             </Text>
             <TouchableOpacity
               style={styles.startButton}
-              onPress={handleSessionToggle}
+              onPress={() => {
+                // Önce ekran kaynaklarını al
+                fetchScreenSources();
+                setShowSourceSelector(true);
+              }}
             >
               <Image 
                 source={screenPlayIcon} 
@@ -614,7 +637,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       {showMediaControls && isSessionActive && (
         <View style={styles.mediaContainer}>
           <View style={styles.mediaInfo}>
-            <Icon name="music" size={16} color="#999" />
+            <Image 
+              source={playIcon} 
+              style={[styles.mediaInfoIcon, { tintColor: '#999' }]}
+              resizeMode="contain"
+            />
             <Text style={styles.mediaInfoText}>
               {mediaStatus.title}
               {mediaStatus.artist ? ` - ${mediaStatus.artist}` : ''}
@@ -627,7 +654,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.mediaButton}
               onPress={() => sendMediaControl('seekbackward')}
             >
-              <Text style={styles.mediaSeekText}>-10s</Text>
+              <Image 
+                source={minusSmallIcon} 
+                style={styles.mediaSeekIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -645,7 +676,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.mediaButton}
               onPress={() => sendMediaControl('seekforward')}
             >
-              <Text style={styles.mediaSeekText}>+10s</Text>
+              <Image 
+                source={plusIcon} 
+                style={styles.mediaSeekIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             
           </View>
@@ -691,7 +726,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           {/* Ses Seviyesi Kontrolü */}
           <View style={styles.volumeContainer}>
             <View style={styles.volumeHeader}>
-              <Icon name="volume-high" size={16} color="#999" />
+              <Image 
+                source={volumeIcon} 
+                style={[styles.volumeHeaderIcon, { tintColor: '#999' }]}
+                resizeMode="contain"
+              />
               <Text style={styles.volumeLabel}>Ses Seviyesi</Text>
               <Text style={styles.volumeValue}>{Math.round(volume)}%</Text>
             </View>
@@ -704,7 +743,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setVolumeLevel(newVolume);
                 }}
               >
-                <Icon name="volume-minus" size={20} color="#fff" />
+                <Image 
+                  source={minusSmallIcon} 
+                  style={styles.volumeButtonIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -741,7 +784,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setVolumeLevel(newVolume);
                 }}
               >
-                <Icon name="volume-plus" size={20} color="#fff" />
+                <Image 
+                  source={plusIcon} 
+                  style={styles.volumeButtonIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -752,7 +799,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setTimeout(() => fetchVolume(), 200);
                 }}
               >
-                <Icon name="volume-mute" size={20} color="#fff" />
+                <Image 
+                  source={volumeMuteIcon} 
+                  style={styles.volumeButtonIcon}
+                  resizeMode="contain"
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -781,7 +832,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.specialKeyButton}
               onPress={() => sendSpecialKey('backspace')}
             >
-              <Icon name="backspace" size={20} color="#fff" />
+              <Image 
+                source={leftIcon} 
+                style={[styles.specialKeyIcon, { tintColor: '#fff' }]}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           </View>
 
@@ -802,18 +857,153 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.sendButton}
               onPress={handleKeyboardSubmit}
             >
-              <Icon name="send" size={24} color="#fff" />
+              <Image 
+                source={playIcon} 
+                style={[styles.sendButtonIcon, { tintColor: '#fff' }]}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.sendButton}
               onPress={() => sendSpecialKey('enter')}
             >
-              <Icon name="keyboard-return" size={24} color="#fff" />
+              <Image 
+                source={playIcon} 
+                style={[styles.sendButtonIcon, { tintColor: '#fff' }]}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           </View>
         </View>
       )}
+
+      {/* Ekran/Pencere Seçim Modal */}
+      <Modal
+        visible={showSourceSelector}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSourceSelector(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Ekran/Pencere Seç</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowSourceSelector(false)}
+              >
+                <Image 
+                  source={pauseIcon} 
+                  style={[styles.modalCloseIcon, { tintColor: '#fff' }]}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} contentContainerStyle={styles.modalBodyContent}>
+              {/* Ekranlar */}
+              {screenSources.screens && screenSources.screens.length > 0 && (
+                <View style={styles.sourceSection}>
+                  <Text style={styles.sourceSectionTitle}>Ekranlar</Text>
+                  <View style={styles.sourceGrid}>
+                    {screenSources.screens.map((source) => (
+                      <TouchableOpacity
+                        key={source.id}
+                        style={[
+                          styles.sourceItem,
+                          selectedSourceId === source.id && styles.sourceItemSelected
+                        ]}
+                        onPress={() => setSelectedSourceId(source.id)}
+                      >
+                        {source.thumbnail && (
+                          <Image 
+                            source={{ uri: source.thumbnail }} 
+                            style={styles.sourceThumbnail}
+                            resizeMode="cover"
+                          />
+                        )}
+                        <Text style={styles.sourceName} numberOfLines={2}>
+                          {source.name}
+                        </Text>
+                        {selectedSourceId === source.id && (
+                          <View style={styles.sourceCheck}>
+                            <Image 
+                              source={playIcon} 
+                              style={[styles.sourceCheckIcon, { tintColor: '#00C853' }]}
+                              resizeMode="contain"
+                            />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Pencereler */}
+              {screenSources.windows && screenSources.windows.length > 0 && (
+                <View style={styles.sourceSection}>
+                  <Text style={styles.sourceSectionTitle}>Pencereler</Text>
+                  <View style={styles.sourceGrid}>
+                    {screenSources.windows.map((source) => (
+                      <TouchableOpacity
+                        key={source.id}
+                        style={[
+                          styles.sourceItem,
+                          selectedSourceId === source.id && styles.sourceItemSelected
+                        ]}
+                        onPress={() => setSelectedSourceId(source.id)}
+                      >
+                        {source.thumbnail && (
+                          <Image 
+                            source={{ uri: source.thumbnail }} 
+                            style={styles.sourceThumbnail}
+                            resizeMode="cover"
+                          />
+                        )}
+                        <Text style={styles.sourceName} numberOfLines={2}>
+                          {source.name}
+                        </Text>
+                        {selectedSourceId === source.id && (
+                          <View style={styles.sourceCheck}>
+                            <Image 
+                              source={playIcon} 
+                              style={[styles.sourceCheckIcon, { tintColor: '#00C853' }]}
+                              resizeMode="contain"
+                            />
+                          </View>
+                        )}
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setShowSourceSelector(false)}
+              >
+                <Text style={styles.modalCancelButtonText}>İptal</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalConfirmButton, !selectedSourceId && styles.modalConfirmButtonDisabled]}
+                onPress={() => {
+                  if (selectedSourceId) {
+                    setShowSourceSelector(false);
+                    startSession();
+                  }
+                }}
+                disabled={!selectedSourceId}
+              >
+                <Text style={styles.modalConfirmButtonText}>Başlat</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -987,6 +1177,10 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 12
   },
+  mediaInfoIcon: {
+    width: 16,
+    height: 16
+  },
   mediaInfoText: {
     fontSize: 12,
     color: '#999',
@@ -1030,6 +1224,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#fff'
+  },
+  mediaSeekIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#fff'
   },
   mediaProgress: {
     marginTop: 8
@@ -1097,6 +1296,10 @@ const styles = StyleSheet.create({
     gap: 8,
     marginBottom: 12
   },
+  volumeHeaderIcon: {
+    width: 16,
+    height: 16
+  },
   volumeLabel: {
     flex: 1,
     fontSize: 12,
@@ -1122,6 +1325,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#333',
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  volumeButtonIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#fff'
   },
   volumeSliderContainer: {
     flex: 1,
@@ -1153,6 +1361,143 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center'
+  },
+  sendButtonIcon: {
+    width: 24,
+    height: 24
+  },
+  specialKeyIcon: {
+    width: 20,
+    height: 20
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000
+  },
+  modalContent: {
+    backgroundColor: '#1e1e1e',
+    borderRadius: 12,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden'
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333'
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff'
+  },
+  modalCloseButton: {
+    padding: 4
+  },
+  modalCloseIcon: {
+    width: 24,
+    height: 24
+  },
+  modalBody: {
+    maxHeight: 400
+  },
+  modalBodyContent: {
+    padding: 16
+  },
+  sourceSection: {
+    marginBottom: 20
+  },
+  sourceSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#999',
+    marginBottom: 12
+  },
+  sourceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12
+  },
+  sourceItem: {
+    width: '47%',
+    backgroundColor: '#333',
+    borderRadius: 8,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent'
+  },
+  sourceItemSelected: {
+    borderColor: '#00C853'
+  },
+  sourceThumbnail: {
+    width: '100%',
+    height: 100,
+    backgroundColor: '#222'
+  },
+  sourceName: {
+    padding: 8,
+    fontSize: 12,
+    color: '#fff',
+    textAlign: 'center'
+  },
+  sourceCheck: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderRadius: 12,
+    padding: 2
+  },
+  sourceCheckIcon: {
+    width: 24,
+    height: 24
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
+    gap: 12
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#444',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  modalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff'
+  },
+  modalConfirmButton: {
+    flex: 1,
+    backgroundColor: '#00C853',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  modalConfirmButtonDisabled: {
+    backgroundColor: '#333',
+    opacity: 0.5
+  },
+  modalConfirmButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff'
   }
 });
 

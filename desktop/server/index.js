@@ -58,6 +58,7 @@ try {
 class LocalDeskServer extends EventEmitter {
   constructor(dataDir = null) {
     super();
+    this.getScreenSourcesCallback = null; // Main process'ten set edilecek
     this.app = express();
     this.server = null;
     this.io = null;
@@ -183,6 +184,22 @@ class LocalDeskServer extends EventEmitter {
         platform: process.platform,
         screenSize
       });
+    });
+
+    // Ekran ve pencere listesi (WebRTC için)
+    this.app.get('/screen-sources', async (req, res) => {
+      try {
+        if (this.getScreenSourcesCallback) {
+          const result = await this.getScreenSourcesCallback();
+          return res.json(result || { screens: [], windows: [] });
+        }
+        
+        // Fallback: boş liste
+        res.json({ screens: [], windows: [] });
+      } catch (error) {
+        console.error('❌ Screen sources hatası:', error);
+        res.json({ screens: [], windows: [] });
+      }
     });
     
     // Server info (ekran boyutu dahil)
@@ -469,10 +486,12 @@ class LocalDeskServer extends EventEmitter {
         
         // Offer'ı main process'e ilet (desktopCapturer için)
         console.log('📹 Emitting webrtc-offer to main process');
+        console.log('📹 Source ID from mobile:', data.sourceId);
         this.emit('webrtc-offer', { 
           socketId: socket.id, 
           offer: data.offer, 
-          deviceId: client.deviceId 
+          deviceId: client.deviceId,
+          sourceId: data.sourceId // Seçilen ekran/pencere ID'si
         });
         console.log('✅ webrtc-offer emitted to main process');
       });
