@@ -50,9 +50,9 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const textInputRef = useRef(null);
   const progressBarWidthRef = useRef(0);
   const volumeSliderWidthRef = useRef(0);
-  const lastTouchRef = useRef({ 
-    x: 0, 
-    y: 0, 
+  const lastTouchRef = useRef({
+    x: 0,
+    y: 0,
     time: 0,
     startX: 0,  // Touch başlangıç pozisyonu
     startY: 0,
@@ -62,10 +62,10 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const lastClickRef = useRef({ time: 0, x: 0, y: 0 }); // Son tık zamanı ve pozisyonu (çift tık için)
   const isDoubleClickDragRef = useRef(false); // Çift tık sonrası sürükleme modunda mı?
   const videoContainerRef = useRef(null);
-  
+
   // Desktop ekran boyutunu al (ilk bağlantıda)
   const [desktopScreenSize, setDesktopScreenSize] = useState({ width: 1920, height: 1080 });
-  
+
   // Desktop ekran boyutunu server'dan al
   React.useEffect(() => {
     const fetchScreenSize = async () => {
@@ -86,7 +86,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             console.warn('⚠️ Screen info alınamadı, device-info kullanılıyor:', error.message);
           }
         }
-        
+
         // Fallback: device-info endpoint'inden al
         const response = await fetch(`http://${device.host}:${device.port}/device-info`);
         if (response.ok) {
@@ -102,12 +102,12 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         console.warn('⚠️ Could not fetch screen size, using default:', error.message);
       }
     };
-    
+
     if (device) {
       fetchScreenSize();
     }
   }, [device, selectedSourceId]); // selectedSourceId değiştiğinde de güncelle
-  
+
   const {
     isSessionActive,
     isConnecting,
@@ -131,7 +131,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     setSelectedSourceId,
     fetchScreenSources
   } = useRemoteScreen(socket, device);
-  
+
   const [showSourceSelector, setShowSourceSelector] = useState(false);
   const [showHeader, setShowHeader] = useState(false); // Header varsayılan olarak gizli
   const [showZoomControls, setShowZoomControls] = useState(false); // Zoom kontrolleri paneli
@@ -149,24 +149,24 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const handleVideoLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
     console.log('📹 onLayout called:', { width, height });
-    
+
     if (width > 0 && height > 0) {
       setVideoSize({ width, height });
-      
+
       // Desktop screen size kontrolü
       if (!desktopScreenSize || !desktopScreenSize.width || !desktopScreenSize.height) {
         console.warn('⚠️ Desktop screen size not available yet, using default');
         setVideoRenderSize({ width, height, offsetX: 0, offsetY: 0 });
         return;
       }
-      
+
       // Video'nun gerçek render boyutunu hesapla (objectFit="contain" için)
       // Desktop ekran aspect ratio'su ile container aspect ratio'sunu karşılaştır
       const containerAspect = width / height;
       const desktopAspect = desktopScreenSize.width / desktopScreenSize.height;
-      
+
       let renderWidth, renderHeight, offsetX, offsetY;
-      
+
       if (containerAspect > desktopAspect) {
         // Container daha geniş - letterbox (üst/alt boşluk)
         renderHeight = height;
@@ -180,9 +180,9 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         offsetX = 0;
         offsetY = (height - renderHeight) / 2;
       }
-      
+
       setVideoRenderSize({ width: renderWidth, height: renderHeight, offsetX, offsetY });
-      
+
       console.log('✅ Video size set:', width, 'x', height);
       console.log('✅ Video render size:', { renderWidth, renderHeight, offsetX, offsetY });
       console.log('✅ Aspect ratios:', { container: containerAspect, desktop: desktopAspect });
@@ -198,9 +198,9 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       // Video layout'u yeniden hesapla
       const containerAspect = videoSize.width / videoSize.height;
       const desktopAspect = desktopScreenSize.width / desktopScreenSize.height;
-      
+
       let renderWidth, renderHeight, offsetX, offsetY;
-      
+
       if (containerAspect > desktopAspect) {
         renderHeight = videoSize.height;
         renderWidth = videoSize.height * desktopAspect;
@@ -212,7 +212,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         offsetX = 0;
         offsetY = (videoSize.height - renderHeight) / 2;
       }
-      
+
       setVideoRenderSize({ width: renderWidth, height: renderHeight, offsetX, offsetY });
       console.log('✅ Video render size updated from desktop screen size:', { renderWidth, renderHeight, offsetX, offsetY });
     }
@@ -223,10 +223,10 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     return PanResponder.create({
       onStartShouldSetPanResponder: () => {
         const canRespond = isSessionActive && videoSize.width > 0 && videoSize.height > 0;
-        console.log('🖱️ onStartShouldSetPanResponder:', { 
-          canRespond, 
-          isSessionActive, 
-          videoSize 
+        console.log('🖱️ onStartShouldSetPanResponder:', {
+          canRespond,
+          isSessionActive,
+          videoSize
         });
         return canRespond;
       },
@@ -235,8 +235,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       },
       onPanResponderGrant: (evt) => {
         console.log('🖱️ onPanResponderGrant called');
-        console.log('🖱️ State check:', { 
-          isSessionActive, 
+        console.log('🖱️ State check:', {
+          isSessionActive,
           videoSize,
           videoRenderSize,
           hasSize: videoSize.width > 0 && videoSize.height > 0
@@ -253,12 +253,12 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         }
 
         const { locationX, locationY } = evt.nativeEvent;
-        
+
         // Touch koordinatlarını video'nun gerçek render alanına göre normalize et
         // Önce offset'i çıkar
         const relativeX = locationX - videoRenderSize.offsetX;
         const relativeY = locationY - videoRenderSize.offsetY;
-        
+
         // Sonra render boyutuna göre normalize et
         const x = relativeX / videoRenderSize.width;
         const y = relativeY / videoRenderSize.height;
@@ -276,19 +276,19 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
 
         // Başlangıç pozisyonunu ve zamanını kaydet
         const now = Date.now();
-        
+
         // Çift tık kontrolü
         const DOUBLE_CLICK_TIME = 500; // 500ms içinde
         const DOUBLE_CLICK_DISTANCE = 0.02; // %2 mesafe içinde
         const timeSinceLastClick = now - lastClickRef.current.time;
         const distanceFromLastClick = Math.sqrt(
-          Math.pow(normalizedX - lastClickRef.current.x, 2) + 
+          Math.pow(normalizedX - lastClickRef.current.x, 2) +
           Math.pow(normalizedY - lastClickRef.current.y, 2)
         );
-        
-        const isDoubleClick = timeSinceLastClick < DOUBLE_CLICK_TIME && 
-                             distanceFromLastClick < DOUBLE_CLICK_DISTANCE;
-        
+
+        const isDoubleClick = timeSinceLastClick < DOUBLE_CLICK_TIME &&
+          distanceFromLastClick < DOUBLE_CLICK_DISTANCE;
+
         if (isDoubleClick) {
           console.log('🖱️ Double click detected!');
           isDoubleClickDragRef.current = true; // Çift tık sonrası sürükleme modu
@@ -298,20 +298,20 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           // Normal tık - çift tık değil
           isDoubleClickDragRef.current = false;
         }
-        
-        lastTouchRef.current = { 
-          x: normalizedX, 
-          y: normalizedY, 
+
+        lastTouchRef.current = {
+          x: normalizedX,
+          y: normalizedY,
           time: now,
           startX: normalizedX,
           startY: normalizedY,
           startTime: now,
           hasMoved: false
         };
-        
+
         // Son tık zamanını güncelle
         lastClickRef.current = { time: now, x: normalizedX, y: normalizedY };
-        
+
         sendMouseMove(normalizedX, normalizedY);
       },
       onPanResponderMove: (evt) => {
@@ -321,11 +321,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         }
 
         const { locationX, locationY } = evt.nativeEvent;
-        
+
         // Touch koordinatlarını video'nun gerçek render alanına göre normalize et
         const relativeX = locationX - videoRenderSize.offsetX;
         const relativeY = locationY - videoRenderSize.offsetY;
-        
+
         const x = relativeX / videoRenderSize.width;
         const y = relativeY / videoRenderSize.height;
 
@@ -336,7 +336,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         const deltaX = Math.abs(normalizedX - lastTouchRef.current.startX);
         const deltaY = Math.abs(normalizedY - lastTouchRef.current.startY);
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
+
         // Eğer mesafe belirli bir threshold'dan büyükse, hareket var demektir
         const MOVEMENT_THRESHOLD = 0.01; // %1 hareket (normalize edilmiş koordinatlarda)
         if (distance > MOVEMENT_THRESHOLD) {
@@ -346,7 +346,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         lastTouchRef.current.x = normalizedX;
         lastTouchRef.current.y = normalizedY;
         lastTouchRef.current.time = Date.now();
-        
+
         // Çift tık sürükleme modundaysa, mouse button down'u sürdür
         if (isDoubleClickDragRef.current) {
           // Button zaten down, sadece hareket ettir
@@ -364,19 +364,19 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
 
         const now = Date.now();
         const timeDiff = now - lastTouchRef.current.startTime;
-        
+
         // Son pozisyondan başlangıç pozisyonuna mesafe
         const deltaX = Math.abs(lastTouchRef.current.x - lastTouchRef.current.startX);
         const deltaY = Math.abs(lastTouchRef.current.y - lastTouchRef.current.startY);
         const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-        
+
         const MOVEMENT_THRESHOLD = 0.01; // %1 hareket (normalize edilmiş koordinatlarda)
         const MAX_CLICK_TIME = 300; // 300ms'den kısa süre
-        
+
         // Çift tık sürükleme modundaysa
         if (isDoubleClickDragRef.current) {
           const { x, y } = lastTouchRef.current;
-          
+
           // Eğer hareket varsa, seçim yapıldı (drag selection)
           if (lastTouchRef.current.hasMoved || distance > MOVEMENT_THRESHOLD) {
             console.log('🖱️ Double click drag selection completed');
@@ -387,19 +387,19 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             sendMouseButtonUp('left', x, y); // Önce button up
             sendMouseClick('right', x, y); // Sonra sağ tık
           }
-          
+
           isDoubleClickDragRef.current = false;
           return;
         }
-        
+
         // Normal tık/drag kontrolü
         // Click olarak algıla SADECE:
         // 1. Hareket edilmemişse (hasMoved = false) VEYA mesafe çok küçükse
         // 2. VE süre kısa ise
-        const isClick = !lastTouchRef.current.hasMoved && 
-                       distance < MOVEMENT_THRESHOLD && 
-                       timeDiff < MAX_CLICK_TIME;
-        
+        const isClick = !lastTouchRef.current.hasMoved &&
+          distance < MOVEMENT_THRESHOLD &&
+          timeDiff < MAX_CLICK_TIME;
+
         console.log('🖱️ Touch Release:', {
           timeDiff,
           distance,
@@ -521,7 +521,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
-      
+
       {/* Header Toggle Button - Sağ üstte */}
       {!showHeader && (
         <TouchableOpacity
@@ -531,49 +531,49 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           <View style={styles.headerToggleDot} />
         </TouchableOpacity>
       )}
-      
+
       {/* Header */}
       {showHeader && (
         <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={onBack}>
-          <Image 
-            source={leftIcon} 
-            style={styles.headerBackIcon}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>{t('remoteScreen.title')}</Text>
-          <Text style={styles.headerSubtitle}>{device.name}</Text>
-        </View>
-        
-        <View style={styles.headerRight}>
-          {isSessionActive && (
-            <>
-              <TouchableOpacity 
-                style={styles.headerIconButton} 
-                onPress={() => setShowMediaControls(!showMediaControls)}
-              >
-                <Image 
-                  source={showMediaControls ? pauseIcon : playIcon} 
-                  style={[styles.headerIconImage, showMediaControls && styles.headerIconImageActive]}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.headerIconButton} 
-                onPress={() => setShowZoomControls(!showZoomControls)}
-              >
-                <Image 
-                  source={plusIcon} 
-                  style={[styles.headerIconImage, showZoomControls && styles.headerIconImageActive]}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-              
-              {/* <TouchableOpacity 
+          <TouchableOpacity style={styles.headerButton} onPress={onBack}>
+            <Image
+              source={leftIcon}
+              style={styles.headerBackIcon}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>{t('remoteScreen.title')}</Text>
+            <Text style={styles.headerSubtitle}>{device.name}</Text>
+          </View>
+
+          <View style={styles.headerRight}>
+            {isSessionActive && (
+              <>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => setShowMediaControls(!showMediaControls)}
+                >
+                  <Image
+                    source={showMediaControls ? pauseIcon : playIcon}
+                    style={[styles.headerIconImage, showMediaControls && styles.headerIconImageActive]}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => setShowZoomControls(!showZoomControls)}
+                >
+                  <Image
+                    source={plusIcon}
+                    style={[styles.headerIconImage, showZoomControls && styles.headerIconImageActive]}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+
+                {/* <TouchableOpacity 
                 style={styles.headerIconButton} 
                 onPress={toggleKeyboard}
               >
@@ -583,41 +583,41 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   resizeMode="contain"
                 />
               </TouchableOpacity> */}
-              
-              <TouchableOpacity 
-                style={styles.headerIconButton} 
-                onPress={handleSessionToggle}
-              >
-                <Image 
-                  source={plugConnectionIcon} 
-                  style={[styles.headerIconImage, { tintColor: '#d32f2f' }]}
-                  resizeMode="contain"
-                />
-              </TouchableOpacity>
-            </>
-          )}
-          
-          {/* <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
+
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={handleSessionToggle}
+                >
+                  <Image
+                    source={plugConnectionIcon}
+                    style={[styles.headerIconImage, { tintColor: '#d32f2f' }]}
+                    resizeMode="contain"
+                  />
+                </TouchableOpacity>
+              </>
+            )}
+
+            {/* <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
             <Image 
               source={plugConnectionIcon} 
               style={[styles.headerBackIcon, { tintColor: '#fff' }]}
               resizeMode="contain"
             />
           </TouchableOpacity> */}
-          
-          {/* Header'ı gizle butonu */}
-          <TouchableOpacity 
-            style={styles.headerButton} 
-            onPress={() => setShowHeader(false)}
-          >
-            <View style={styles.headerHideDot} />
-          </TouchableOpacity>
+
+            {/* Header'ı gizle butonu */}
+            <TouchableOpacity
+              style={styles.headerButton}
+              onPress={() => setShowHeader(false)}
+            >
+              <View style={styles.headerHideDot} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
       )}
 
       {/* Video Stream */}
-      <View 
+      <View
         style={styles.videoContainer}
         onLayout={(event) => {
           const { width, height } = event.nativeEvent.layout;
@@ -626,8 +626,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       >
         {!isSessionActive && !isConnecting && (
           <View style={styles.placeholder}>
-            <Image 
-              source={screenPlayIcon} 
+            <Image
+              source={screenPlayIcon}
               style={styles.placeholderIcon}
               resizeMode="contain"
             />
@@ -642,8 +642,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 setShowSourceSelector(true);
               }}
             >
-              <Image 
-                source={screenPlayIcon} 
+              <Image
+                source={screenPlayIcon}
                 style={styles.startButtonIcon}
                 resizeMode="contain"
               />
@@ -656,8 +656,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
 
         {isConnecting && (
           <View style={styles.placeholder}>
-            <Image 
-              source={plugConnectionIcon} 
+            <Image
+              source={plugConnectionIcon}
               style={styles.connectingIcon}
               resizeMode="contain"
             />
@@ -694,7 +694,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 />
               </View>
             </View>
-            
+
           </View>
         )}
       </View>
@@ -704,14 +704,14 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         <View style={styles.zoomContainer}>
           {/* Zoom Seviyesi */}
           <View style={styles.zoomHeader}>
-            <Image 
-              source={plusIcon} 
+            <Image
+              source={plusIcon}
               style={[styles.zoomHeaderIcon, { tintColor: '#999' }]}
               resizeMode="contain"
             />
             <Text style={styles.zoomLabel}>Yakınlaştırma: {Math.round(zoomLevel * 100)}%</Text>
           </View>
-          
+
           <View style={styles.zoomControls}>
             <TouchableOpacity
               style={styles.zoomButton}
@@ -721,13 +721,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 setPanOffset({ x: 0, y: 0 });
               }}
             >
-              <Image 
-                source={minusSmallIcon} 
+              <Image
+                source={minusSmallIcon}
                 style={styles.zoomButtonIcon}
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.zoomSliderContainer}
               activeOpacity={1}
@@ -747,15 +747,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               }}
             >
               <View style={styles.zoomSliderTrack}>
-                <View 
+                <View
                   style={[
-                    styles.zoomSliderFill, 
+                    styles.zoomSliderFill,
                     { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
-                  ]} 
+                  ]}
                 />
               </View>
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.zoomButton}
               onPress={() => {
@@ -764,13 +764,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 setPanOffset({ x: 0, y: 0 });
               }}
             >
-              <Image 
-                source={plusIcon} 
+              <Image
+                source={plusIcon}
                 style={styles.zoomButtonIcon}
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.zoomButton}
               onPress={() => {
@@ -781,18 +781,18 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               <Text style={styles.zoomResetText}>1x</Text>
             </TouchableOpacity>
           </View>
-          
+
           {/* Pan Kontrolleri */}
           <View style={styles.panContainer}>
             <View style={styles.panHeader}>
-              <Image 
-                source={leftIcon} 
+              <Image
+                source={leftIcon}
                 style={[styles.panHeaderIcon, { tintColor: '#999' }]}
                 resizeMode="contain"
               />
               <Text style={styles.panLabel}>Ekran Hareketi</Text>
             </View>
-            
+
             <View style={styles.panControls}>
               {/* Yukarı */}
               <View style={styles.panRow}>
@@ -803,15 +803,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={[styles.panButtonIcon, { transform: [{ rotate: '90deg' }] }]}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
                 <View style={styles.panSpacer} />
               </View>
-              
+
               {/* Sola - Sağa */}
               <View style={styles.panRow}>
                 <TouchableOpacity
@@ -820,13 +820,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={[styles.panButtonIcon, { transform: [{ rotate: '180deg' }] }]}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-                
+
                 <View style={styles.panCenter}>
                   <TouchableOpacity
                     style={styles.panResetButton}
@@ -837,21 +837,21 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     <Text style={styles.panResetText}>Merkez</Text>
                   </TouchableOpacity>
                 </View>
-                
+
                 <TouchableOpacity
                   style={styles.panButton}
                   onPress={() => {
                     setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={styles.panButtonIcon}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
               </View>
-              
+
               {/* Aşağı */}
               <View style={styles.panRow}>
                 <View style={styles.panSpacer} />
@@ -861,8 +861,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={[styles.panButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
                     resizeMode="contain"
                   />
@@ -878,8 +878,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       {showMediaControls && isSessionActive && (
         <View style={styles.mediaContainer}>
           <View style={styles.mediaInfo}>
-            <Image 
-              source={playIcon} 
+            <Image
+              source={playIcon}
               style={[styles.mediaInfoIcon, { tintColor: '#999' }]}
               resizeMode="contain"
             />
@@ -888,44 +888,44 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               {mediaStatus.artist ? ` - ${mediaStatus.artist}` : ''}
             </Text>
           </View>
-          
+
           <View style={styles.mediaControls}>
-            
+
             <TouchableOpacity
               style={styles.mediaButton}
               onPress={() => sendMediaControl('seekbackward')}
             >
-              <Image 
-                source={minusSmallIcon} 
+              <Image
+                source={minusSmallIcon}
                 style={styles.mediaSeekIcon}
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.mediaButton, styles.mediaButtonPrimary]}
               onPress={() => sendMediaControl('playpause')}
             >
-              <Image 
-                source={mediaStatus.isPlaying ? pauseIcon : playIcon} 
+              <Image
+                source={mediaStatus.isPlaying ? pauseIcon : playIcon}
                 style={styles.mediaButtonPrimaryIcon}
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.mediaButton}
               onPress={() => sendMediaControl('seekforward')}
             >
-              <Image 
-                source={plusIcon} 
+              <Image
+                source={plusIcon}
                 style={styles.mediaSeekIcon}
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            
+
           </View>
-          
+
           {mediaStatus.duration > 0 && (
             <View style={styles.mediaProgress}>
               <TouchableOpacity
@@ -942,19 +942,19 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   const progressBarWidth = progressBarWidthRef.current || 300;
                   const percentage = Math.max(0, Math.min(1, locationX / progressBarWidth));
                   const newPosition = Math.max(0, Math.min(mediaStatus.duration, percentage * mediaStatus.duration));
-                  
+
                   // Medya pozisyonunu güncelle
                   setMediaStatus(prev => ({ ...prev, position: newPosition }));
-                  
+
                   console.log('🎵 Seek to:', newPosition, 'seconds (', percentage * 100, '%)');
                 }}
               >
                 <View style={styles.mediaProgressBarInner}>
-                  <View 
+                  <View
                     style={[
-                      styles.mediaProgressFill, 
+                      styles.mediaProgressFill,
                       { width: `${(mediaStatus.position / mediaStatus.duration) * 100}%` }
-                    ]} 
+                    ]}
                   />
                 </View>
               </TouchableOpacity>
@@ -967,15 +967,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           {/* Ses Seviyesi Kontrolü */}
           <View style={styles.volumeContainer}>
             <View style={styles.volumeHeader}>
-              <Image 
-                source={volumeIcon} 
+              <Image
+                source={volumeIcon}
                 style={[styles.volumeHeaderIcon, { tintColor: '#999' }]}
                 resizeMode="contain"
               />
               <Text style={styles.volumeLabel}>Ses Seviyesi</Text>
               <Text style={styles.volumeValue}>{Math.round(volume)}%</Text>
             </View>
-            
+
             <View style={styles.volumeControls}>
               <TouchableOpacity
                 style={styles.volumeButton}
@@ -984,13 +984,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setVolumeLevel(newVolume);
                 }}
               >
-                <Image 
-                  source={minusSmallIcon} 
+                <Image
+                  source={minusSmallIcon}
                   style={styles.volumeButtonIcon}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.volumeSliderContainer}
                 activeOpacity={1}
@@ -1009,15 +1009,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 }}
               >
                 <View style={styles.volumeSliderTrack}>
-                  <View 
+                  <View
                     style={[
-                      styles.volumeSliderFill, 
+                      styles.volumeSliderFill,
                       { width: `${volume}%` }
-                    ]} 
+                    ]}
                   />
                 </View>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.volumeButton}
                 onPress={() => {
@@ -1025,13 +1025,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setVolumeLevel(newVolume);
                 }}
               >
-                <Image 
-                  source={plusIcon} 
+                <Image
+                  source={plusIcon}
                   style={styles.volumeButtonIcon}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.volumeButton}
                 onPress={() => {
@@ -1040,8 +1040,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setTimeout(() => fetchVolume(), 200);
                 }}
               >
-                <Image 
-                  source={volumeMuteIcon} 
+                <Image
+                  source={volumeMuteIcon}
                   style={styles.volumeButtonIcon}
                   resizeMode="contain"
                 />
@@ -1053,207 +1053,209 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
 
       {/* Zoom Kontrolleri Paneli */}
       {showZoomControls && isSessionActive && (
-        <View style={styles.zoomContainer}>
-          {/* Ekran Önizlemesi */}
-          {remoteStream && (
-            <View style={styles.zoomPreviewContainer}>
-              <View
-                style={[
-                  styles.zoomPreviewInner,
-                  {
-                    transform: [
-                      { scale: zoomLevel },
-                      { translateX: panOffset.x },
-                      { translateY: panOffset.y }
-                    ]
-                  }
-                ]}
-              >
-                <RTCView
-                  streamURL={remoteStream.toURL()}
-                  style={styles.zoomPreview}
-                  objectFit="contain"
-                />
-              </View>
-            </View>
-          )}
-          
-          {/* Zoom Seviyesi */}
-          <View style={styles.zoomHeader}>
-            <Image 
-              source={plusIcon} 
-              style={[styles.zoomHeaderIcon, { tintColor: '#999' }]}
-              resizeMode="contain"
-            />
-            <Text style={styles.zoomLabel}>Yakınlaştırma</Text>
-            <Text style={styles.zoomValue}>{Math.round(zoomLevel * 100)}%</Text>
-          </View>
-          
-          <View style={styles.zoomControls}>
-            <TouchableOpacity
-              style={styles.zoomButton}
-              onPress={() => {
-                const newZoom = Math.max(0.5, zoomLevel - 0.25);
-                setZoomLevel(newZoom);
-                // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <Image 
-                source={minusSmallIcon} 
-                style={styles.zoomButtonIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.zoomSliderContainer}
-              activeOpacity={1}
-              onLayout={(event) => {
-                const { width } = event.nativeEvent.layout;
-                if (width > 0) {
-                  volumeSliderWidthRef.current = width; // Mevcut ref'i kullan
-                }
-              }}
-              onPress={(event) => {
-                const { locationX } = event.nativeEvent;
-                const sliderWidth = volumeSliderWidthRef.current || 200;
-                const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
-                // 0.5x ile 3.0x arasında zoom
-                const newZoom = 0.5 + (percentage * 2.5);
-                setZoomLevel(newZoom);
-                // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <View style={styles.zoomSliderTrack}>
-                <View 
+        <ScrollView>
+          <View style={styles.zoomContainer}>
+            {/* Ekran Önizlemesi */}
+            {remoteStream && (
+              <View style={styles.zoomPreviewContainer}>
+                <View
                   style={[
-                    styles.zoomSliderFill, 
-                    { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
-                  ]} 
-                />
+                    styles.zoomPreviewInner,
+                    {
+                      transform: [
+                        { scale: zoomLevel },
+                        { translateX: panOffset.x },
+                        { translateY: panOffset.y }
+                      ]
+                    }
+                  ]}
+                >
+                  <RTCView
+                    streamURL={remoteStream.toURL()}
+                    style={styles.zoomPreview}
+                    objectFit="contain"
+                  />
+                </View>
               </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.zoomButton}
-              onPress={() => {
-                const newZoom = Math.min(3.0, zoomLevel + 0.25);
-                setZoomLevel(newZoom);
-                // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <Image 
-                source={plusIcon} 
-                style={styles.zoomButtonIcon}
+            )}
+
+            {/* Zoom Seviyesi */}
+            <View style={styles.zoomHeader}>
+              <Image
+                source={plusIcon}
+                style={[styles.zoomHeaderIcon, { tintColor: '#999' }]}
                 resizeMode="contain"
               />
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={styles.zoomButton}
-              onPress={() => {
-                // Zoom'u sıfırla (1.0x)
-                setZoomLevel(1.0);
-                setPanOffset({ x: 0, y: 0 });
-              }}
-            >
-              <Text style={styles.zoomResetText}>1x</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Pan Kontrolleri (Hareket) */}
-          <View style={styles.panContainer}>
-            <View style={styles.panHeader}>
-              <Image 
-                source={leftIcon} 
-                style={[styles.panHeaderIcon, { tintColor: '#999' }]}
-                resizeMode="contain"
-              />
-              <Text style={styles.panLabel}>Ekran Hareketi</Text>
+              <Text style={styles.zoomLabel}>Yakınlaştırma</Text>
+              <Text style={styles.zoomValue}>{Math.round(zoomLevel * 100)}%</Text>
             </View>
-            
-            <View style={styles.panControls}>
-              {/* Yukarı */}
-              <View style={styles.panRow}>
-                <View style={styles.panSpacer} />
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panButtonIcon, { transform: [{ rotate: '90deg' }] }]}
-                    resizeMode="contain"
+
+            <View style={styles.zoomControls}>
+              <TouchableOpacity
+                style={styles.zoomButton}
+                onPress={() => {
+                  const newZoom = Math.max(0.5, zoomLevel - 0.25);
+                  setZoomLevel(newZoom);
+                  // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Image
+                  source={minusSmallIcon}
+                  style={styles.zoomButtonIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.zoomSliderContainer}
+                activeOpacity={1}
+                onLayout={(event) => {
+                  const { width } = event.nativeEvent.layout;
+                  if (width > 0) {
+                    volumeSliderWidthRef.current = width; // Mevcut ref'i kullan
+                  }
+                }}
+                onPress={(event) => {
+                  const { locationX } = event.nativeEvent;
+                  const sliderWidth = volumeSliderWidthRef.current || 200;
+                  const percentage = Math.max(0, Math.min(1, locationX / sliderWidth));
+                  // 0.5x ile 3.0x arasında zoom
+                  const newZoom = 0.5 + (percentage * 2.5);
+                  setZoomLevel(newZoom);
+                  // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <View style={styles.zoomSliderTrack}>
+                  <View
+                    style={[
+                      styles.zoomSliderFill,
+                      { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
+                    ]}
                   />
-                </TouchableOpacity>
-                <View style={styles.panSpacer} />
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.zoomButton}
+                onPress={() => {
+                  const newZoom = Math.min(3.0, zoomLevel + 0.25);
+                  setZoomLevel(newZoom);
+                  // Zoom değiştiğinde pan offset'i sıfırla (merkeze dön)
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Image
+                  source={plusIcon}
+                  style={styles.zoomButtonIcon}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.zoomButton}
+                onPress={() => {
+                  // Zoom'u sıfırla (1.0x)
+                  setZoomLevel(1.0);
+                  setPanOffset({ x: 0, y: 0 });
+                }}
+              >
+                <Text style={styles.zoomResetText}>1x</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Pan Kontrolleri (Hareket) */}
+            <View style={styles.panContainer}>
+              <View style={styles.panHeader}>
+                <Image
+                  source={leftIcon}
+                  style={[styles.panHeaderIcon, { tintColor: '#999' }]}
+                  resizeMode="contain"
+                />
+                <Text style={styles.panLabel}>Ekran Hareketi</Text>
               </View>
-              
-              {/* Sola - Sağa */}
-              <View style={styles.panRow}>
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panButtonIcon, { transform: [{ rotate: '180deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                
-                <View style={styles.panCenter}>
+
+              <View style={styles.panControls}>
+                {/* Yukarı */}
+                <View style={styles.panRow}>
+                  <View style={styles.panSpacer} />
                   <TouchableOpacity
-                    style={styles.panResetButton}
+                    style={styles.panButton}
                     onPress={() => {
-                      setPanOffset({ x: 0, y: 0 });
+                      setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
                     }}
                   >
-                    <Text style={styles.panResetText}>Merkez</Text>
+                    <Image
+                      source={leftIcon}
+                      style={[styles.panButtonIcon, { transform: [{ rotate: '90deg' }] }]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.panSpacer} />
+                </View>
+
+                {/* Sola - Sağa */}
+                <View style={styles.panRow}>
+                  <TouchableOpacity
+                    style={styles.panButton}
+                    onPress={() => {
+                      setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
+                    }}
+                  >
+                    <Image
+                      source={leftIcon}
+                      style={[styles.panButtonIcon, { transform: [{ rotate: '180deg' }] }]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+
+                  <View style={styles.panCenter}>
+                    <TouchableOpacity
+                      style={styles.panResetButton}
+                      onPress={() => {
+                        setPanOffset({ x: 0, y: 0 });
+                      }}
+                    >
+                      <Text style={styles.panResetText}>Merkez</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.panButton}
+                    onPress={() => {
+                      setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
+                    }}
+                  >
+                    <Image
+                      source={leftIcon}
+                      style={styles.panButtonIcon}
+                      resizeMode="contain"
+                    />
                   </TouchableOpacity>
                 </View>
-                
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={styles.panButtonIcon}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-              </View>
-              
-              {/* Aşağı */}
-              <View style={styles.panRow}>
-                <View style={styles.panSpacer} />
-                <TouchableOpacity
-                  style={styles.panButton}
-                  onPress={() => {
-                    setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
-                  }}
-                >
-                  <Image 
-                    source={leftIcon} 
-                    style={[styles.panButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
-                    resizeMode="contain"
-                  />
-                </TouchableOpacity>
-                <View style={styles.panSpacer} />
+
+                {/* Aşağı */}
+                <View style={styles.panRow}>
+                  <View style={styles.panSpacer} />
+                  <TouchableOpacity
+                    style={styles.panButton}
+                    onPress={() => {
+                      setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
+                    }}
+                  >
+                    <Image
+                      source={leftIcon}
+                      style={[styles.panButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
+                      resizeMode="contain"
+                    />
+                  </TouchableOpacity>
+                  <View style={styles.panSpacer} />
+                </View>
               </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       )}
 
       {/* Klavye Input */}
@@ -1335,14 +1337,14 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 style={styles.zoomCloseButton}
                 onPress={() => setShowZoomControls(false)}
               >
-                <Image 
-                  source={pauseIcon} 
+                <Image
+                  source={pauseIcon}
                   style={[styles.zoomCloseIcon, { tintColor: '#999' }]}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.zoomCompactControls}>
               <TouchableOpacity
                 style={styles.zoomCompactButton}
@@ -1352,13 +1354,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setPanOffset({ x: 0, y: 0 });
                 }}
               >
-                <Image 
-                  source={minusSmallIcon} 
+                <Image
+                  source={minusSmallIcon}
                   style={styles.zoomCompactButtonIcon}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.zoomCompactSliderContainer}
                 activeOpacity={1}
@@ -1378,15 +1380,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 }}
               >
                 <View style={styles.zoomCompactSliderTrack}>
-                  <View 
+                  <View
                     style={[
-                      styles.zoomCompactSliderFill, 
+                      styles.zoomCompactSliderFill,
                       { width: `${((zoomLevel - 0.5) / 2.5) * 100}%` }
-                    ]} 
+                    ]}
                   />
                 </View>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.zoomCompactButton}
                 onPress={() => {
@@ -1395,13 +1397,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   setPanOffset({ x: 0, y: 0 });
                 }}
               >
-                <Image 
-                  source={plusIcon} 
+                <Image
+                  source={plusIcon}
                   style={styles.zoomCompactButtonIcon}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={styles.zoomCompactButton}
                 onPress={() => {
@@ -1412,7 +1414,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 <Text style={styles.zoomCompactResetText}>1x</Text>
               </TouchableOpacity>
             </View>
-            
+
             {/* Pan Kontrolleri - Kompakt */}
             <View style={styles.panCompactContainer}>
               <View style={styles.panCompactGrid}>
@@ -1423,15 +1425,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     setPanOffset(prev => ({ ...prev, y: Math.min(prev.y + 50, 500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={[styles.panCompactButtonIcon, { transform: [{ rotate: '90deg' }] }]}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
                 <View style={styles.panCompactSpacer} />
               </View>
-              
+
               <View style={styles.panCompactGrid}>
                 <TouchableOpacity
                   style={styles.panCompactButton}
@@ -1439,13 +1441,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     setPanOffset(prev => ({ ...prev, x: Math.max(prev.x - 50, -500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={[styles.panCompactButtonIcon, { transform: [{ rotate: '180deg' }] }]}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={styles.panCompactCenterButton}
                   onPress={() => {
@@ -1454,21 +1456,21 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 >
                   <Text style={styles.panCompactCenterText}>O</Text>
                 </TouchableOpacity>
-                
+
                 <TouchableOpacity
                   style={styles.panCompactButton}
                   onPress={() => {
                     setPanOffset(prev => ({ ...prev, x: Math.min(prev.x + 50, 500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={styles.panCompactButtonIcon}
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
               </View>
-              
+
               <View style={styles.panCompactGrid}>
                 <View style={styles.panCompactSpacer} />
                 <TouchableOpacity
@@ -1477,8 +1479,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     setPanOffset(prev => ({ ...prev, y: Math.max(prev.y - 50, -500) }));
                   }}
                 >
-                  <Image 
-                    source={leftIcon} 
+                  <Image
+                    source={leftIcon}
                     style={[styles.panCompactButtonIcon, { transform: [{ rotate: '-90deg' }] }]}
                     resizeMode="contain"
                   />
@@ -1500,8 +1502,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 style={styles.modalCloseButton}
                 onPress={() => setShowSourceSelector(false)}
               >
-                <Image 
-                  source={pauseIcon} 
+                <Image
+                  source={pauseIcon}
                   style={[styles.modalCloseIcon, { tintColor: '#fff' }]}
                   resizeMode="contain"
                 />
@@ -1524,8 +1526,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                         onPress={() => setSelectedSourceId(source.id)}
                       >
                         {source.thumbnail && (
-                          <Image 
-                            source={{ uri: source.thumbnail }} 
+                          <Image
+                            source={{ uri: source.thumbnail }}
                             style={styles.sourceThumbnail}
                             resizeMode="cover"
                           />
@@ -1535,8 +1537,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                         </Text>
                         {selectedSourceId === source.id && (
                           <View style={styles.sourceCheck}>
-                            <Image 
-                              source={playIcon} 
+                            <Image
+                              source={playIcon}
                               style={[styles.sourceCheckIcon, { tintColor: '#00C853' }]}
                               resizeMode="contain"
                             />
@@ -1563,8 +1565,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                         onPress={() => setSelectedSourceId(source.id)}
                       >
                         {source.thumbnail && (
-                          <Image 
-                            source={{ uri: source.thumbnail }} 
+                          <Image
+                            source={{ uri: source.thumbnail }}
                             style={styles.sourceThumbnail}
                             resizeMode="cover"
                           />
@@ -1574,8 +1576,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                         </Text>
                         {selectedSourceId === source.id && (
                           <View style={styles.sourceCheck}>
-                            <Image 
-                              source={playIcon} 
+                            <Image
+                              source={playIcon}
                               style={[styles.sourceCheckIcon, { tintColor: '#00C853' }]}
                               resizeMode="contain"
                             />
@@ -1601,7 +1603,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   if (selectedSourceId) {
                     const sourceIdToUse = selectedSourceId;
                     setShowSourceSelector(false);
-                    
+
                     // Seçilen ekranın boyutunu al
                     try {
                       const response = await fetch(`http://${device.host}:${device.port}/screen-info?sourceId=${encodeURIComponent(sourceIdToUse)}`);
@@ -1615,7 +1617,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                     } catch (error) {
                       console.warn('⚠️ Screen info alınamadı:', error.message);
                     }
-                    
+
                     // Kısa bir delay ile modal kapanmasını bekle
                     await new Promise(resolve => setTimeout(resolve, 100));
                     // Seçilen sourceId'yi parametre olarak geç
