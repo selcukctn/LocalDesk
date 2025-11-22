@@ -16,6 +16,12 @@ export const useRemoteScreen = (socket, deviceInfo) => {
   
   const peerConnectionRef = useRef(null);
   const socketRef = useRef(socket);
+  const deviceRef = useRef(deviceInfo);
+  
+  // Device referansını güncelle
+  useEffect(() => {
+    deviceRef.current = deviceInfo;
+  }, [deviceInfo]);
 
   // Socket referansını güncelle
   useEffect(() => {
@@ -197,6 +203,61 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     socketRef.current.emit('remote-media-control', { action });
   }, [isSessionActive]);
 
+  // Ses seviyesi kontrolü gönder
+  const sendVolumeControl = useCallback((action, value = null) => {
+    if (!socketRef.current || !isSessionActive) return;
+    
+    console.log(`🔊 Volume control: ${action}`, value ? `value: ${value}` : '');
+    socketRef.current.emit('remote-volume-control', { action, value });
+  }, [isSessionActive]);
+
+  // Ses seviyesini al
+  const [volume, setVolume] = useState(50);
+  
+  const fetchVolume = useCallback(async () => {
+    const device = deviceRef.current;
+    if (!device) return;
+    
+    try {
+      const response = await fetch(`http://${device.host}:${device.port}/volume`);
+      if (response.ok) {
+        const data = await response.json();
+        setVolume(data.volume || 50);
+      }
+    } catch (error) {
+      console.error('❌ Ses seviyesi alınamadı:', error);
+    }
+  }, []);
+
+  // Ses seviyesini ayarla
+  const setVolumeLevel = useCallback(async (newVolume) => {
+    const device = deviceRef.current;
+    if (!device) return;
+    
+    const clampedVolume = Math.max(0, Math.min(100, newVolume));
+    
+    try {
+      const response = await fetch(`http://${device.host}:${device.port}/volume`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ volume: clampedVolume })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setVolume(clampedVolume);
+          // Ayrıca socket event'i de gönder (hızlı feedback için)
+          sendVolumeControl('set', clampedVolume);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Ses seviyesi ayarlanamadı:', error);
+    }
+  }, [sendVolumeControl]);
+
   // WebRTC signaling event'lerini dinle
   useEffect(() => {
     if (!socketRef.current) {
@@ -286,7 +347,13 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     sendMouseButtonUp,
     sendMouseScroll,
     sendKeyboardInput,
-    sendMediaControl
+    sendMediaControl,
+    sendVolumeControl,
+    volume,
+    setVolumeLevel,
+    fetchVolume,
+    desktopScreenSize,
+    mediaStatus
   };
 };
 

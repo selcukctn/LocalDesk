@@ -45,6 +45,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const [videoRenderSize, setVideoRenderSize] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
   const textInputRef = useRef(null);
   const progressBarWidthRef = useRef(0);
+  const volumeSliderWidthRef = useRef(0);
   const lastTouchRef = useRef({ 
     x: 0, 
     y: 0, 
@@ -98,8 +99,12 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     sendMouseButtonUp,
     sendMouseScroll,
     sendKeyboardInput,
-    sendMediaControl
-  } = useRemoteScreen(socket);
+    sendMediaControl,
+    sendVolumeControl,
+    volume,
+    setVolumeLevel,
+    fetchVolume
+  } = useRemoteScreen(socket, device);
 
   // Zaman formatı (saniye -> mm:ss)
   const formatTime = (seconds) => {
@@ -437,6 +442,16 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     return () => clearInterval(interval);
   }, [isSessionActive, showMediaControls, device]);
 
+  // Ses seviyesini periyodik olarak güncelle
+  React.useEffect(() => {
+    if (!isSessionActive || !showMediaControls) return;
+
+    fetchVolume();
+    const interval = setInterval(fetchVolume, 3000); // Her 3 saniyede bir güncelle
+
+    return () => clearInterval(interval);
+  }, [isSessionActive, showMediaControls, fetchVolume]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
@@ -463,10 +478,10 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 style={styles.headerIconButton} 
                 onPress={() => setShowMediaControls(!showMediaControls)}
               >
-                <Icon
-                  name={showMediaControls ? 'music-note' : 'music-off'}
-                  size={20}
-                  color={showMediaControls ? "#00C853" : "#fff"}
+                <Image 
+                  source={screenPlayIcon} 
+                  style={[styles.header,styles.headerIconImageActive]}
+                  resizeMode="contain"
                 />
               </TouchableOpacity>
               
@@ -573,16 +588,6 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           </View>
           
           <View style={styles.mediaControls}>
-            <TouchableOpacity
-              style={styles.mediaButton}
-              onPress={() => sendMediaControl('previous')}
-            >
-              <Image 
-                source={leftIcon} 
-                style={styles.mediaButtonIcon}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
             
             <TouchableOpacity
               style={styles.mediaButton}
@@ -609,16 +614,6 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               <Text style={styles.mediaSeekText}>+10s</Text>
             </TouchableOpacity>
             
-            <TouchableOpacity
-              style={styles.mediaButton}
-              onPress={() => sendMediaControl('next')}
-            >
-              <Image 
-                source={angleDoubleSmallLeftIcon} 
-                style={[styles.mediaButtonIcon, styles.mediaButtonIconRotated]}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
           </View>
           
           {mediaStatus.duration > 0 && (
@@ -986,6 +981,59 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8
+  },
+  volumeContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#333'
+  },
+  volumeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12
+  },
+  volumeLabel: {
+    flex: 1,
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '500'
+  },
+  volumeValue: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '600',
+    minWidth: 40,
+    textAlign: 'right'
+  },
+  volumeControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12
+  },
+  volumeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  volumeSliderContainer: {
+    flex: 1,
+    height: 40,
+    justifyContent: 'center'
+  },
+  volumeSliderTrack: {
+    height: 4,
+    backgroundColor: '#333',
+    borderRadius: 2
+  },
+  volumeSliderFill: {
+    height: '100%',
+    backgroundColor: '#00C853',
+    borderRadius: 2
   },
   textInput: {
     flex: 1,
