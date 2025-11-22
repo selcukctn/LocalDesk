@@ -13,6 +13,8 @@ export const useRemoteScreen = (socket, deviceInfo) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [remoteStream, setRemoteStream] = useState(null);
   const [error, setError] = useState(null);
+  const [screenSources, setScreenSources] = useState({ screens: [], windows: [] });
+  const [selectedSourceId, setSelectedSourceId] = useState(null);
   
   const peerConnectionRef = useRef(null);
   const socketRef = useRef(socket);
@@ -28,6 +30,29 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     socketRef.current = socket;
   }, [socket]);
 
+  // Ekran ve pencere kaynaklarını al
+  const fetchScreenSources = useCallback(async () => {
+    const device = deviceRef.current;
+    if (!device) return;
+    
+    try {
+      const response = await fetch(`http://${device.host}:${device.port}/screen-sources`);
+      if (response.ok) {
+        const data = await response.json();
+        setScreenSources(data);
+        // İlk ekranı varsayılan olarak seç (sadece henüz seçilmemişse)
+        setSelectedSourceId(prev => {
+          if (!prev && data.screens && data.screens.length > 0) {
+            return data.screens[0].id;
+          }
+          return prev;
+        });
+      }
+    } catch (error) {
+      console.error('❌ Screen sources alınamadı:', error);
+    }
+  }, []);
+
   // WebRTC bağlantısını başlat
   const startSession = useCallback(async () => {
     if (!socketRef.current || !socketRef.current.connected) {
@@ -35,16 +60,31 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       return;
     }
 
-    // Eğer source seçilmemişse, ilk ekranı seç
-    if (!selectedSourceId && screenSources.screens && screenSources.screens.length > 0) {
-      setSelectedSourceId(screenSources.screens[0].id);
+    // Eğer source seçilmemişse, ekran kaynaklarını al ve ilk ekranı seç
+    let currentSourceId = selectedSourceId;
+    if (!currentSourceId) {
+      await fetchScreenSources();
+      // fetchScreenSources içinde zaten ilk ekran seçiliyor, state'i bekleyelim
+      // State güncellemesi asenkron olduğu için, fetchScreenSources sonrası
+      // screenSources'u kontrol edelim
+      await new Promise(resolve => setTimeout(resolve, 100)); // Kısa bir delay
+      // State'i tekrar kontrol et
+      currentSourceId = selectedSourceId;
+      if (!currentSourceId) {
+        // Hala seçilmemişse, screenSources'dan ilk ekranı al
+        const sources = screenSources;
+        if (sources.screens && sources.screens.length > 0) {
+          currentSourceId = sources.screens[0].id;
+          setSelectedSourceId(currentSourceId);
+        }
+      }
     }
 
     try {
       setIsConnecting(true);
       setError(null);
       console.log('📹 Remote Screen oturumu başlatılıyor...');
-      console.log('📹 Selected source ID:', selectedSourceId);
+      console.log('📹 Selected source ID:', currentSourceId || selectedSourceId);
 
       // Peer connection oluştur
       const pc = new RTCPeerConnection(ICE_SERVERS);
@@ -123,11 +163,14 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       console.log('📹 Sending offer to desktop via socket.io');
       console.log('📹 Socket connected?', socketRef.current.connected);
       console.log('📹 Socket id:', socketRef.current.id);
-      console.log('📹 Selected source ID:', selectedSourceId);
+      
+      // selectedSourceId'yi closure'dan al (state güncellemesi asenkron olduğu için)
+      const sourceIdToUse = selectedSourceId || (screenSources.screens && screenSources.screens.length > 0 ? screenSources.screens[0].id : null);
+      console.log('📹 Selected source ID:', sourceIdToUse);
       
       socketRef.current.emit('webrtc-offer', {
         offer: pc.localDescription,
-        sourceId: selectedSourceId // Seçilen ekran/pencere ID'si
+        sourceId: sourceIdToUse // Seçilen ekran/pencere ID'si
       });
       console.log('✅ Offer emitted successfully');
 
@@ -137,7 +180,7 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       setIsConnecting(false);
       setIsSessionActive(false);
     }
-  }, [selectedSourceId, screenSources]);
+  }, [selectedSourceId, screenSources, fetchScreenSources]);
 
   // WebRTC bağlantısını durdur
   const stopSession = useCallback(() => {
