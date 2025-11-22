@@ -72,6 +72,7 @@ class LocalDeskServer extends EventEmitter {
     this.keyboardAddon = null;
     this.robot = robot;
     this.activeSourceIds = new Map(); // socketId -> sourceId (seçilen ekran/pencere)
+    this.activeScreenBounds = new Map(); // socketId -> { x, y, width, height } (seçilen ekranın bounds'ları)
     
     // Veri dosyaları - build modunda kullanıcı veri dizinini kullan
     // Development modunda __dirname/data, production'da userData/data

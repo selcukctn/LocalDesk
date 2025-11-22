@@ -559,7 +559,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 />
               </TouchableOpacity>
               
-              <TouchableOpacity 
+              {/* <TouchableOpacity 
                 style={styles.headerIconButton} 
                 onPress={toggleKeyboard}
               >
@@ -568,14 +568,14 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   style={[styles.headerIconImage, showKeyboard && styles.headerIconImageActive]}
                   resizeMode="contain"
                 />
-              </TouchableOpacity>
+              </TouchableOpacity> */}
               
               <TouchableOpacity 
                 style={styles.headerIconButton} 
                 onPress={handleSessionToggle}
               >
                 <Image 
-                  source={pauseIcon} 
+                  source={plugConnectionIcon} 
                   style={[styles.headerIconImage, { tintColor: '#d32f2f' }]}
                   resizeMode="contain"
                 />
@@ -583,13 +583,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             </>
           )}
           
-          <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
+          {/* <TouchableOpacity style={styles.headerButton} onPress={onDisconnect}>
             <Image 
-              source={pauseIcon} 
+              source={plugConnectionIcon} 
               style={[styles.headerBackIcon, { tintColor: '#fff' }]}
               resizeMode="contain"
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           
           {/* Header'ı gizle butonu */}
           <TouchableOpacity 
@@ -849,7 +849,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       )}
 
       {/* Klavye Input */}
-      {showKeyboard && (
+      {/* {showKeyboard && (
         <View style={styles.keyboardContainer}>
           <View style={styles.keyboardRow}>
             <TouchableOpacity
@@ -914,7 +914,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             </TouchableOpacity>
           </View>
         </View>
-      )}
+      )} */}
 
       {/* Ekran/Pencere Seçim Modal */}
       {showSourceSelector && (
