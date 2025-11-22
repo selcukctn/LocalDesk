@@ -115,6 +115,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   } = useRemoteScreen(socket, device);
   
   const [showSourceSelector, setShowSourceSelector] = useState(false);
+  const [showHeader, setShowHeader] = useState(false); // Header varsayılan olarak gizli
 
   // Zaman formatı (saniye -> mm:ss)
   const formatTime = (seconds) => {
@@ -500,8 +501,19 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       
+      {/* Header Toggle Button - Sağ üstte */}
+      {!showHeader && (
+        <TouchableOpacity
+          style={styles.headerToggleButton}
+          onPress={() => setShowHeader(true)}
+        >
+          <View style={styles.headerToggleDot} />
+        </TouchableOpacity>
+      )}
+      
       {/* Header */}
-      <View style={styles.header}>
+      {showHeader && (
+        <View style={styles.header}>
         <TouchableOpacity style={styles.headerButton} onPress={onBack}>
           <Image 
             source={leftIcon} 
@@ -560,8 +572,17 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               resizeMode="contain"
             />
           </TouchableOpacity>
+          
+          {/* Header'ı gizle butonu */}
+          <TouchableOpacity 
+            style={styles.headerButton} 
+            onPress={() => setShowHeader(false)}
+          >
+            <View style={styles.headerHideDot} />
+          </TouchableOpacity>
         </View>
       </View>
+      )}
 
       {/* Video Stream */}
       <View 
@@ -1497,6 +1518,31 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#fff'
+  },
+  headerToggleButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1001,
+    elevation: 1001 // Android için
+  },
+  headerToggleDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#fff'
+  },
+  headerHideDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#999'
   }
 });
 
