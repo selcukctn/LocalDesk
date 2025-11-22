@@ -71,6 +71,7 @@ class LocalDeskServer extends EventEmitter {
     this.pendingPairings = new Map();
     this.keyboardAddon = null;
     this.robot = robot;
+    this.activeSourceIds = new Map(); // socketId -> sourceId (seçilen ekran/pencere)
     
     // Veri dosyaları - build modunda kullanıcı veri dizinini kullan
     // Development modunda __dirname/data, production'da userData/data
@@ -199,6 +200,62 @@ class LocalDeskServer extends EventEmitter {
       } catch (error) {
         console.error('❌ Screen sources hatası:', error);
         res.json({ screens: [], windows: [] });
+      }
+    });
+    
+    // Seçilen ekran/pencere bilgisini al (sourceId'ye göre)
+    this.app.get('/screen-info', async (req, res) => {
+      const { sourceId } = req.query;
+      
+      if (!sourceId) {
+        return res.json({ 
+          success: false, 
+          error: 'sourceId parametresi gerekli',
+          screenSize: { width: 1920, height: 1080 } // Fallback
+        });
+      }
+      
+      try {
+        // Main process'ten ekran bilgisini almak için callback kullan
+        if (this.getScreenInfoCallback) {
+          const screenInfo = await this.getScreenInfoCallback(sourceId);
+          return res.json({
+            success: true,
+            screenSize: screenInfo.screenSize,
+            bounds: screenInfo.bounds
+          });
+        } else {
+          // Fallback: Ana ekran boyutu
+          let screenSize = { width: 1920, height: 1080 };
+          if (this.robot) {
+            try {
+              screenSize = this.robot.getScreenSize();
+            } catch (error) {
+              // Varsayılan kullan
+            }
+          }
+          return res.json({
+            success: false,
+            screenSize,
+            error: 'Screen info callback not available'
+          });
+        }
+      } catch (error) {
+        console.error('❌ Screen info hatası:', error);
+        // Fallback: Ana ekran boyutu
+        let screenSize = { width: 1920, height: 1080 };
+        if (this.robot) {
+          try {
+            screenSize = this.robot.getScreenSize();
+          } catch (e) {
+            // Varsayılan kullan
+          }
+        }
+        res.json({
+          success: false,
+          screenSize,
+          error: error.message
+        });
       }
     });
     
@@ -527,11 +584,9 @@ class LocalDeskServer extends EventEmitter {
         // RobotJS ile mouse move
         if (this.robot && typeof data.x === 'number' && typeof data.y === 'number') {
           try {
-            const screenSize = this.robot.getScreenSize();
-            // Normalize coordinates (0-1) to actual screen size
-            const screenX = Math.round(data.x * screenSize.width);
-            const screenY = Math.round(data.y * screenSize.height);
-            console.log('🖱️ Moving mouse to:', { screenX, screenY, screenSize });
+            // Seçilen ekran/pencere için koordinatları hesapla
+            const { x: screenX, y: screenY } = this.getScreenCoordinates(socket.id, data.x, data.y);
+            console.log('🖱️ Moving mouse to:', { screenX, screenY, normalized: { x: data.x, y: data.y } });
             this.robot.moveMouse(screenX, screenY);
             console.log('✅ Mouse moved successfully');
           } catch (error) {
@@ -563,11 +618,10 @@ class LocalDeskServer extends EventEmitter {
         // RobotJS ile mouse click
         if (this.robot) {
           try {
-            const screenSize = this.robot.getScreenSize();
-            const screenX = Math.round(data.x * screenSize.width);
-            const screenY = Math.round(data.y * screenSize.height);
+            // Seçilen ekran/pencere için koordinatları hesapla
+            const { x: screenX, y: screenY } = this.getScreenCoordinates(socket.id, data.x, data.y);
             
-            console.log('🖱️ Clicking at:', { screenX, screenY, screenSize, button: data.button });
+            console.log('🖱️ Clicking at:', { screenX, screenY, normalized: { x: data.x, y: data.y }, button: data.button });
             
             // Önce mouse'u hareket ettir
             this.robot.moveMouse(screenX, screenY);
@@ -616,9 +670,8 @@ class LocalDeskServer extends EventEmitter {
         
         if (this.robot) {
           try {
-            const screenSize = this.robot.getScreenSize();
-            const screenX = Math.round(data.x * screenSize.width);
-            const screenY = Math.round(data.y * screenSize.height);
+            // Seçilen ekran/pencere için koordinatları hesapla
+            const { x: screenX, y: screenY } = this.getScreenCoordinates(socket.id, data.x, data.y);
             
             // Mouse'u hareket ettir
             this.robot.moveMouse(screenX, screenY);
@@ -645,9 +698,8 @@ class LocalDeskServer extends EventEmitter {
         
         if (this.robot) {
           try {
-            const screenSize = this.robot.getScreenSize();
-            const screenX = Math.round(data.x * screenSize.width);
-            const screenY = Math.round(data.y * screenSize.height);
+            // Seçilen ekran/pencere için koordinatları hesapla
+            const { x: screenX, y: screenY } = this.getScreenCoordinates(socket.id, data.x, data.y);
             
             // Mouse'u hareket ettir
             this.robot.moveMouse(screenX, screenY);
@@ -855,10 +907,36 @@ class LocalDeskServer extends EventEmitter {
       socket.on('disconnect', () => {
         console.log('📴 Bağlantı kesildi:', socket.id);
         this.connectedClients.delete(socket.id);
+        // Seçilen sourceId'yi temizle
+        this.activeSourceIds.delete(socket.id);
         // WebRTC bağlantısını temizle
         this.emit('webrtc-disconnect', { socketId: socket.id });
       });
     });
+  }
+
+  // Seçilen ekran bounds'larını ayarla (main.js'den çağrılır)
+  setActiveScreenBounds(socketId, bounds) {
+    this.activeScreenBounds.set(socketId, bounds);
+    console.log('📹 Active screen bounds set for socket:', socketId, bounds);
+  }
+
+  // Seçilen ekran/pencere için koordinatları hesapla
+  getScreenCoordinates(socketId, normalizedX, normalizedY) {
+    const bounds = this.activeScreenBounds.get(socketId);
+    
+    if (bounds) {
+      // Seçilen ekranın koordinat sistemine göre hesapla
+      const screenX = Math.round(bounds.x + (normalizedX * bounds.width));
+      const screenY = Math.round(bounds.y + (normalizedY * bounds.height));
+      return { x: screenX, y: screenY };
+    } else {
+      // Fallback: Ana ekran (RobotJS getScreenSize)
+      const screenSize = this.robot.getScreenSize();
+      const screenX = Math.round(normalizedX * screenSize.width);
+      const screenY = Math.round(normalizedY * screenSize.height);
+      return { x: screenX, y: screenY };
+    }
   }
 
   // WebRTC signaling için helper metodlar

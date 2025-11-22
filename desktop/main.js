@@ -103,6 +103,58 @@ app.whenReady().then(async () => {
     }
   };
 
+  // Server'a screen info callback'i ekle (sourceId'ye göre ekran bilgisi)
+  server.getScreenInfoCallback = async (sourceId) => {
+    try {
+      if (!sourceId) {
+        // Fallback: Ana ekran
+        const primaryDisplay = screen.getPrimaryDisplay();
+        return {
+          screenSize: primaryDisplay.size,
+          bounds: primaryDisplay.bounds
+        };
+      }
+
+      // Ekran ID'sinden ekran index'ini çıkar (format: "screen:INDEX:0")
+      if (sourceId.startsWith('screen:')) {
+        const screenIndexMatch = sourceId.match(/^screen:(\d+):/);
+        if (screenIndexMatch) {
+          const screenIndex = parseInt(screenIndexMatch[1], 10);
+          const displays = screen.getAllDisplays();
+          if (displays[screenIndex]) {
+            const display = displays[screenIndex];
+            return {
+              screenSize: display.size,
+              bounds: display.bounds
+            };
+          }
+        }
+      } else if (sourceId.startsWith('window:')) {
+        // Pencere seçildiğinde, ana ekranı kullan (pencere bounds'larını almak karmaşık)
+        const primaryDisplay = screen.getPrimaryDisplay();
+        return {
+          screenSize: primaryDisplay.size,
+          bounds: primaryDisplay.bounds
+        };
+      }
+
+      // Fallback: Ana ekran
+      const primaryDisplay = screen.getPrimaryDisplay();
+      return {
+        screenSize: primaryDisplay.size,
+        bounds: primaryDisplay.bounds
+      };
+    } catch (error) {
+      console.error('❌ Screen info callback hatası:', error);
+      // Fallback: Ana ekran
+      const primaryDisplay = screen.getPrimaryDisplay();
+      return {
+        screenSize: primaryDisplay.size,
+        bounds: primaryDisplay.bounds
+      };
+    }
+  };
+
   // WebRTC event handlers
   setupWebRTCHandlers(server);
   
@@ -533,6 +585,31 @@ function setupWebRTCHandlers(server) {
       }
 
       console.log('✅ Seçilen source:', selectedSource.name, 'ID:', selectedSource.id);
+      
+      // Seçilen ekran/pencere bilgisini server'a ilet (mouse kontrolü için)
+      // Ekran ID'sinden ekran index'ini çıkar (format: "screen:INDEX:0")
+      let screenBounds = null;
+      if (selectedSource.id.startsWith('screen:')) {
+        const screenIndexMatch = selectedSource.id.match(/^screen:(\d+):/);
+        if (screenIndexMatch) {
+          const screenIndex = parseInt(screenIndexMatch[1], 10);
+          const displays = screen.getAllDisplays();
+          if (displays[screenIndex]) {
+            screenBounds = displays[screenIndex].bounds;
+            console.log('📹 Seçilen ekran bounds:', screenBounds);
+            // Server'a ekran bilgisini ilet
+            server.setActiveScreenBounds(socketId, screenBounds);
+          }
+        }
+      } else if (selectedSource.id.startsWith('window:')) {
+        // Pencere seçildiğinde, pencereyi bul ve bounds'larını al
+        // Not: Electron'da pencere bounds'larını almak için BrowserWindow.getAllWindows() kullanılabilir
+        // Ancak bu karmaşık olabilir, şimdilik ana ekranı kullan
+        const primaryDisplay = screen.getPrimaryDisplay();
+        screenBounds = primaryDisplay.bounds;
+        console.log('📹 Pencere seçildi, ana ekran bounds kullanılıyor:', screenBounds);
+        server.setActiveScreenBounds(socketId, screenBounds);
+      }
       
       // Electron constraint'leri
       const constraints = {

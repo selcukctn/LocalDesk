@@ -70,6 +70,24 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   React.useEffect(() => {
     const fetchScreenSize = async () => {
       try {
+        // Eğer seçili bir sourceId varsa, onun bilgisini al
+        if (selectedSourceId) {
+          try {
+            const response = await fetch(`http://${device.host}:${device.port}/screen-info?sourceId=${encodeURIComponent(selectedSourceId)}`);
+            if (response.ok) {
+              const screenInfo = await response.json();
+              if (screenInfo.success && screenInfo.screenSize) {
+                console.log('📹 Seçilen ekran boyutu:', screenInfo.screenSize);
+                setDesktopScreenSize(screenInfo.screenSize);
+                return;
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Screen info alınamadı, device-info kullanılıyor:', error.message);
+          }
+        }
+        
+        // Fallback: device-info endpoint'inden al
         const response = await fetch(`http://${device.host}:${device.port}/device-info`);
         if (response.ok) {
           const info = await response.json();
@@ -88,7 +106,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     if (device) {
       fetchScreenSize();
     }
-  }, [device]);
+  }, [device, selectedSourceId]); // selectedSourceId değiştiğinde de güncelle
   
   const {
     isSessionActive,
@@ -1009,6 +1027,21 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   if (selectedSourceId) {
                     const sourceIdToUse = selectedSourceId;
                     setShowSourceSelector(false);
+                    
+                    // Seçilen ekranın boyutunu al
+                    try {
+                      const response = await fetch(`http://${device.host}:${device.port}/screen-info?sourceId=${encodeURIComponent(sourceIdToUse)}`);
+                      if (response.ok) {
+                        const screenInfo = await response.json();
+                        if (screenInfo.success && screenInfo.screenSize) {
+                          console.log('📹 Seçilen ekran boyutu güncelleniyor:', screenInfo.screenSize);
+                          setDesktopScreenSize(screenInfo.screenSize);
+                        }
+                      }
+                    } catch (error) {
+                      console.warn('⚠️ Screen info alınamadı:', error.message);
+                    }
+                    
                     // Kısa bir delay ile modal kapanmasını bekle
                     await new Promise(resolve => setTimeout(resolve, 100));
                     // Seçilen sourceId'yi parametre olarak geç

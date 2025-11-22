@@ -82,16 +82,37 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       }
     }
     
-    // Seçilen sourceId'yi state'e kaydet
-    if (currentSourceId && currentSourceId !== selectedSourceId) {
-      setSelectedSourceId(currentSourceId);
-    }
+      // Seçilen sourceId'yi state'e kaydet
+      if (currentSourceId && currentSourceId !== selectedSourceId) {
+        setSelectedSourceId(currentSourceId);
+      }
 
-    try {
-      setIsConnecting(true);
-      setError(null);
-      console.log('📹 Remote Screen oturumu başlatılıyor...');
-      console.log('📹 Selected source ID:', currentSourceId || selectedSourceId);
+      try {
+        setIsConnecting(true);
+        setError(null);
+        console.log('📹 Remote Screen oturumu başlatılıyor...');
+        console.log('📹 Selected source ID:', currentSourceId || selectedSourceId);
+        
+        // Seçilen ekran/pencere bilgisini al ve event ile bildir
+        const device = deviceRef.current;
+        if (device && currentSourceId) {
+          try {
+            const response = await fetch(`http://${device.host}:${device.port}/screen-info?sourceId=${encodeURIComponent(currentSourceId)}`);
+            if (response.ok) {
+              const screenInfo = await response.json();
+              if (screenInfo.success && screenInfo.screenSize) {
+                console.log('📹 Seçilen ekran boyutu:', screenInfo.screenSize);
+                // Screen size bilgisini event ile bildir (component'e iletmek için)
+                socketRef.current?.emit('screen-size-update', {
+                  sourceId: currentSourceId,
+                  screenSize: screenInfo.screenSize
+                });
+              }
+            }
+          } catch (error) {
+            console.warn('⚠️ Screen info alınamadı:', error.message);
+          }
+        }
 
       // Peer connection oluştur
       const pc = new RTCPeerConnection(ICE_SERVERS);
