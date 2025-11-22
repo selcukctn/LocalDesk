@@ -1054,6 +1054,30 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       {/* Zoom Kontrolleri Paneli */}
       {showZoomControls && isSessionActive && (
         <View style={styles.zoomContainer}>
+          {/* Ekran Önizlemesi */}
+          {remoteStream && (
+            <View style={styles.zoomPreviewContainer}>
+              <View
+                style={[
+                  styles.zoomPreviewInner,
+                  {
+                    transform: [
+                      { scale: zoomLevel },
+                      { translateX: panOffset.x },
+                      { translateY: panOffset.y }
+                    ]
+                  }
+                ]}
+              >
+                <RTCView
+                  streamURL={remoteStream.toURL()}
+                  style={styles.zoomPreview}
+                  objectFit="contain"
+                />
+              </View>
+            </View>
+          )}
+          
           {/* Zoom Seviyesi */}
           <View style={styles.zoomHeader}>
             <Image 
@@ -1695,6 +1719,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#333'
+  },
+  zoomPreviewContainer: {
+    height: 150,
+    backgroundColor: '#000',
+    borderRadius: 8,
+    marginBottom: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#333'
+  },
+  zoomPreviewInner: {
+    width: '100%',
+    height: '100%'
+  },
+  zoomPreview: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#000'
   },
   zoomHeader: {
     flexDirection: 'row',
