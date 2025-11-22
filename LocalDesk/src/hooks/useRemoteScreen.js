@@ -54,7 +54,7 @@ export const useRemoteScreen = (socket, deviceInfo) => {
   }, []);
 
   // WebRTC bağlantısını başlat
-  const startSession = useCallback(async (sourceId = null, viewOnly = false) => {
+  const startSession = useCallback(async (sourceId = null) => {
     if (!socketRef.current || !socketRef.current.connected) {
       setError('Cihaza bağlı değilsiniz');
       return;
@@ -172,12 +172,10 @@ export const useRemoteScreen = (socket, deviceInfo) => {
       console.log('📹 Socket id:', socketRef.current.id);
       
       console.log('📹 Selected source ID:', currentSourceId);
-      console.log('📹 View Only Mode (Ek Monitör):', viewOnly);
       
       socketRef.current.emit('webrtc-offer', {
         offer: pc.localDescription,
-        sourceId: currentSourceId, // Seçilen ekran/pencere ID'si
-        viewOnly: viewOnly // Ek monitör modu (Miracast için)
+        sourceId: currentSourceId // Seçilen ekran/pencere ID'si
       });
       console.log('✅ Offer emitted successfully');
 

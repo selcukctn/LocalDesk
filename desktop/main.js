@@ -48,7 +48,7 @@ function createWindow() {
   mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));
 
   // DevTools'u her zaman aç (WebRTC debug için)
-  mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -108,7 +108,7 @@ app.whenReady().then(async () => {
   
   // Remote control event handlers
   setupRemoteControlHandlers(server);
-  
+
   // Server'ı başlat
   try {
     await server.start();
@@ -494,13 +494,12 @@ function setupWebRTCHandlers(server) {
   if (!server) return;
 
   // WebRTC offer event
-  server.on('webrtc-offer', async ({ socketId, offer, deviceId, sourceId, viewOnly }) => {
+  server.on('webrtc-offer', async ({ socketId, offer, deviceId, sourceId }) => {
     console.log('📹 WebRTC offer alındı main.js\'de');
     console.log('📹 Socket ID:', socketId);
     console.log('📹 Device ID:', deviceId);
     console.log('📹 Offer type:', offer?.type);
     console.log('📹 Source ID:', sourceId);
-    console.log('📹 View Only Mode (Ek Monitör):', viewOnly);
     
     try {
       console.log('📹 Getting desktop sources...');

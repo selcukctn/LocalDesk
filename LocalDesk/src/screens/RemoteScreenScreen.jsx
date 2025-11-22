@@ -115,7 +115,6 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   } = useRemoteScreen(socket, device);
   
   const [showSourceSelector, setShowSourceSelector] = useState(false);
-  const [isViewOnlyMode, setIsViewOnlyMode] = useState(false);
 
   // Zaman formatı (saniye -> mm:ss)
   const formatTime = (seconds) => {
@@ -201,20 +200,15 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const panResponder = useMemo(() => {
     return PanResponder.create({
       onStartShouldSetPanResponder: () => {
-        // View-only modunda touch event'lerini devre dışı bırak
-        if (isViewOnlyMode) return false;
         const canRespond = isSessionActive && videoSize.width > 0 && videoSize.height > 0;
         console.log('🖱️ onStartShouldSetPanResponder:', { 
           canRespond, 
           isSessionActive, 
-          videoSize,
-          isViewOnlyMode
+          videoSize 
         });
         return canRespond;
       },
       onMoveShouldSetPanResponder: () => {
-        // View-only modunda touch event'lerini devre dışı bırak
-        if (isViewOnlyMode) return false;
         return isSessionActive && videoSize.width > 0 && videoSize.height > 0;
       },
       onPanResponderGrant: (evt) => {
@@ -402,7 +396,7 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         }
       }
     });
-  }, [isSessionActive, videoSize, videoRenderSize, sendMouseMove, sendMouseClick, sendMouseButtonDown, sendMouseButtonUp, isViewOnlyMode]);
+  }, [isSessionActive, videoSize, videoRenderSize, sendMouseMove, sendMouseClick]);
 
 
   // Klavye toggle
@@ -587,61 +581,23 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             <Text style={styles.placeholderText}>
               {t('remoteScreen.touchToControl')}
             </Text>
-            <View style={styles.startButtonsContainer}>
-              <TouchableOpacity
-                style={styles.startButton}
-                onPress={() => {
-                  setIsViewOnlyMode(false);
-                  // Önce ekran kaynaklarını al
-                  fetchScreenSources();
-                  setShowSourceSelector(true);
-                }}
-              >
-                <Image 
-                  source={screenPlayIcon} 
-                  style={styles.startButtonIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.startButtonText}>
-                  {t('remoteScreen.startSession')}
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.startButton, styles.extendedDisplayButton]}
-                onPress={async () => {
-                  setIsViewOnlyMode(true);
-                  // Ek monitör modunda ekran seçimi yapmadan direkt bağlan
-                  // Önce ekran kaynaklarını al (ilk ekranı otomatik seçmek için)
-                  await fetchScreenSources();
-                  // Kısa bir delay ile state güncellemesini bekle
-                  await new Promise(resolve => setTimeout(resolve, 300));
-                  // İlk ekranı seç ve direkt bağlan
-                  if (screenSources.screens && screenSources.screens.length > 0) {
-                    const firstScreenId = screenSources.screens[0].id;
-                    setSelectedSourceId(firstScreenId);
-                    // Ek monitör modunda direkt bağlan (ekran seçimi yok)
-                    startSession(firstScreenId, true);
-                  } else {
-                    // Ekran kaynağı yoksa hata göster
-                    Alert.alert(
-                      'Hata',
-                      'Ekran kaynağı bulunamadı. Lütfen normal modu kullanın.',
-                      [{ text: 'Tamam' }]
-                    );
-                  }
-                }}
-              >
-                <Image 
-                  source={screenPlayIcon} 
-                  style={styles.startButtonIcon}
-                  resizeMode="contain"
-                />
-                <Text style={styles.startButtonText}>
-                  Ek Monitör
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.startButton}
+              onPress={() => {
+                // Önce ekran kaynaklarını al
+                fetchScreenSources();
+                setShowSourceSelector(true);
+              }}
+            >
+              <Image 
+                source={screenPlayIcon} 
+                style={styles.startButtonIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.startButtonText}>
+                {t('remoteScreen.startSession')}
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -664,18 +620,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             <View
               style={styles.touchOverlay}
               onLayout={handleVideoLayout}
-              {...(!isViewOnlyMode ? panResponder.panHandlers : {})}
+              {...panResponder.panHandlers}
             >
               <RTCView
                 streamURL={remoteStream.toURL()}
                 style={styles.video}
                 objectFit="contain"
               />
-              {isViewOnlyMode && (
-                <View style={styles.viewOnlyBadge}>
-                  <Text style={styles.viewOnlyBadgeText}>Ek Monitör Modu</Text>
-                </View>
-              )}
             </View>
           </View>
         )}
@@ -1036,12 +987,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                 onPress={async () => {
                   if (selectedSourceId) {
                     const sourceIdToUse = selectedSourceId;
-                    const viewOnly = isViewOnlyMode;
                     setShowSourceSelector(false);
                     // Kısa bir delay ile modal kapanmasını bekle
                     await new Promise(resolve => setTimeout(resolve, 100));
                     // Seçilen sourceId'yi parametre olarak geç
-                    startSession(sourceIdToUse, viewOnly);
+                    startSession(sourceIdToUse);
                   }
                 }}
                 disabled={!selectedSourceId}
@@ -1136,21 +1086,6 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#000'
   },
-  viewOnlyBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    backgroundColor: 'rgba(25, 118, 210, 0.9)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    zIndex: 10
-  },
-  viewOnlyBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600'
-  },
   placeholder: {
     flex: 1,
     alignItems: 'center',
@@ -1180,28 +1115,14 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     textAlign: 'center'
   },
-  startButtonsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    paddingHorizontal: 20
-  },
   startButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#00C853',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
-    gap: 8,
-    flex: 1,
-    maxWidth: 200,
-    justifyContent: 'center'
-  },
-  extendedDisplayButton: {
-    backgroundColor: '#1976D2'
+    gap: 8
   },
   startButtonIcon: {
     width: 24,

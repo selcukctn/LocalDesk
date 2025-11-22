@@ -30,16 +30,6 @@ try {
   console.error('💡 Çözüm: cd desktop/server/media-addon && npm install');
 }
 
-// Display addon yükleme (Windows sanal display için)
-let displayAddon = null;
-try {
-  displayAddon = require('./display-addon');
-  console.log('✅ Display addon yüklendi');
-} catch (error) {
-  console.error('❌ Display addon yüklenemedi:', error.message);
-  console.error('💡 Çözüm: cd desktop/server/display-addon && npm install');
-}
-
 // RobotJS yükleme (opsiyonel - yüklenemezse graceful failure)
 let robot = null;
 try {
@@ -81,8 +71,6 @@ class LocalDeskServer extends EventEmitter {
     this.pendingPairings = new Map();
     this.keyboardAddon = null;
     this.robot = robot;
-    this.displayAddon = displayAddon;
-    this.viewOnlySessions = new Map(); // socketId -> viewOnly (ek monitör modu)
     
     // Veri dosyaları - build modunda kullanıcı veri dizinini kullan
     // Development modunda __dirname/data, production'da userData/data
@@ -496,56 +484,14 @@ class LocalDeskServer extends EventEmitter {
         
         console.log('✅ Client authenticated:', client.deviceName);
         
-        // View-only modunu kaydet (ek monitör modu)
-        if (data.viewOnly) {
-          this.viewOnlySessions.set(socket.id, true);
-          console.log('📺 Ek monitör modu aktif - Remote control devre dışı');
-          console.log('📺 Windows\'un mobil cihazı ek monitör olarak algılaması için Miracast receiver etkinleştiriliyor...');
-          
-          // Miracast receiver'ı etkinleştir (Windows'un mobil cihazı ek monitör olarak algılaması için)
-          if (this.displayAddon && this.displayAddon.enableMiracastReceiver) {
-            try {
-              // Önce Miracast receiver durumunu kontrol et
-              const status = this.displayAddon.isMiracastReceiverEnabled();
-              console.log('📡 Miracast receiver durumu:', status);
-              
-              if (!status.enabled) {
-                // Miracast receiver'ı etkinleştir
-                console.log('📡 Miracast receiver etkinleştiriliyor...');
-                const result = this.displayAddon.enableMiracastReceiver();
-                if (result.success) {
-                  console.log('✅ Miracast receiver etkinleştirildi:', result.message);
-                  console.log('💡 Windows artık mobil cihazı ek monitör olarak algılayabilir');
-                  console.log('💡 Not: Windows\'u yeniden başlatmanız gerekebilir');
-                  console.log('💡 Mobil cihazınızdan "Project" menüsünden bu PC\'yi seçebilirsiniz');
-                } else {
-                  console.warn('⚠️ Miracast receiver etkinleştirilemedi:', result.message);
-                  console.warn('💡 Yönetici hakları gerekebilir');
-                }
-              } else {
-                console.log('✅ Miracast receiver zaten etkin');
-                console.log('💡 Windows mobil cihazı ek monitör olarak algılayabilir');
-              }
-            } catch (error) {
-              console.error('❌ Miracast receiver hatası:', error.message);
-            }
-          } else {
-            console.warn('⚠️ Display addon yüklü değil, Miracast receiver etkinleştirilemedi');
-          }
-        } else {
-          this.viewOnlySessions.delete(socket.id);
-        }
-        
         // Offer'ı main process'e ilet (desktopCapturer için)
         console.log('📹 Emitting webrtc-offer to main process');
         console.log('📹 Source ID from mobile:', data.sourceId);
-        console.log('📹 View Only Mode:', data.viewOnly);
         this.emit('webrtc-offer', { 
           socketId: socket.id, 
           offer: data.offer, 
           deviceId: client.deviceId,
-          sourceId: data.sourceId, // Seçilen ekran/pencere ID'si
-          viewOnly: data.viewOnly // Ek monitör modu
+          sourceId: data.sourceId // Seçilen ekran/pencere ID'si
         });
         console.log('✅ webrtc-offer emitted to main process');
       });
@@ -663,11 +609,6 @@ class LocalDeskServer extends EventEmitter {
 
       // Mouse button down (sürükleme için)
       socket.on('remote-mouse-button-down', (data) => {
-        // Ek monitör modunda remote control devre dışı
-        if (this.viewOnlySessions.get(socket.id)) {
-          return;
-        }
-        
         const client = this.connectedClients.get(socket.id);
         if (!client) return;
         const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
@@ -697,11 +638,6 @@ class LocalDeskServer extends EventEmitter {
 
       // Mouse button up (sürükleme bitişi için)
       socket.on('remote-mouse-button-up', (data) => {
-        // Ek monitör modunda remote control devre dışı
-        if (this.viewOnlySessions.get(socket.id)) {
-          return;
-        }
-        
         const client = this.connectedClients.get(socket.id);
         if (!client) return;
         const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
@@ -918,27 +854,6 @@ class LocalDeskServer extends EventEmitter {
 
       socket.on('disconnect', () => {
         console.log('📴 Bağlantı kesildi:', socket.id);
-        
-        // View-only session'ı temizle
-        if (this.viewOnlySessions.has(socket.id)) {
-          this.viewOnlySessions.delete(socket.id);
-          console.log('📺 Ek monitör modu sonlandırıldı');
-          
-          // Sanal display'i kaldır
-          if (this.displayAddon && this.displayAddon.removeVirtualDisplay) {
-            try {
-              const result = this.displayAddon.removeVirtualDisplay();
-              if (result.success) {
-                console.log('✅ Sanal display kaldırıldı:', result.message);
-              } else {
-                console.warn('⚠️ Sanal display kaldırılamadı:', result.message);
-              }
-            } catch (error) {
-              console.error('❌ Sanal display kaldırma hatası:', error.message);
-            }
-          }
-        }
-        
         this.connectedClients.delete(socket.id);
         // WebRTC bağlantısını temizle
         this.emit('webrtc-disconnect', { socketId: socket.id });
