@@ -22,6 +22,10 @@ import { useRemoteScreen } from '../hooks/useRemoteScreen';
 const screenPlayIcon = require('../icons/screen-play.png');
 const plugConnectionIcon = require('../icons/plug-connection.png');
 const keyboardDownIcon = require('../icons/keyboard-down.png');
+const leftIcon = require('../icons/left.png');
+const angleDoubleSmallLeftIcon = require('../icons/angle-double-small-left.png');
+const playIcon = require('../icons/play.png');
+const pauseIcon = require('../icons/pause.png');
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -439,7 +443,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerButton} onPress={onBack}>
-          <Icon name="arrow-left" size={24} color="#fff" />
+          <Image 
+            source={leftIcon} 
+            style={styles.headerBackIcon}
+            resizeMode="contain"
+          />
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
@@ -568,17 +576,21 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.mediaButton}
               onPress={() => sendMediaControl('previous')}
             >
-              <Icon name="skip-previous" size={24} color="#fff" />
+              <Image 
+                source={leftIcon} 
+                style={styles.mediaButtonIcon}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             
             <TouchableOpacity
               style={[styles.mediaButton, styles.mediaButtonPrimary]}
               onPress={() => sendMediaControl('playpause')}
             >
-              <Icon 
-                name={mediaStatus.isPlaying ? 'pause' : 'play'} 
-                size={32} 
-                color="#fff" 
+              <Image 
+                source={mediaStatus.isPlaying ? pauseIcon : playIcon} 
+                style={styles.mediaButtonPrimaryIcon}
+                resizeMode="contain"
               />
             </TouchableOpacity>
             
@@ -586,7 +598,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.mediaButton}
               onPress={() => sendMediaControl('next')}
             >
-              <Icon name="skip-next" size={24} color="#fff" />
+              <Image 
+                source={angleDoubleSmallLeftIcon} 
+                style={[styles.mediaButtonIcon, styles.mediaButtonIconRotated]}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           </View>
           
@@ -685,7 +701,14 @@ const styles = StyleSheet.create({
   },
   headerButton: {
     padding: 8,
-    width: 40
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  headerBackIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff'
   },
   headerRight: {
     flexDirection: 'row',
@@ -854,6 +877,19 @@ const styles = StyleSheet.create({
     height: 64,
     borderRadius: 32,
     backgroundColor: '#00C853'
+  },
+  mediaButtonIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff'
+  },
+  mediaButtonIconRotated: {
+    transform: [{ rotate: '180deg' }]
+  },
+  mediaButtonPrimaryIcon: {
+    width: 32,
+    height: 32,
+    tintColor: '#fff'
   },
   mediaProgress: {
     marginTop: 8
