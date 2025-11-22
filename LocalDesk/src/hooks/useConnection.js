@@ -295,6 +295,11 @@ export const useConnection = () => {
     };
   }, []);
 
+  // Socket'i dışarıya aç (remote screen için gerekli)
+  const getSocket = useCallback(() => {
+    return socketRef.current;
+  }, []);
+
   return {
     isConnected,
     isPairing,
@@ -305,7 +310,9 @@ export const useConnection = () => {
     connect,
     disconnect,
     executeShortcut,
-    deviceInfo
+    deviceInfo,
+    socket: socketRef.current,
+    getSocket
   };
 };
 

@@ -22,6 +22,7 @@
     "connecting": "Bağlanıyor...",
     "connectedDevice": "Bağlı Cihaz",
     "disconnect": "Bağlantıyı Kes",
+    "remoteScreen": "Uzak Ekran",
     "pages": "Sayfalar",
     "selectPage": "Kısayolları görüntülemek için bir sayfa seçin",
     "pairingWait": "Eşleşme onayı bekleniyor...",
@@ -60,6 +61,27 @@
     "english": "English",
     "german": "Deutsch",
     "turkish": "Türkçe"
+  },
+  "remoteScreen": {
+    "title": "Uzak Ekran",
+    "connecting": "Bağlanıyor...",
+    "connected": "Bağlandı",
+    "disconnected": "Bağlantı Kesildi",
+    "reconnecting": "Yeniden Bağlanılıyor...",
+    "startSession": "Oturumu Başlat",
+    "endSession": "Oturumu Bitir",
+    "quality": "Kalite",
+    "qualityLow": "Düşük",
+    "qualityMedium": "Orta",
+    "qualityHigh": "Yüksek",
+    "showKeyboard": "Klavyeyi Göster",
+    "hideKeyboard": "Klavyeyi Gizle",
+    "loading": "Yükleniyor...",
+    "error": "Hata",
+    "errorConnection": "Bağlantı kurulamadı",
+    "errorStream": "Video akışı başlatılamadı",
+    "touchToControl": "Kontrol etmek için dokunun",
+    "sessionActive": "Oturum Aktif"
   }
 }
 

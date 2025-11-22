@@ -10,6 +10,15 @@ const { spawn } = require('child_process');
 
 const discovery = require('./discovery');
 
+// RobotJS yükleme (opsiyonel - yüklenemezse graceful failure)
+let robot = null;
+try {
+  robot = require('robotjs');
+  console.log('✅ RobotJS yüklendi (remote control aktif)');
+} catch (error) {
+  console.warn('⚠️  RobotJS yüklenemedi, remote control devre dışı:', error.message);
+}
+
 class LocalDeskServer extends EventEmitter {
   constructor(dataDir = null) {
     super();
@@ -24,6 +33,7 @@ class LocalDeskServer extends EventEmitter {
     this.connectedClients = new Map();
     this.pendingPairings = new Map();
     this.keyboardAddon = null;
+    this.robot = robot;
     
     // Veri dosyaları - build modunda kullanıcı veri dizinini kullan
     // Development modunda __dirname/data, production'da userData/data
@@ -276,11 +286,198 @@ class LocalDeskServer extends EventEmitter {
         socket.emit('execute-result', { success: true, shortcutId });
       });
       
+      // WebRTC signaling - Remote Screen için
+      socket.on('webrtc-offer', async (data) => {
+        console.log('📹 WebRTC offer alındı, socket:', socket.id);
+        console.log('📹 Offer data:', data);
+        
+        const client = this.connectedClients.get(socket.id);
+        if (!client) {
+          console.error('❌ Client not found in connectedClients!');
+          socket.emit('error', { message: 'Yetkisiz cihaz' });
+          return;
+        }
+        
+        console.log('✅ Client authenticated:', client.deviceName);
+        
+        // Offer'ı main process'e ilet (desktopCapturer için)
+        console.log('📹 Emitting webrtc-offer to main process');
+        this.emit('webrtc-offer', { 
+          socketId: socket.id, 
+          offer: data.offer, 
+          deviceId: client.deviceId 
+        });
+        console.log('✅ webrtc-offer emitted to main process');
+      });
+
+      socket.on('webrtc-answer', (data) => {
+        console.log('📹 WebRTC answer alındı:', socket.id);
+        // Answer'ı main process'e ilet
+        this.emit('webrtc-answer', { socketId: socket.id, answer: data.answer });
+      });
+
+      socket.on('webrtc-ice-candidate', (data) => {
+        console.log('📹 WebRTC ICE candidate alındı:', socket.id);
+        // ICE candidate'ı main process'e ilet
+        this.emit('webrtc-ice-candidate', { socketId: socket.id, candidate: data.candidate });
+      });
+
+      // Remote Screen kontrolü - Mouse
+      socket.on('remote-mouse-move', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        // RobotJS ile mouse move
+        if (this.robot && typeof data.x === 'number' && typeof data.y === 'number') {
+          try {
+            const screenSize = this.robot.getScreenSize();
+            // Normalize coordinates (0-1) to actual screen size
+            const screenX = Math.round(data.x * screenSize.width);
+            const screenY = Math.round(data.y * screenSize.height);
+            this.robot.moveMouse(screenX, screenY);
+          } catch (error) {
+            console.error('❌ Mouse move hatası:', error.message);
+          }
+        }
+      });
+
+      socket.on('remote-mouse-click', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        // RobotJS ile mouse click
+        if (this.robot) {
+          try {
+            const screenSize = this.robot.getScreenSize();
+            const screenX = Math.round(data.x * screenSize.width);
+            const screenY = Math.round(data.y * screenSize.height);
+            
+            // Önce mouse'u hareket ettir
+            this.robot.moveMouse(screenX, screenY);
+            
+            // Click (button: 'left', 'right', 'middle')
+            const buttonMap = { left: 'left', right: 'right', middle: 'middle', 0: 'left', 1: 'middle', 2: 'right' };
+            const robotButton = buttonMap[data.button] || 'left';
+            
+            this.robot.mouseClick(robotButton);
+            console.log(`🖱️ Mouse click: ${robotButton} at (${screenX}, ${screenY})`);
+          } catch (error) {
+            console.error('❌ Mouse click hatası:', error.message);
+          }
+        }
+      });
+
+      socket.on('remote-mouse-scroll', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        // RobotJS ile scroll
+        if (this.robot) {
+          try {
+            // RobotJS scrollMouse(x, y) - x: horizontal, y: vertical
+            // Pozitif değerler yukarı/sağa, negatif değerler aşağı/sola kaydırır
+            const scrollAmount = Math.round(-data.deltaY / 10); // Normalize scroll amount
+            this.robot.scrollMouse(0, scrollAmount);
+            console.log(`🖱️ Mouse scroll: ${scrollAmount}`);
+          } catch (error) {
+            console.error('❌ Mouse scroll hatası:', error.message);
+          }
+        }
+      });
+
+      // Remote Screen kontrolü - Keyboard
+      socket.on('remote-keyboard-input', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        // RobotJS ile keyboard input
+        if (this.robot) {
+          try {
+            if (data.text) {
+              // Metin girişi
+              this.robot.typeString(data.text);
+              console.log(`⌨️ Keyboard text: ${data.text}`);
+            } else if (data.keys && data.keys.length > 0) {
+              // Özel tuşlar (modifier + key)
+              // Format: ['control', 'c'] gibi
+              const modifiers = [];
+              let mainKey = null;
+              
+              for (const key of data.keys) {
+                const lowerKey = key.toLowerCase();
+                if (['control', 'alt', 'shift', 'command', 'win'].includes(lowerKey)) {
+                  modifiers.push(lowerKey);
+                } else {
+                  mainKey = lowerKey;
+                }
+              }
+              
+              if (mainKey) {
+                this.robot.keyTap(mainKey, modifiers);
+                console.log(`⌨️ Keyboard keys: ${modifiers.join('+')}+${mainKey}`);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Keyboard input hatası:', error.message);
+          }
+        }
+      });
+
       socket.on('disconnect', () => {
         console.log('📴 Bağlantı kesildi:', socket.id);
         this.connectedClients.delete(socket.id);
+        // WebRTC bağlantısını temizle
+        this.emit('webrtc-disconnect', { socketId: socket.id });
       });
     });
+  }
+
+  // WebRTC signaling için helper metodlar
+  sendWebRTCOffer(socketId, offer) {
+    console.log('📹 sendWebRTCOffer called for socket:', socketId);
+    const socket = this.io.sockets.sockets.get(socketId);
+    if (socket) {
+      console.log('✅ Socket found, emitting webrtc-offer to mobile');
+      socket.emit('webrtc-offer', { offer });
+      console.log('✅ webrtc-offer emitted');
+    } else {
+      console.error('❌ Socket not found for ID:', socketId);
+    }
+  }
+
+  sendWebRTCAnswer(socketId, answer) {
+    console.log('📹 sendWebRTCAnswer called for socket:', socketId);
+    console.log('📹 Answer type:', answer?.type);
+    const socket = this.io.sockets.sockets.get(socketId);
+    if (socket) {
+      console.log('✅ Socket found, emitting webrtc-answer to mobile');
+      console.log('📹 Socket connected?', socket.connected);
+      socket.emit('webrtc-answer', { answer });
+      console.log('✅ webrtc-answer emitted to mobile successfully');
+    } else {
+      console.error('❌ Socket not found for ID:', socketId);
+      console.error('❌ Available sockets:', Array.from(this.io.sockets.sockets.keys()));
+    }
+  }
+
+  sendWebRTCICECandidate(socketId, candidate) {
+    console.log('📹 sendWebRTCICECandidate called for socket:', socketId);
+    const socket = this.io.sockets.sockets.get(socketId);
+    if (socket) {
+      console.log('✅ Socket found, emitting webrtc-ice-candidate to mobile');
+      socket.emit('webrtc-ice-candidate', { candidate });
+      console.log('✅ webrtc-ice-candidate emitted');
+    } else {
+      console.error('❌ Socket not found for ID:', socketId);
+    }
   }
 
   async handlePairingResponse(deviceId, approved) {

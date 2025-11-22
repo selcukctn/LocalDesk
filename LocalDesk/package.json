@@ -20,6 +20,7 @@
     "react-native-udp": "^4.1.6",
     "react-native-vector-icons": "^10.0.3",
     "react-native-zeroconf": "^0.13.8",
+    "react-native-webrtc": "^111.0.2",
     "socket.io-client": "^4.6.1"
   },
   "devDependencies": {

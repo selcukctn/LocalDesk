@@ -6,13 +6,14 @@
  * @license MIT
  */
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, desktopCapturer, screen } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const LocalDeskServer = require('./server');
 
 let mainWindow;
 let server;
+const webrtcPeers = new Map(); // socketId -> { peerConnection, stream }
 
 // Veri dizinini belirle (build modunda kullanıcı veri dizinini kullan)
 function getDataDir() {
@@ -46,10 +47,8 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));
 
-  // Geliştirme modunda DevTools'u aç
-  if (process.env.NODE_ENV === 'development') {
-    mainWindow.webContents.openDevTools();
-  }
+  // DevTools'u her zaman aç (WebRTC debug için)
+  mainWindow.webContents.openDevTools();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -69,6 +68,12 @@ app.whenReady().then(async () => {
       mainWindow.webContents.send('pairing-request', deviceInfo);
     }
   });
+
+  // WebRTC event handlers
+  setupWebRTCHandlers(server);
+  
+  // Remote control event handlers
+  setupRemoteControlHandlers(server);
 
   // Server'ı başlat
   try {
@@ -413,6 +418,195 @@ ipcMain.handle('install-update', async () => {
       success: false, 
       error: error.message 
     };
+  }
+});
+
+// WebRTC Screen Sharing Setup
+function setupWebRTCHandlers(server) {
+  if (!server) return;
+
+  // WebRTC offer event
+  server.on('webrtc-offer', async ({ socketId, offer, deviceId }) => {
+    console.log('📹 WebRTC offer alındı main.js\'de');
+    console.log('📹 Socket ID:', socketId);
+    console.log('📹 Device ID:', deviceId);
+    console.log('📹 Offer type:', offer?.type);
+    
+    try {
+      console.log('📹 Getting desktop sources...');
+      // Ekran listesini al
+      const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        thumbnailSize: { width: 0, height: 0 }
+      });
+
+      console.log('📹 Found', sources.length, 'sources');
+      console.log('📹 Sources:', sources.map(s => ({ id: s.id, name: s.name })));
+
+      // İlk ekranı kullan (çoklu ekran desteği için genişletilebilir)
+      const primaryScreen = sources.find(source => source.id.startsWith('screen:'));
+      
+      if (!primaryScreen) {
+        console.error('❌ Ekran bulunamadı');
+        return;
+      }
+
+      console.log('✅ Ekran bulundu:', primaryScreen.name, 'ID:', primaryScreen.id);
+      
+      // Electron constraint'leri
+      const constraints = {
+        audio: false,
+        video: {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: primaryScreen.id,
+            minWidth: 1280,
+            maxWidth: 1920,
+            minHeight: 720,
+            maxHeight: 1080,
+            minFrameRate: 15,
+            maxFrameRate: 30
+          }
+        }
+      };
+
+      console.log('📹 Constraints:', JSON.stringify(constraints, null, 2));
+      
+      // Media stream al (renderer process'e gönder)
+      console.log('📹 Sending start-screen-capture to renderer');
+      mainWindow.webContents.send('start-screen-capture', {
+        socketId,
+        offer,
+        constraints
+      });
+      console.log('✅ start-screen-capture event sent to renderer');
+
+    } catch (error) {
+      console.error('❌ WebRTC screen capture hatası:', error);
+      console.error('❌ Error stack:', error.stack);
+    }
+  });
+
+  // WebRTC answer event
+  server.on('webrtc-answer', ({ socketId, answer }) => {
+    console.log('📹 WebRTC answer alındı:', socketId);
+    mainWindow.webContents.send('webrtc-answer', { socketId, answer });
+  });
+
+  // WebRTC ICE candidate event
+  server.on('webrtc-ice-candidate', ({ socketId, candidate }) => {
+    console.log('📹 WebRTC ICE candidate alındı:', socketId);
+    mainWindow.webContents.send('webrtc-ice-candidate', { socketId, candidate });
+  });
+
+  // WebRTC disconnect event
+  server.on('webrtc-disconnect', ({ socketId }) => {
+    console.log('📹 WebRTC bağlantısı kesildi:', socketId);
+    mainWindow.webContents.send('webrtc-disconnect', { socketId });
+    webrtcPeers.delete(socketId);
+  });
+}
+
+// Remote Control Handlers
+function setupRemoteControlHandlers(server) {
+  if (!server) return;
+
+  // Mouse move
+  server.on('remote-mouse-move', ({ socketId, x, y }) => {
+    try {
+      const displays = screen.getAllDisplays();
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const { width, height } = primaryDisplay.size;
+      
+      // Normalize coordinates (0-1 range) to screen coordinates
+      const screenX = Math.round(x * width);
+      const screenY = Math.round(y * height);
+      
+      // Electron'da mouse move için native API kullanacağız
+      // Bu kısmı server/index.js'de yönetmek daha iyi
+      mainWindow.webContents.send('remote-mouse-move', { x: screenX, y: screenY });
+    } catch (error) {
+      console.error('❌ Mouse move hatası:', error);
+    }
+  });
+
+  // Mouse click
+  server.on('remote-mouse-click', ({ socketId, button, x, y }) => {
+    try {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const { width, height } = primaryDisplay.size;
+      
+      const screenX = Math.round(x * width);
+      const screenY = Math.round(y * height);
+      
+      console.log(`🖱️ Mouse click: button=${button}, x=${screenX}, y=${screenY}`);
+      mainWindow.webContents.send('remote-mouse-click', { button, x: screenX, y: screenY });
+    } catch (error) {
+      console.error('❌ Mouse click hatası:', error);
+    }
+  });
+
+  // Mouse scroll
+  server.on('remote-mouse-scroll', ({ socketId, deltaX, deltaY }) => {
+    try {
+      console.log(`🖱️ Mouse scroll: deltaX=${deltaX}, deltaY=${deltaY}`);
+      mainWindow.webContents.send('remote-mouse-scroll', { deltaX, deltaY });
+    } catch (error) {
+      console.error('❌ Mouse scroll hatası:', error);
+    }
+  });
+
+  // Keyboard input
+  server.on('remote-keyboard-input', ({ socketId, text, keys }) => {
+    try {
+      if (text) {
+        console.log(`⌨️ Keyboard text: ${text}`);
+        mainWindow.webContents.send('remote-keyboard-text', { text });
+      }
+      if (keys && keys.length > 0) {
+        console.log(`⌨️ Keyboard keys: ${keys.join('+')}`);
+        mainWindow.webContents.send('remote-keyboard-keys', { keys });
+      }
+    } catch (error) {
+      console.error('❌ Keyboard input hatası:', error);
+    }
+  });
+}
+
+// IPC handlers for WebRTC signaling from renderer
+ipcMain.on('webrtc-local-offer', (event, { socketId, offer }) => {
+  console.log('📹 webrtc-local-offer received from renderer');
+  if (server) {
+    server.sendWebRTCOffer(socketId, offer);
+  } else {
+    console.error('❌ Server not available');
+  }
+});
+
+ipcMain.on('webrtc-local-answer', (event, { socketId, answer }) => {
+  console.log('📹 webrtc-local-answer received from renderer');
+  console.log('📹 Socket ID:', socketId);
+  console.log('📹 Answer type:', answer?.type);
+  
+  if (server) {
+    console.log('📹 Sending answer to mobile via server');
+    server.sendWebRTCAnswer(socketId, answer);
+    console.log('✅ Answer sent to mobile');
+  } else {
+    console.error('❌ Server not available');
+  }
+});
+
+ipcMain.on('webrtc-local-ice-candidate', (event, { socketId, candidate }) => {
+  console.log('📹 webrtc-local-ice-candidate received from renderer');
+  console.log('📹 Socket ID:', socketId);
+  
+  if (server) {
+    console.log('📹 Sending ICE candidate to mobile via server');
+    server.sendWebRTCICECandidate(socketId, candidate);
+    console.log('✅ ICE candidate sent to mobile');
+  } else {
+    console.error('❌ Server not available');
   }
 });
 

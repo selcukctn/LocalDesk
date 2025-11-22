@@ -22,6 +22,7 @@
     "connecting": "Verbinde...",
     "connectedDevice": "Verbundenes Gerät",
     "disconnect": "Trennen",
+    "remoteScreen": "Fernbildschirm",
     "pages": "Seiten",
     "selectPage": "Wählen Sie eine Seite aus, um Verknüpfungen anzuzeigen",
     "pairingWait": "Warte auf Kopplungsbestätigung...",
@@ -60,6 +61,27 @@
     "english": "English",
     "german": "Deutsch",
     "turkish": "Türkçe"
+  },
+  "remoteScreen": {
+    "title": "Fernbildschirm",
+    "connecting": "Verbinde...",
+    "connected": "Verbunden",
+    "disconnected": "Getrennt",
+    "reconnecting": "Erneut verbinden...",
+    "startSession": "Sitzung starten",
+    "endSession": "Sitzung beenden",
+    "quality": "Qualität",
+    "qualityLow": "Niedrig",
+    "qualityMedium": "Mittel",
+    "qualityHigh": "Hoch",
+    "showKeyboard": "Tastatur anzeigen",
+    "hideKeyboard": "Tastatur ausblenden",
+    "loading": "Lädt...",
+    "error": "Fehler",
+    "errorConnection": "Verbindung fehlgeschlagen",
+    "errorStream": "Videostream konnte nicht gestartet werden",
+    "touchToControl": "Zum Steuern berühren",
+    "sessionActive": "Sitzung aktiv"
   }
 }
 

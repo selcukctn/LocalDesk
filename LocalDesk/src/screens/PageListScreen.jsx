@@ -20,6 +20,7 @@ export const PageListScreen = ({
   isConnected,
   isPairing,
   onPageSelect,
+  onRemoteScreenOpen,
   onDisconnect
 }) => {
   const { t } = useI18n();
@@ -86,6 +87,16 @@ export const PageListScreen = ({
 
           {/* Alt Butonlar - Scroll dışında sabit */}
           <View style={styles.menuActions}>
+            {isConnected && onRemoteScreenOpen && (
+              <TouchableOpacity
+                style={styles.remoteScreenBtn}
+                onPress={onRemoteScreenOpen}
+              >
+                <Text style={styles.remoteScreenBtnIcon}>🖥️</Text>
+                <Text style={styles.remoteScreenBtnText}>{t('remoteScreen.title')}</Text>
+              </TouchableOpacity>
+            )}
+            
             <TouchableOpacity
               style={styles.disconnectBtn}
               onPress={onDisconnect}
@@ -283,7 +294,28 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#3e3e42'
+    borderTopColor: '#3e3e42',
+    gap: 12
+  },
+  remoteScreenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00C853',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: '#00E676'
+  },
+  remoteScreenBtnIcon: {
+    fontSize: 20
+  },
+  remoteScreenBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF'
   },
   disconnectBtn: {
     flexDirection: 'row',

@@ -22,6 +22,7 @@
     "connecting": "Connecting...",
     "connectedDevice": "Connected Device",
     "disconnect": "Disconnect",
+    "remoteScreen": "Remote Screen",
     "pages": "Pages",
     "selectPage": "Select a page to view shortcuts",
     "pairingWait": "Waiting for pairing approval...",
@@ -60,6 +61,27 @@
     "english": "English",
     "german": "German",
     "turkish": "Turkish"
+  },
+  "remoteScreen": {
+    "title": "Remote Screen",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "reconnecting": "Reconnecting...",
+    "startSession": "Start Session",
+    "endSession": "End Session",
+    "quality": "Quality",
+    "qualityLow": "Low",
+    "qualityMedium": "Medium",
+    "qualityHigh": "High",
+    "showKeyboard": "Show Keyboard",
+    "hideKeyboard": "Hide Keyboard",
+    "loading": "Loading...",
+    "error": "Error",
+    "errorConnection": "Connection failed",
+    "errorStream": "Video stream could not be started",
+    "touchToControl": "Touch to control",
+    "sessionActive": "Session Active"
   }
 }
 

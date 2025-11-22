@@ -64,3 +64,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   }
 });
 
+// WebRTC helpers for renderer process
+contextBridge.exposeInMainWorld('webrtc', {
+  // Listen for events from main process
+  onStartScreenCapture: (callback) => {
+    ipcRenderer.on('start-screen-capture', (event, data) => callback(data));
+  },
+  onWebRTCAnswer: (callback) => {
+    ipcRenderer.on('webrtc-answer', (event, data) => callback(data));
+  },
+  onWebRTCIceCandidate: (callback) => {
+    ipcRenderer.on('webrtc-ice-candidate', (event, data) => callback(data));
+  },
+  onWebRTCDisconnect: (callback) => {
+    ipcRenderer.on('webrtc-disconnect', (event, data) => callback(data));
+  },
+  
+  // Send events to main process
+  sendAnswer: (socketId, answer) => {
+    ipcRenderer.send('webrtc-local-answer', { socketId, answer });
+  },
+  sendIceCandidate: (socketId, candidate) => {
+    ipcRenderer.send('webrtc-local-ice-candidate', { socketId, candidate });
+  }
+});
+

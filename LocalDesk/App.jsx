@@ -13,12 +13,14 @@ import { DiscoveryScreen } from './src/screens/DiscoveryScreen';
 import { PageListScreen } from './src/screens/PageListScreen';
 import { ControlScreen } from './src/screens/ControlScreen';
 import { SettingsScreen } from './src/screens/SettingsScreen';
+import { RemoteScreenScreen } from './src/screens/RemoteScreenScreen';
 import { useConnection } from './src/hooks/useConnection';
 
 function AppContent() {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [selectedPage, setSelectedPage] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showRemoteScreen, setShowRemoteScreen] = useState(false);
   const { t } = useI18n();
   
   const {
@@ -30,7 +32,8 @@ function AppContent() {
     error,
     connect,
     disconnect,
-    executeShortcut
+    executeShortcut,
+    socket
   } = useConnection();
 
   // Tüm uygulama için yatay mod zorla
@@ -53,6 +56,18 @@ function AppContent() {
     disconnect();
     setSelectedDevice(null);
     setSelectedPage(null);
+    setShowRemoteScreen(false);
+  };
+
+  // Remote Screen'e geç
+  const handleRemoteScreenOpen = () => {
+    setShowRemoteScreen(true);
+    setSelectedPage(null);
+  };
+
+  // Remote Screen'den geri dön
+  const handleRemoteScreenBack = () => {
+    setShowRemoteScreen(false);
   };
 
   // Sayfa seçimi
@@ -122,6 +137,14 @@ function AppContent() {
           onDeviceSelect={handleDeviceSelect}
           onSettingsPress={() => setShowSettings(true)}
         />
+      ) : showRemoteScreen ? (
+        // Remote Screen ekranı - Uzaktan kontrol
+        <RemoteScreenScreen
+          device={currentDevice || selectedDevice}
+          socket={socket}
+          onBack={handleRemoteScreenBack}
+          onDisconnect={handleDisconnect}
+        />
       ) : !selectedPage ? (
         // Sayfa listesi ekranı - Bağlandıktan sonra
         <PageListScreen
@@ -130,6 +153,7 @@ function AppContent() {
           isConnected={isConnected}
           isPairing={isPairing}
           onPageSelect={handlePageSelect}
+          onRemoteScreenOpen={handleRemoteScreenOpen}
           onDisconnect={handleDisconnect}
         />
       ) : (
