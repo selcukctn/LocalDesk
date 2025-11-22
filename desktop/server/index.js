@@ -500,8 +500,9 @@ class LocalDeskServer extends EventEmitter {
         if (data.viewOnly) {
           this.viewOnlySessions.set(socket.id, true);
           console.log('📺 Ek monitör modu aktif - Remote control devre dışı');
+          console.log('📺 Windows\'un mobil cihazı ek monitör olarak algılaması için Miracast receiver etkinleştiriliyor...');
           
-          // Miracast receiver'ı etkinleştir
+          // Miracast receiver'ı etkinleştir (Windows'un mobil cihazı ek monitör olarak algılaması için)
           if (this.displayAddon && this.displayAddon.enableMiracastReceiver) {
             try {
               // Önce Miracast receiver durumunu kontrol et
@@ -514,6 +515,7 @@ class LocalDeskServer extends EventEmitter {
                 const result = this.displayAddon.enableMiracastReceiver();
                 if (result.success) {
                   console.log('✅ Miracast receiver etkinleştirildi:', result.message);
+                  console.log('💡 Windows artık mobil cihazı ek monitör olarak algılayabilir');
                   console.log('💡 Not: Windows\'u yeniden başlatmanız gerekebilir');
                   console.log('💡 Mobil cihazınızdan "Project" menüsünden bu PC\'yi seçebilirsiniz');
                 } else {
@@ -522,10 +524,13 @@ class LocalDeskServer extends EventEmitter {
                 }
               } else {
                 console.log('✅ Miracast receiver zaten etkin');
+                console.log('💡 Windows mobil cihazı ek monitör olarak algılayabilir');
               }
             } catch (error) {
               console.error('❌ Miracast receiver hatası:', error.message);
             }
+          } else {
+            console.warn('⚠️ Display addon yüklü değil, Miracast receiver etkinleştirilemedi');
           }
         } else {
           this.viewOnlySessions.delete(socket.id);

@@ -609,11 +609,27 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               
               <TouchableOpacity
                 style={[styles.startButton, styles.extendedDisplayButton]}
-                onPress={() => {
+                onPress={async () => {
                   setIsViewOnlyMode(true);
-                  // Önce ekran kaynaklarını al
-                  fetchScreenSources();
-                  setShowSourceSelector(true);
+                  // Ek monitör modunda ekran seçimi yapmadan direkt bağlan
+                  // Önce ekran kaynaklarını al (ilk ekranı otomatik seçmek için)
+                  await fetchScreenSources();
+                  // Kısa bir delay ile state güncellemesini bekle
+                  await new Promise(resolve => setTimeout(resolve, 300));
+                  // İlk ekranı seç ve direkt bağlan
+                  if (screenSources.screens && screenSources.screens.length > 0) {
+                    const firstScreenId = screenSources.screens[0].id;
+                    setSelectedSourceId(firstScreenId);
+                    // Ek monitör modunda direkt bağlan (ekran seçimi yok)
+                    startSession(firstScreenId, true);
+                  } else {
+                    // Ekran kaynağı yoksa hata göster
+                    Alert.alert(
+                      'Hata',
+                      'Ekran kaynağı bulunamadı. Lütfen normal modu kullanın.',
+                      [{ text: 'Tamam' }]
+                    );
+                  }
                 }}
               >
                 <Image 
