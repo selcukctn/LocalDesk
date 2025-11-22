@@ -170,6 +170,19 @@ class LocalDeskServer extends EventEmitter {
       res.json(this.getServerInfo());
     });
     
+    // Medya durumu (şimdilik basit - sonra Windows Media Control API ile genişletilebilir)
+    this.app.get('/media-status', (req, res) => {
+      // Şimdilik varsayılan değerler döndür
+      // Sonra Windows Media Control API ile gerçek durumu alabiliriz
+      res.json({
+        isPlaying: false,
+        title: 'Medya oynatıcı bulunamadı',
+        artist: '',
+        duration: 0,
+        position: 0
+      });
+    });
+    
     // Sayfa listesi (yeni API)
     this.app.get('/pages', (req, res) => {
       res.json(this.pages);
@@ -547,6 +560,75 @@ class LocalDeskServer extends EventEmitter {
             }
           } catch (error) {
             console.error('❌ Keyboard input hatası:', error.message);
+          }
+        }
+      });
+
+      // Medya kontrolü
+      socket.on('remote-media-control', (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        console.log('🎵 Media control:', data.action);
+        
+        if (this.robot) {
+          try {
+            // Medya kontrolü için keyboard shortcut'ları kullan
+            // Çoğu medya oynatıcı bu tuşları destekler
+            let keys = null;
+            
+            switch (data.action) {
+              case 'play':
+              case 'pause':
+              case 'playpause':
+                // Space = Play/Pause (çoğu uygulama: Spotify, YouTube, VLC, vb.)
+                keys = ['space'];
+                break;
+              case 'next':
+                // Ctrl+Right = Next (Spotify, YouTube Music)
+                // Veya sadece medya tuşu
+                if (process.platform === 'win32') {
+                  keys = ['control', 'right'];
+                } else {
+                  keys = ['audio_next'];
+                }
+                break;
+              case 'previous':
+                // Ctrl+Left = Previous
+                if (process.platform === 'win32') {
+                  keys = ['control', 'left'];
+                } else {
+                  keys = ['audio_prev'];
+                }
+                break;
+              case 'stop':
+                // Stop için genelde 's' tuşu
+                keys = ['s'];
+                break;
+            }
+            
+            if (keys) {
+              const modifiers = [];
+              let mainKey = null;
+              
+              for (const key of keys) {
+                const lowerKey = key.toLowerCase();
+                if (['control', 'alt', 'shift', 'command', 'win'].includes(lowerKey)) {
+                  modifiers.push(lowerKey);
+                } else {
+                  mainKey = lowerKey;
+                }
+              }
+              
+              if (mainKey) {
+                this.robot.keyTap(mainKey, modifiers);
+                console.log(`🎵 Media control: ${modifiers.join('+')}+${mainKey} (${data.action})`);
+              }
+            }
+          } catch (error) {
+            console.error('❌ Media control hatası:', error.message);
           }
         }
       });

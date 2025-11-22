@@ -10,19 +10,33 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
-  PanResponder
+  PanResponder,
+  Image
 } from 'react-native';
 import { RTCView } from 'react-native-webrtc';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useI18n } from '../contexts/I18nContext';
 import { useRemoteScreen } from '../hooks/useRemoteScreen';
 
+// Icon imports
+const screenPlayIcon = require('../icons/screen-play.png');
+const plugConnectionIcon = require('../icons/plug-connection.png');
+const keyboardDownIcon = require('../icons/keyboard-down.png');
+
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => {
   const { t } = useI18n();
   const [showKeyboard, setShowKeyboard] = useState(false);
+  const [showMediaControls, setShowMediaControls] = useState(false);
   const [keyboardText, setKeyboardText] = useState('');
+  const [mediaStatus, setMediaStatus] = useState({
+    isPlaying: false,
+    title: 'Medya oynatıcı bulunamadı',
+    artist: '',
+    duration: 0,
+    position: 0
+  });
   const [videoSize, setVideoSize] = useState({ width: 0, height: 0 });
   const [videoRenderSize, setVideoRenderSize] = useState({ width: 0, height: 0, offsetX: 0, offsetY: 0 });
   const textInputRef = useRef(null);
@@ -78,8 +92,16 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     sendMouseButtonDown,
     sendMouseButtonUp,
     sendMouseScroll,
-    sendKeyboardInput
+    sendKeyboardInput,
+    sendMediaControl
   } = useRemoteScreen(socket);
+
+  // Zaman formatı (saniye -> mm:ss)
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Video layout değişikliğinde boyutları al ve gerçek render boyutunu hesapla
   const handleVideoLayout = (event) => {
@@ -388,6 +410,28 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     console.log('📹 Session active:', isSessionActive);
   }, [videoSize, isSessionActive]);
 
+  // Medya durumunu periyodik olarak güncelle
+  React.useEffect(() => {
+    if (!isSessionActive || !showMediaControls) return;
+
+    const fetchMediaStatus = async () => {
+      try {
+        const response = await fetch(`http://${device.host}:${device.port}/media-status`);
+        if (response.ok) {
+          const status = await response.json();
+          setMediaStatus(status);
+        }
+      } catch (error) {
+        // Sessizce devam et
+      }
+    };
+
+    fetchMediaStatus();
+    const interval = setInterval(fetchMediaStatus, 2000); // Her 2 saniyede bir güncelle
+
+    return () => clearInterval(interval);
+  }, [isSessionActive, showMediaControls, device]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
@@ -408,12 +452,23 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             <>
               <TouchableOpacity 
                 style={styles.headerIconButton} 
-                onPress={toggleKeyboard}
+                onPress={() => setShowMediaControls(!showMediaControls)}
               >
                 <Icon
-                  name={showKeyboard ? 'keyboard-off' : 'keyboard'}
+                  name={showMediaControls ? 'music-note' : 'music-off'}
                   size={20}
-                  color="#fff"
+                  color={showMediaControls ? "#00C853" : "#fff"}
+                />
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.headerIconButton} 
+                onPress={toggleKeyboard}
+              >
+                <Image 
+                  source={keyboardDownIcon} 
+                  style={[styles.headerIconImage, showKeyboard && styles.headerIconImageActive]}
+                  resizeMode="contain"
                 />
               </TouchableOpacity>
               
@@ -442,7 +497,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       >
         {!isSessionActive && !isConnecting && (
           <View style={styles.placeholder}>
-            <Icon name="monitor" size={80} color="#555" />
+            <Image 
+              source={screenPlayIcon} 
+              style={styles.placeholderIcon}
+              resizeMode="contain"
+            />
             <Text style={styles.placeholderText}>
               {t('remoteScreen.touchToControl')}
             </Text>
@@ -450,7 +509,11 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
               style={styles.startButton}
               onPress={handleSessionToggle}
             >
-              <Icon name="play-circle" size={24} color="#fff" />
+              <Image 
+                source={screenPlayIcon} 
+                style={styles.startButtonIcon}
+                resizeMode="contain"
+              />
               <Text style={styles.startButtonText}>
                 {t('remoteScreen.startSession')}
               </Text>
@@ -460,7 +523,12 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
 
         {isConnecting && (
           <View style={styles.placeholder}>
-            <ActivityIndicator size="large" color="#00C853" />
+            <Image 
+              source={plugConnectionIcon} 
+              style={styles.connectingIcon}
+              resizeMode="contain"
+            />
+            <ActivityIndicator size="large" color="#00C853" style={styles.connectingSpinner} />
             <Text style={styles.placeholderText}>
               {t('remoteScreen.connecting')}
             </Text>
@@ -484,6 +552,61 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         )}
       </View>
 
+      {/* Medya Kontrol Paneli */}
+      {showMediaControls && isSessionActive && (
+        <View style={styles.mediaContainer}>
+          <View style={styles.mediaInfo}>
+            <Icon name="music" size={16} color="#999" />
+            <Text style={styles.mediaInfoText}>
+              {mediaStatus.title}
+              {mediaStatus.artist ? ` - ${mediaStatus.artist}` : ''}
+            </Text>
+          </View>
+          
+          <View style={styles.mediaControls}>
+            <TouchableOpacity
+              style={styles.mediaButton}
+              onPress={() => sendMediaControl('previous')}
+            >
+              <Icon name="skip-previous" size={24} color="#fff" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.mediaButton, styles.mediaButtonPrimary]}
+              onPress={() => sendMediaControl('playpause')}
+            >
+              <Icon 
+                name={mediaStatus.isPlaying ? 'pause' : 'play'} 
+                size={32} 
+                color="#fff" 
+              />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={styles.mediaButton}
+              onPress={() => sendMediaControl('next')}
+            >
+              <Icon name="skip-next" size={24} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          
+          {mediaStatus.duration > 0 && (
+            <View style={styles.mediaProgress}>
+              <View style={styles.mediaProgressBar}>
+                <View 
+                  style={[
+                    styles.mediaProgressFill, 
+                    { width: `${(mediaStatus.position / mediaStatus.duration) * 100}%` }
+                  ]} 
+                />
+              </View>
+              <Text style={styles.mediaTimeText}>
+                {formatTime(mediaStatus.position)} / {formatTime(mediaStatus.duration)}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Klavye Input */}
       {showKeyboard && (
@@ -572,7 +695,17 @@ const styles = StyleSheet.create({
   headerIconButton: {
     padding: 6,
     borderRadius: 6,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  headerIconImage: {
+    width: 20,
+    height: 20,
+    tintColor: '#fff'
+  },
+  headerIconImageActive: {
+    tintColor: '#00C853'
   },
   headerCenter: {
     flex: 1,
@@ -613,6 +746,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 20
   },
+  placeholderIcon: {
+    width: 120,
+    height: 120,
+    opacity: 0.6,
+    marginBottom: 20
+  },
+  connectingIcon: {
+    width: 80,
+    height: 80,
+    opacity: 0.7,
+    marginBottom: 20
+  },
+  connectingSpinner: {
+    marginTop: -100,
+    marginBottom: 20
+  },
   placeholderText: {
     fontSize: 16,
     color: '#999',
@@ -628,6 +777,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     gap: 8
+  },
+  startButtonIcon: {
+    width: 24,
+    height: 24,
+    tintColor: '#fff'
   },
   startButtonText: {
     fontSize: 18,
@@ -661,6 +815,64 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#fff'
+  },
+  mediaContainer: {
+    backgroundColor: '#1e1e1e',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#333'
+  },
+  mediaInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12
+  },
+  mediaInfoText: {
+    fontSize: 12,
+    color: '#999',
+    fontWeight: '500'
+  },
+  mediaControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 12
+  },
+  mediaButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  mediaButtonPrimary: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#00C853'
+  },
+  mediaProgress: {
+    marginTop: 8
+  },
+  mediaProgressBar: {
+    height: 4,
+    backgroundColor: '#333',
+    borderRadius: 2,
+    marginBottom: 8
+  },
+  mediaProgressFill: {
+    height: '100%',
+    backgroundColor: '#00C853',
+    borderRadius: 2
+  },
+  mediaTimeText: {
+    fontSize: 11,
+    color: '#999',
+    textAlign: 'center'
   },
   keyboardContainer: {
     backgroundColor: '#1e1e1e',

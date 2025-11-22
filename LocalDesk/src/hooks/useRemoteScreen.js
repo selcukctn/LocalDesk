@@ -189,6 +189,14 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     socketRef.current.emit('remote-keyboard-input', { text, keys });
   }, [isSessionActive]);
 
+  // Medya kontrolü gönder
+  const sendMediaControl = useCallback((action) => {
+    if (!socketRef.current || !isSessionActive) return;
+    
+    console.log(`🎵 Media control: ${action}`);
+    socketRef.current.emit('remote-media-control', { action });
+  }, [isSessionActive]);
+
   // WebRTC signaling event'lerini dinle
   useEffect(() => {
     if (!socketRef.current) {
@@ -277,7 +285,8 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     sendMouseButtonDown,
     sendMouseButtonUp,
     sendMouseScroll,
-    sendKeyboardInput
+    sendKeyboardInput,
+    sendMediaControl
   };
 };
 
