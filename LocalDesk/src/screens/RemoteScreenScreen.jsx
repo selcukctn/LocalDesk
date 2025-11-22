@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -44,18 +44,47 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   // Video layout değişikliğinde boyutları al
   const handleVideoLayout = (event) => {
     const { width, height } = event.nativeEvent.layout;
-    setVideoSize({ width, height });
-    console.log('📹 Video size:', width, 'x', height);
+    console.log('📹 onLayout called:', { width, height });
+    console.log('📹 Layout event:', event.nativeEvent);
+    
+    if (width > 0 && height > 0) {
+      setVideoSize({ width, height });
+      console.log('✅ Video size set:', width, 'x', height);
+    } else {
+      console.warn('⚠️ Invalid video size:', { width, height });
+    }
   };
 
-  // PanResponder oluştur
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+  // PanResponder oluştur - useMemo ile dependency'lere göre yeniden oluştur
+  const panResponder = useMemo(() => {
+    return PanResponder.create({
+      onStartShouldSetPanResponder: () => {
+        const canRespond = isSessionActive && videoSize.width > 0 && videoSize.height > 0;
+        console.log('🖱️ onStartShouldSetPanResponder:', { 
+          canRespond, 
+          isSessionActive, 
+          videoSize 
+        });
+        return canRespond;
+      },
+      onMoveShouldSetPanResponder: () => {
+        return isSessionActive && videoSize.width > 0 && videoSize.height > 0;
+      },
       onPanResponderGrant: (evt) => {
-        if (!isSessionActive || !videoSize.width || !videoSize.height) {
-          console.warn('⚠️ Session not active or video size not set');
+        console.log('🖱️ onPanResponderGrant called');
+        console.log('🖱️ State check:', { 
+          isSessionActive, 
+          videoSize,
+          hasSize: videoSize.width > 0 && videoSize.height > 0
+        });
+
+        if (!isSessionActive) {
+          console.warn('⚠️ Session not active');
+          return;
+        }
+
+        if (!videoSize.width || !videoSize.height) {
+          console.warn('⚠️ Video size not set:', videoSize);
           return;
         }
 
@@ -76,7 +105,10 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         sendMouseMove(normalizedX, normalizedY);
       },
       onPanResponderMove: (evt) => {
-        if (!isSessionActive || !videoSize.width || !videoSize.height) return;
+        if (!isSessionActive || !videoSize.width || !videoSize.height) {
+          console.warn('⚠️ Cannot move - session:', isSessionActive, 'size:', videoSize);
+          return;
+        }
 
         const { locationX, locationY } = evt.nativeEvent;
         const x = locationX / videoSize.width;
@@ -89,7 +121,10 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         sendMouseMove(normalizedX, normalizedY);
       },
       onPanResponderRelease: () => {
-        if (!isSessionActive) return;
+        if (!isSessionActive) {
+          console.warn('⚠️ Cannot release - session not active');
+          return;
+        }
 
         const now = Date.now();
         const timeDiff = now - lastTouchRef.current.time;
@@ -101,8 +136,8 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
           sendMouseClick('left', x, y);
         }
       }
-    })
-  ).current;
+    });
+  }, [isSessionActive, videoSize, sendMouseMove, sendMouseClick]);
 
 
   // Klavye toggle
@@ -164,6 +199,12 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     }
   }, [error, t]);
 
+  // Video size değişimini logla
+  React.useEffect(() => {
+    console.log('📹 Video size state changed:', videoSize);
+    console.log('📹 Session active:', isSessionActive);
+  }, [videoSize, isSessionActive]);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
@@ -185,7 +226,13 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
       </View>
 
       {/* Video Stream */}
-      <View style={styles.videoContainer}>
+      <View 
+        style={styles.videoContainer}
+        onLayout={(event) => {
+          const { width, height } = event.nativeEvent.layout;
+          console.log('📹 videoContainer layout:', { width, height });
+        }}
+      >
         {!isSessionActive && !isConnecting && (
           <View style={styles.placeholder}>
             <Icon name="monitor" size={80} color="#555" />
@@ -214,12 +261,10 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
         )}
 
         {isSessionActive && remoteStream && (
-          <View
-            style={styles.videoWrapper}
-            onLayout={handleVideoLayout}
-          >
+          <View style={styles.videoWrapper}>
             <View
               style={styles.touchOverlay}
+              onLayout={handleVideoLayout}
               {...panResponder.panHandlers}
             >
               <RTCView
