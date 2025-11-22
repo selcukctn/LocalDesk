@@ -10,6 +10,26 @@ const { spawn } = require('child_process');
 
 const discovery = require('./discovery');
 
+// Volume addon yükleme (Windows ses kontrolü için)
+let volumeAddon = null;
+try {
+  volumeAddon = require('./volume-addon');
+  console.log('✅ Volume addon yüklendi');
+} catch (error) {
+  console.error('❌ Volume addon yüklenemedi:', error.message);
+  console.error('💡 Çözüm: cd desktop/server/volume-addon && npm install');
+}
+
+// Media addon yükleme (Windows medya durumu için)
+let mediaAddon = null;
+try {
+  mediaAddon = require('./media-addon');
+  console.log('✅ Media addon yüklendi');
+} catch (error) {
+  console.error('❌ Media addon yüklenemedi:', error.message);
+  console.error('💡 Çözüm: cd desktop/server/media-addon && npm install');
+}
+
 // RobotJS yükleme (opsiyonel - yüklenemezse graceful failure)
 let robot = null;
 try {
@@ -170,7 +190,49 @@ class LocalDeskServer extends EventEmitter {
       res.json(this.getServerInfo());
     });
     
-    // Medya durumu (Windows Media Control API ile)
+    // Ses seviyesini al
+    this.app.get('/volume', async (req, res) => {
+      if (process.platform !== 'win32') {
+        return res.json({ volume: 50, success: false });
+      }
+
+      if (volumeAddon) {
+        try {
+          const result = volumeAddon.getVolume();
+          return res.json({ volume: result.volume, success: result.success });
+        } catch (error) {
+          console.error('❌ Volume addon hatası:', error.message);
+        }
+      }
+      
+      // Fallback: Varsayılan değer
+      res.json({ volume: 50, success: false });
+    });
+
+    // Ses seviyesini ayarla
+    this.app.post('/volume', async (req, res) => {
+      if (process.platform !== 'win32') {
+        return res.json({ success: false, message: 'Sadece Windows destekleniyor' });
+      }
+
+      const { volume } = req.body;
+      if (typeof volume !== 'number' || volume < 0 || volume > 100) {
+        return res.json({ success: false, message: 'Geçersiz ses seviyesi (0-100)' });
+      }
+
+      if (volumeAddon) {
+        try {
+          const result = volumeAddon.setVolume(volume);
+          return res.json({ success: result.success, volume });
+        } catch (error) {
+          console.error('❌ Volume addon hatası:', error.message);
+        }
+      }
+      
+      res.json({ success: false, message: 'Volume addon yüklenemedi' });
+    });
+
+    // Medya durumu (Windows Media Control API ile - C++ addon)
     this.app.get('/media-status', async (req, res) => {
       if (process.platform !== 'win32') {
         return res.json({
@@ -178,18 +240,36 @@ class LocalDeskServer extends EventEmitter {
           title: 'Sadece Windows destekleniyor',
           artist: '',
           duration: 0,
-          position: 0
+          position: 0,
+          success: false
         });
       }
 
+      // C++ addon ile medya durumunu al
+      if (mediaAddon) {
+        try {
+          const result = mediaAddon.getMediaStatus();
+          return res.json({
+            isPlaying: result.isPlaying,
+            title: result.title,
+            artist: result.artist,
+            duration: result.duration,
+            position: result.position,
+            success: result.success
+          });
+        } catch (error) {
+          console.error('❌ Media addon hatası:', error.message);
+        }
+      }
+      
+      // Fallback: PowerShell script (eğer addon yüklenemediyse)
       try {
-        // PowerShell script ile medya durumunu al
         const { exec } = require('child_process');
         const { promisify } = require('util');
         const execAsync = promisify(exec);
         
         const scriptPath = path.join(__dirname, 'get-media-status.ps1');
-        const { stdout, stderr } = await execAsync(
+        const { stdout } = await execAsync(
           `powershell -ExecutionPolicy Bypass -File "${scriptPath}"`,
           { timeout: 5000 }
         );
@@ -212,7 +292,8 @@ class LocalDeskServer extends EventEmitter {
         title: 'Medya oynatıcı bulunamadı',
         artist: '',
         duration: 0,
-        position: 0
+        position: 0,
+        success: false
       });
     });
     
@@ -648,6 +729,24 @@ class LocalDeskServer extends EventEmitter {
                 // Stop için genelde 's' tuşu
                 keys = ['s'];
                 break;
+              case 'volumeup':
+                // Volume Up tuşu
+                if (process.platform === 'win32') {
+                  keys = ['volumeup'];
+                }
+                break;
+              case 'volumedown':
+                // Volume Down tuşu
+                if (process.platform === 'win32') {
+                  keys = ['volumedown'];
+                }
+                break;
+              case 'volumemute':
+                // Volume Mute tuşu
+                if (process.platform === 'win32') {
+                  keys = ['volumemute'];
+                }
+                break;
             }
             
             if (keys) {
@@ -670,6 +769,58 @@ class LocalDeskServer extends EventEmitter {
             }
           } catch (error) {
             console.error('❌ Media control hatası:', error.message);
+          }
+        }
+      });
+
+      // Ses seviyesi kontrolü
+      socket.on('remote-volume-control', async (data) => {
+        const client = this.connectedClients.get(socket.id);
+        if (!client) return;
+        const trusted = this.trustedDevices.find(d => d.id === client.deviceId);
+        if (!trusted) return;
+        
+        console.log('🔊 Volume control:', data.action, data.value);
+        
+        if (process.platform === 'win32') {
+          try {
+            if (data.action === 'set' && typeof data.value === 'number') {
+              // Ses seviyesini ayarla (C++ addon ile)
+              if (volumeAddon) {
+                const result = volumeAddon.setVolume(data.value);
+                if (result.success) {
+                  console.log(`🔊 Ses seviyesi ayarlandı: ${data.value}%`);
+                } else {
+                  console.error('❌ Ses seviyesi ayarlanamadı');
+                }
+              } else {
+                console.error('❌ Volume addon yüklenemedi');
+              }
+            } else if (data.action === 'up' || data.action === 'down') {
+              // Ses seviyesini artır/azalt (RobotJS ile tuş basma)
+              if (this.robot) {
+                const key = data.action === 'up' ? 'volumeup' : 'volumedown';
+                this.robot.keyTap(key);
+                console.log(`🔊 Ses seviyesi ${data.action === 'up' ? 'artırıldı' : 'azaltıldı'}`);
+              }
+            } else if (data.action === 'mute') {
+              // Sesi kapat/aç (C++ addon ile)
+              if (volumeAddon) {
+                // Önce mevcut mute durumunu al
+                const muteStatus = volumeAddon.getMute();
+                const newMuteState = !muteStatus.mute; // Toggle
+                const result = volumeAddon.setMute(newMuteState);
+                if (result.success) {
+                  console.log(`🔊 Ses ${newMuteState ? 'kapatıldı' : 'açıldı'}`);
+                }
+              } else if (this.robot) {
+                // Fallback: RobotJS ile
+                this.robot.keyTap('volumemute');
+                console.log('🔊 Ses kapatıldı/açıldı');
+              }
+            }
+          } catch (error) {
+            console.error('❌ Ses kontrolü hatası:', error.message);
           }
         }
       });

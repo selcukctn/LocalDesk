@@ -1,0 +1,15 @@
+{
+  "name": "volume-addon",
+  "version": "1.0.0",
+  "description": "Windows ses seviyesi kontrolü için native addon",
+  "main": "index.js",
+  "scripts": {
+    "install": "node-gyp rebuild",
+    "rebuild": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "^7.0.0"
+  },
+  "gypfile": true
+}
+
