@@ -63,6 +63,16 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
   const isDoubleClickDragRef = useRef(false); // Çift tık sonrası sürükleme modunda mı?
   const videoContainerRef = useRef(null);
   
+  // Zoom state'leri
+  const [zoomScale, setZoomScale] = useState(1);
+  const [zoomTranslateX, setZoomTranslateX] = useState(0);
+  const [zoomTranslateY, setZoomTranslateY] = useState(0);
+  const isZoomingRef = useRef(false); // Zoom modunda mı?
+  const initialDistanceRef = useRef(0); // İki parmak arasındaki başlangıç mesafesi
+  const initialScaleRef = useRef(1); // Zoom başladığındaki scale
+  const initialCenterRef = useRef({ x: 0, y: 0 }); // İki parmağın ortası
+  const lastZoomCenterRef = useRef({ x: 0, y: 0 }); // Son zoom merkezi
+  
   // Desktop ekran boyutunu al (ilk bağlantıda)
   const [desktopScreenSize, setDesktopScreenSize] = useState({ width: 1920, height: 1080 });
   
@@ -215,19 +225,125 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
     }
   }, [desktopScreenSize, videoSize]);
 
+  // İki parmak arasındaki mesafeyi hesapla
+  const calculateDistance = (touch1, touch2) => {
+    const dx = touch2.pageX - touch1.pageX;
+    const dy = touch2.pageY - touch1.pageY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // İki parmağın ortasını hesapla
+  const calculateCenter = (touch1, touch2) => {
+    return {
+      x: (touch1.pageX + touch2.pageX) / 2,
+      y: (touch1.pageY + touch2.pageY) / 2
+    };
+  };
+
+  // Touch event handler'ları (iki parmak zoom için)
+  const handleTouchStart = (evt) => {
+    const touches = evt.nativeEvent.touches;
+    
+    // İki parmak dokunuşu varsa zoom moduna geç
+    if (touches.length === 2) {
+      isZoomingRef.current = true;
+      const distance = calculateDistance(touches[0], touches[1]);
+      initialDistanceRef.current = distance;
+      initialScaleRef.current = zoomScale;
+      
+      // Zoom merkezini hesapla (touchOverlay'e göre)
+      const center = calculateCenter(touches[0], touches[1]);
+      // Video container'ın merkezine göre offset hesapla
+      const centerX = center.x - (videoSize.width / 2);
+      const centerY = center.y - (videoSize.height / 2);
+      
+      initialCenterRef.current = { x: centerX, y: centerY };
+      lastZoomCenterRef.current = { x: centerX, y: centerY };
+      
+      console.log('🔍 Zoom başladı, mesafe:', distance, 'merkez:', { x: centerX, y: centerY });
+    } else {
+      isZoomingRef.current = false;
+    }
+  };
+
+  const handleTouchMove = (evt) => {
+    const touches = evt.nativeEvent.touches;
+    
+    // İki parmak zoom işlemi
+    if (touches.length === 2 && isZoomingRef.current && videoSize.width > 0 && videoSize.height > 0) {
+      const distance = calculateDistance(touches[0], touches[1]);
+      const scale = (distance / initialDistanceRef.current) * initialScaleRef.current;
+      
+      // Scale sınırları (0.5x - 3x)
+      const clampedScale = Math.max(0.5, Math.min(3, scale));
+      
+      // Merkez noktasını güncelle (touchOverlay'e göre)
+      const center = calculateCenter(touches[0], touches[1]);
+      const centerX = center.x - (videoSize.width / 2);
+      const centerY = center.y - (videoSize.height / 2);
+      
+      // Zoom merkezine göre translate hesapla
+      // Scale değiştiğinde, zoom merkezi sabit kalmalı
+      const scaleChange = clampedScale - initialScaleRef.current;
+      const newTranslateX = zoomTranslateX - (initialCenterRef.current.x * scaleChange);
+      const newTranslateY = zoomTranslateY - (initialCenterRef.current.y * scaleChange);
+      
+      // Pan işlemi (iki parmak kaydırma)
+      const panDeltaX = centerX - lastZoomCenterRef.current.x;
+      const panDeltaY = centerY - lastZoomCenterRef.current.y;
+      
+      setZoomScale(clampedScale);
+      setZoomTranslateX(newTranslateX + panDeltaX);
+      setZoomTranslateY(newTranslateY + panDeltaY);
+      
+      lastZoomCenterRef.current = { x: centerX, y: centerY };
+      console.log('🔍 Zoom scale:', clampedScale.toFixed(2), 'translate:', { 
+        x: (newTranslateX + panDeltaX).toFixed(0), 
+        y: (newTranslateY + panDeltaY).toFixed(0) 
+      });
+    }
+  };
+
+  const handleTouchEnd = (evt) => {
+    const touches = evt.nativeEvent.touches;
+    
+    // İki parmak bırakıldıysa zoom modunu kapat
+    if (touches.length < 2) {
+      isZoomingRef.current = false;
+      console.log('🔍 Zoom bitti');
+    }
+  };
+
+  // Zoom'u sıfırla
+  const resetZoom = useCallback(() => {
+    setZoomScale(1);
+    setZoomTranslateX(0);
+    setZoomTranslateY(0);
+    isZoomingRef.current = false;
+  }, []);
+
   // PanResponder oluştur - useMemo ile dependency'lere göre yeniden oluştur
   const panResponder = useMemo(() => {
     return PanResponder.create({
-      onStartShouldSetPanResponder: () => {
+      onStartShouldSetPanResponder: (evt) => {
+        // Zoom modundaysa mouse kontrolünü devre dışı bırak
+        if (isZoomingRef.current) {
+          return false;
+        }
         const canRespond = isSessionActive && videoSize.width > 0 && videoSize.height > 0;
         console.log('🖱️ onStartShouldSetPanResponder:', { 
           canRespond, 
           isSessionActive, 
-          videoSize 
+          videoSize,
+          isZooming: isZoomingRef.current
         });
         return canRespond;
       },
       onMoveShouldSetPanResponder: () => {
+        // Zoom modundaysa mouse kontrolünü devre dışı bırak
+        if (isZoomingRef.current) {
+          return false;
+        }
         return isSessionActive && videoSize.width > 0 && videoSize.height > 0;
       },
       onPanResponderGrant: (evt) => {
@@ -580,6 +696,18 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
                   resizeMode="contain"
                 />
               </TouchableOpacity>
+              
+              {/* Zoom sıfırla butonu */}
+              {zoomScale !== 1 && (
+                <TouchableOpacity 
+                  style={styles.headerIconButton} 
+                  onPress={resetZoom}
+                >
+                  <Text style={{ fontSize: 16, color: '#fff', textAlign: 'center' }}>
+                    🔍
+                  </Text>
+                </TouchableOpacity>
+              )}
             </>
           )}
           
@@ -659,13 +787,29 @@ export const RemoteScreenScreen = ({ device, socket, onBack, onDisconnect }) => 
             <View
               style={styles.touchOverlay}
               onLayout={handleVideoLayout}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               {...panResponder.panHandlers}
             >
-              <RTCView
-                streamURL={remoteStream.toURL()}
-                style={styles.video}
-                objectFit="contain"
-              />
+              <View
+                style={[
+                  styles.videoZoomContainer,
+                  {
+                    transform: [
+                      { translateX: zoomTranslateX },
+                      { translateY: zoomTranslateY },
+                      { scale: zoomScale }
+                    ]
+                  }
+                ]}
+              >
+                <RTCView
+                  streamURL={remoteStream.toURL()}
+                  style={styles.video}
+                  objectFit="contain"
+                />
+              </View>
             </View>
           </View>
         )}
@@ -1127,15 +1271,19 @@ const styles = StyleSheet.create({
   },
   videoWrapper: {
     flex: 1,
-    position: 'relative'
+    position: 'relative',
+    overflow: 'hidden'
   },
   touchOverlay: {
     flex: 1,
     width: '100%',
     height: '100%'
   },
+  videoZoomContainer: {
+    width: '100%',
+    height: '100%'
+  },
   video: {
-    flex: 1,
     width: '100%',
     height: '100%',
     backgroundColor: '#000'
