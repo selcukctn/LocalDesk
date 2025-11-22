@@ -351,9 +351,7 @@ export const useRemoteScreen = (socket, deviceInfo) => {
     sendVolumeControl,
     volume,
     setVolumeLevel,
-    fetchVolume,
-    desktopScreenSize,
-    mediaStatus
+    fetchVolume
   };
 };
 
