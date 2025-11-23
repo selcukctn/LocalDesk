@@ -21,7 +21,7 @@ export const useConnection = () => {
   const [shortcuts, setShortcuts] = useState([]); // Geriye uyumluluk için
   const [error, setError] = useState(null);
   const [deviceInfo, setDeviceInfo] = useState(null);
-  
+
   const socketRef = useRef(null);
 
   // Cihaz bilgilerini yükle
@@ -33,17 +33,17 @@ export const useConnection = () => {
     try {
       let deviceId = await AsyncStorage.getItem(STORAGE_KEYS.DEVICE_ID);
       let deviceName = await AsyncStorage.getItem(STORAGE_KEYS.DEVICE_NAME);
-      
+
       if (!deviceId) {
         deviceId = generateDeviceId();
         await AsyncStorage.setItem(STORAGE_KEYS.DEVICE_ID, deviceId);
       }
-      
+
       if (!deviceName) {
         deviceName = `${Platform.OS === 'ios' ? 'iPhone' : 'Android'} ${Platform.Version}`;
         await AsyncStorage.setItem(STORAGE_KEYS.DEVICE_NAME, deviceName);
       }
-      
+
       setDeviceInfo({ deviceId, deviceName });
       console.log('📱 Cihaz bilgileri yüklendi:', deviceName, deviceId);
     } catch (err) {
@@ -57,7 +57,7 @@ export const useConnection = () => {
       setError('Cihaz bilgileri yüklenmedi');
       return;
     }
-    
+
     // Mevcut bağlantı varsa önce kapat
     if (socketRef.current) {
       console.log('⚠️ Mevcut bağlantı kapatılıyor...');
@@ -68,43 +68,53 @@ export const useConnection = () => {
         console.error('Eski bağlantı kapatma hatası:', err);
       }
     }
-    
+
     try {
       console.log('🔌 Bağlanılıyor:', device.name);
       setError(null);
       setCurrentDevice(device);
-      
+
       // Socket.IO bağlantısı
+      // Android'de daha iyi çalışması için önce polling, sonra websocket
       const socket = io(`http://${device.host}:${device.port}`, {
-        transports: ['websocket'],
+        transports: Platform.OS === 'android' ? ['polling', 'websocket'] : ['websocket', 'polling'],
         reconnection: true,
         reconnectionDelay: 1000,
-        reconnectionAttempts: 5
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5,
+        timeout: 30000, // Android için daha uzun timeout
+        forceNew: true, // Her zaman yeni bağlantı oluştur
+        upgrade: true, // Polling'den websocket'e upgrade'e izin ver
+        rememberUpgrade: true, // Upgrade'i hatırla
+        autoConnect: true,
+        rejectUnauthorized: false // Yerel ağ için SSL doğrulamasını devre dışı bırak
       });
-      
+
       socketRef.current = socket;
-      
+
       // Event listeners
       socket.on('connect', () => {
         console.log('✅ Socket.IO bağlandı');
+        console.log('📡 Transport:', socket.io.engine.transport.name);
+        console.log('📡 Connected to:', `http://${device.host}:${device.port}`);
         // Pairing isteği gönder
         requestPairing(socket);
       });
-      
+
       socket.on('disconnect', () => {
         console.log('📴 Bağlantı kesildi');
         setIsConnected(false);
       });
-      
+
       socket.on('pair-response', (response) => {
         handlePairingResponse(response, device);
       });
-      
+
       // Yeni format: pages-update
       socket.on('pages-update', (updatedPages) => {
         console.log('📥 Sayfalar güncellendi:', updatedPages.length);
         setPages(updatedPages);
-        
+
         // Geriye uyumluluk için ilk sayfanın shortcuts'larını da set et
         if (updatedPages.length > 0 && updatedPages[0].shortcuts) {
           setShortcuts(updatedPages[0].shortcuts);
@@ -112,12 +122,12 @@ export const useConnection = () => {
           setShortcuts([]);
         }
       });
-      
+
       // Eski format: shortcuts-update (geriye uyumluluk)
       socket.on('shortcuts-update', (updatedShortcuts) => {
         console.log('📥 Kısayollar güncellendi (eski format):', updatedShortcuts.length);
         setShortcuts(updatedShortcuts);
-        
+
         // Eğer pages boşsa, eski formatı pages'e çevir
         if (pages.length === 0) {
           setPages([{
@@ -127,35 +137,65 @@ export const useConnection = () => {
           }]);
         }
       });
-      
+
       socket.on('execute-result', (result) => {
         console.log('✅ Kısayol çalıştırıldı:', result);
       });
-      
+
       socket.on('error', (err) => {
         console.error('❌ Socket hatası:', err);
         setError(err.message || 'Bağlantı hatası');
       });
-      
+
       socket.on('connect_error', (err) => {
-        console.error('❌ Bağlantı hatası:', err);
-        setError('Sunucuya bağlanılamadı');
+        console.error('❌ Bağlantı hatası:', err.message || err);
+        console.error('❌ Hata türü:', err.type);
+        console.error('❌ Platform:', Platform.OS);
+        console.error('❌ Hedef:', `http://${device.host}:${device.port}`);
+        console.log('📋 Hata detayları:', {
+          type: err.type,
+          description: err.description,
+          message: err.message,
+          context: err.context,
+          code: err.code,
+          stack: err.stack
+        });
+        
+        let errorMessage = 'Sunucuya bağlanılamadı';
+        if (err.message && err.message.includes('timeout')) {
+          errorMessage = 'Bağlantı zaman aşımına uğradı';
+        } else if (err.message && err.message.includes('refused')) {
+          errorMessage = 'Sunucu bağlantıyı reddetti';
+        } else if (err.message && err.message.includes('websocket error')) {
+          errorMessage = 'WebSocket bağlantı hatası - Lütfen uygulamayı yeniden başlatın';
+        } else if (err.type === 'TransportError') {
+          errorMessage = 'Network bağlantı hatası - Sunucu adresini ve ağ bağlantınızı kontrol edin';
+        }
+        
+        setError(errorMessage);
         setIsPairing(false);
+        setIsConnected(false);
       });
-      
+
     } catch (err) {
-      console.error('Bağlantı hatası:', err);
-      setError('Bağlantı başlatılamadı');
+      console.error('❌ Bağlantı başlatma hatası:', err);
+      console.log('Hata detayları:', {
+        message: err.message,
+        stack: err.stack
+      });
+      setError('Bağlantı başlatılamadı: ' + (err.message || 'Bilinmeyen hata'));
+      setIsPairing(false);
+      setIsConnected(false);
     }
   }, [deviceInfo]);
 
   // Pairing isteği
   const requestPairing = useCallback((socket) => {
     if (!deviceInfo) return;
-    
+
     setIsPairing(true);
     console.log('🔐 Pairing isteği gönderiliyor...');
-    
+
     socket.emit('pair-request', {
       deviceId: deviceInfo.deviceId,
       deviceName: deviceInfo.deviceName,
@@ -166,17 +206,17 @@ export const useConnection = () => {
   // Pairing yanıtı
   const handlePairingResponse = useCallback(async (response, device) => {
     setIsPairing(false);
-    
+
     if (response.success) {
       console.log('✅ Pairing başarılı:', response.message);
       setIsConnected(true);
       setError(null);
-      
+
       // Güvenilir cihazlara ekle
       if (response.autoConnected !== true) {
         await addTrustedDevice(device);
       }
-      
+
       // Sayfaları yükle (cihaz bilgisini geçir)
       await loadPages(device);
     } else {
@@ -191,7 +231,7 @@ export const useConnection = () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEYS.TRUSTED_DEVICES);
       const trusted = stored ? JSON.parse(stored) : [];
-      
+
       // Zaten ekli mi?
       if (!trusted.find(d => d.id === device.id)) {
         trusted.push({
@@ -201,12 +241,12 @@ export const useConnection = () => {
           port: device.port,
           addedAt: Date.now()
         });
-        
+
         await AsyncStorage.setItem(
           STORAGE_KEYS.TRUSTED_DEVICES,
           JSON.stringify(trusted)
         );
-        
+
         console.log('✅ Güvenilir cihaza eklendi:', device.name);
       }
     } catch (err) {
@@ -222,23 +262,23 @@ export const useConnection = () => {
         console.warn('⚠️ Sayfa yüklemek için cihaz bilgisi yok');
         return;
       }
-      
+
       console.log('📡 Sayfalar yükleniyor:', `http://${targetDevice.host}:${targetDevice.port}/pages`);
-      
+
       // HTTP üzerinden sayfaları al
       const response = await fetch(
         `http://${targetDevice.host}:${targetDevice.port}/pages`,
         { timeout: 5000 }
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       setPages(data);
       console.log('📥 Sayfalar yüklendi:', data.length, 'adet');
-      
+
       // Geriye uyumluluk için ilk sayfanın shortcuts'larını da set et
       if (data.length > 0 && data[0].shortcuts) {
         setShortcuts(data[0].shortcuts);
@@ -260,9 +300,9 @@ export const useConnection = () => {
       console.warn('⚠️ Bağlantı yok, kısayol çalıştırılamadı');
       return;
     }
-    
+
     console.log('⌨️ Kısayol çalıştırılıyor:', shortcut.label);
-    
+
     socketRef.current.emit('execute-shortcut', {
       shortcutId: shortcut.id,
       keys: shortcut.keys,
@@ -274,12 +314,12 @@ export const useConnection = () => {
   // Bağlantıyı kes
   const disconnect = useCallback(() => {
     console.log('🔌 Bağlantı kesiliyor...');
-    
+
     if (socketRef.current) {
       socketRef.current.disconnect();
       socketRef.current = null;
     }
-    
+
     setIsConnected(false);
     setCurrentDevice(null);
     setPages([]);
