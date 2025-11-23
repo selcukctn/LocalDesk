@@ -37,7 +37,7 @@
     "save": "Kaydet",
     "language": "Dil",
     "about": "Hakkında",
-    "version": "Versiyon: 0.0.1",
+    "version": "Versiyon: 0.0.2",
     "description": "Stream Deck benzeri klavye kısayol kontrolcüsü",
     "aboutDescription": "Mobil uygulama ile lokal ağda bağlanarak<br>masaüstü bilgisayarınıza klavye kısayolları gönderebilirsiniz."
   },

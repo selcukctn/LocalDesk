@@ -1,6 +1,6 @@
 {
   "name": "localdesk-desktop",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Local Desk desktop app - Stream Deck like keyboard shortcut management",
   "main": "main.js",
   "scripts": {

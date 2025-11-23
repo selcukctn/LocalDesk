@@ -37,7 +37,7 @@
     "save": "Speichern",
     "language": "Sprache",
     "about": "Über",
-    "version": "Version: 0.0.1",
+    "version": "Version: 0.0.2",
     "description": "Stream Deck-ähnlicher Tastaturkürzel-Controller",
     "aboutDescription": "Verbinden Sie sich über die mobile App im lokalen Netzwerk<br>um Tastaturkürzel an Ihren Desktop-Computer zu senden."
   },
