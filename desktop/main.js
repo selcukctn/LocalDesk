@@ -47,8 +47,10 @@ function createWindow() {
 
   mainWindow.loadFile(path.join(__dirname, 'ui', 'index.html'));
 
-  // DevTools'u her zaman aç (WebRTC debug için)
-    mainWindow.webContents.openDevTools();
+  // DevTools'u aç (sadece geliştirme modunda)
+  // if (process.env.NODE_ENV === 'development') {
+  //   mainWindow.webContents.openDevTools();
+  // }
 
   mainWindow.on('closed', () => {
     mainWindow = null;

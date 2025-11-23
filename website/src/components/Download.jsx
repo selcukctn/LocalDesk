@@ -13,7 +13,7 @@ function Download() {
         
         <div className="download-buttons">
           <a 
-            href="https://github.com/selcukctn/localdesk/releases/latest" 
+            href="https://github.com/selcukctn/LocalDesk/releases/tag/v0.0.2" 
             target="_blank" 
             rel="noopener noreferrer"
             className="download-btn windows-btn"
@@ -43,7 +43,7 @@ function Download() {
           </a>
 
           <a 
-            href="#" 
+            href="https://github.com/selcukctn/LocalDesk/releases/tag/v0.0.2" 
             className="download-btn playstore-btn"
             onClick={(e) => e.preventDefault()}
           >
